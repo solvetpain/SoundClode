@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using System.Windows.Media;
+using System.Windows.Interop;
 using Forms = System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 
@@ -415,6 +417,11 @@ namespace SoundCloudNative
                                     _notifyIcon.ShowBalloonTip(2500, "Сейчас играет", $"{title}\n{artist}", Forms.ToolTipIcon.None);
                                 }
                             }
+                            else if (type == "THEME_CHANGED")
+                            {
+                                string thm = root.TryGetProperty("theme", out var thmProp) ? thmProp.GetString() ?? "dark" : "dark";
+                                ApplyWindowTheme(thm);
+                            }
                             else if (type == "LIKE_TRACK" || type == "LIKE_PLAYLIST")
                             {
                                 long id = root.TryGetProperty("id", out var idProp) ? idProp.GetInt64() : (root.TryGetProperty("trackId", out var tidProp) ? tidProp.GetInt64() : (root.TryGetProperty("playlistId", out var pidProp) ? pidProp.GetInt64() : 0));
@@ -462,6 +469,17 @@ namespace SoundCloudNative
                 var htmlFolder = Path.GetDirectoryName(localHtml) ?? AppDomain.CurrentDomain.BaseDirectory;
                 webView.CoreWebView2.SetVirtualHostNameToFolderMapping("soundclode.local", htmlFolder, CoreWebView2HostResourceAccessKind.Allow);
                 webView.Source = new Uri("https://soundclode.local/index.html");
+
+                webView.NavigationCompleted += async (s, e) =>
+                {
+                    try
+                    {
+                        var themeJson = await webView.ExecuteScriptAsync("document.documentElement.getAttribute('data-theme') || 'dark'");
+                        var theme = themeJson?.Trim('"', ' ', '\\') ?? "dark";
+                        ApplyWindowTheme(theme);
+                    }
+                    catch { }
+                };
 
                 // Broadcast fresh scraped client ID on launch
                 _ = Task.Run(async () =>
@@ -861,6 +879,46 @@ namespace SoundCloudNative
                 WindowState = WindowState.Normal;
                 Activate();
                 Focus();
+            });
+        }
+
+        private void ApplyWindowTheme(string theme)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                bool isLight = string.Equals(theme, "light", StringComparison.OrdinalIgnoreCase);
+                if (isLight)
+                {
+                    mainBorder.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xF7, 0xF8, 0xFA));
+                    mainBorder.BorderBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xE2, 0xE4, 0xEA));
+                    titleBarGrid.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xF7, 0xF8, 0xFA));
+                    btnMinimize.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x40, 0x42, 0x4C));
+                    btnMaximize.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x40, 0x42, 0x4C));
+                    btnClose.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x40, 0x42, 0x4C));
+
+                    int darkMode = 0;
+                    var hwnd = new WindowInteropHelper(this).Handle;
+                    if (hwnd != IntPtr.Zero)
+                    {
+                        try { DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkMode, sizeof(int)); } catch { }
+                    }
+                }
+                else
+                {
+                    mainBorder.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(0xC0, 0x07, 0x08, 0x0A));
+                    mainBorder.BorderBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x20, 0x22, 0x2B));
+                    titleBarGrid.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(0x90, 0x07, 0x08, 0x0A));
+                    btnMinimize.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x71, 0x75, 0x85));
+                    btnMaximize.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x71, 0x75, 0x85));
+                    btnClose.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x71, 0x75, 0x85));
+
+                    int darkMode = 1;
+                    var hwnd = new WindowInteropHelper(this).Handle;
+                    if (hwnd != IntPtr.Zero)
+                    {
+                        try { DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkMode, sizeof(int)); } catch { }
+                    }
+                }
             });
         }
 

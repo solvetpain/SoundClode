@@ -15,8 +15,8 @@
         <WindowChrome CaptionHeight="28" ResizeBorderThickness="8" GlassFrameThickness="-1" CornerRadius="0"/>
     </WindowChrome.WindowChrome>
 
-    <!-- Seamless dark border with Mica glass translucency -->
-    <Border Background="#C007080A" BorderBrush="#20222B" BorderThickness="1" ClipToBounds="True">
+    <!-- Seamless dynamic border with Mica glass translucency -->
+    <Border x:Name="mainBorder" Background="#C007080A" BorderBrush="#20222B" BorderThickness="1" ClipToBounds="True">
 
         <Grid>
             <Grid.RowDefinitions>
@@ -25,7 +25,7 @@
             </Grid.RowDefinitions>
 
             <!-- Minimalist integrated drag bar -->
-            <Grid Grid.Row="0" Background="#9007080A" MouseDown="TitleBar_MouseDown">
+            <Grid x:Name="titleBarGrid" Grid.Row="0" Background="#9007080A" MouseDown="TitleBar_MouseDown">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
@@ -33,9 +33,9 @@
 
                 <!-- Window action buttons on the right -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0" WindowChrome.IsHitTestVisibleInChrome="True">
-                    <Button Click="BtnMinimize_Click" Content="—" Foreground="#717585" Background="Transparent" BorderThickness="0" Width="28" Height="22" Cursor="Hand" FontSize="12"/>
-                    <Button Click="BtnMaximize_Click" Content="🗖" Foreground="#717585" Background="Transparent" BorderThickness="0" Width="28" Height="22" Cursor="Hand" FontSize="11" Margin="2,0,0,0"/>
-                    <Button Click="BtnClose_Click" Content="✕" Foreground="#717585" Background="Transparent" BorderThickness="0" Width="28" Height="22" Cursor="Hand" FontSize="12" Margin="2,0,0,0"/>
+                    <Button x:Name="btnMinimize" Click="BtnMinimize_Click" Content="—" Foreground="#717585" Background="Transparent" BorderThickness="0" Width="28" Height="22" Cursor="Hand" FontSize="12"/>
+                    <Button x:Name="btnMaximize" Click="BtnMaximize_Click" Content="🗖" Foreground="#717585" Background="Transparent" BorderThickness="0" Width="28" Height="22" Cursor="Hand" FontSize="11" Margin="2,0,0,0"/>
+                    <Button x:Name="btnClose" Click="BtnClose_Click" Content="✕" Foreground="#717585" Background="Transparent" BorderThickness="0" Width="28" Height="22" Cursor="Hand" FontSize="12" Margin="2,0,0,0"/>
                 </StackPanel>
             </Grid>
 
