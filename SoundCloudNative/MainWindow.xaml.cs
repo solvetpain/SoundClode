@@ -88,12 +88,39 @@ namespace SoundCloudNative
             try
             {
                 var userDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SoundClode", "WebViewProfile");
-                var options = new CoreWebView2EnvironmentOptions();
+                var options = new CoreWebView2EnvironmentOptions
+                {
+                    AdditionalBrowserArguments =
+                        "--disable-features=CalculateNativeWinOcclusion,IntensiveWakeUpThrottling " +
+                        "--disable-backgrounding-occluded-windows " +
+                        "--disable-background-timer-throttling " +
+                        "--disable-renderer-backgrounding " +
+                        "--disable-gpu-process-crash-limit " +
+                        "--autoplay-policy=no-user-gesture-required"
+                };
                 _env = await CoreWebView2Environment.CreateAsync(null, userDataDir, options);
                 await webView.EnsureCoreWebView2Async(_env);
 
                 webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
                 webView.CoreWebView2.Settings.AreDevToolsEnabled = false;
+                webView.DefaultBackgroundColor = System.Drawing.Color.FromArgb(18, 19, 24);
+
+                // Auto-recover if GPU or Renderer crashes (e.g. when DirectX games take exclusive focus)
+                webView.CoreWebView2.ProcessFailed += (s, args) =>
+                {
+                    Debug.WriteLine($"[SoundClode] ProcessFailed: {args.ProcessFailedKind}, reason: {args.Reason}");
+                    if (args.ProcessFailedKind == CoreWebView2ProcessFailedKind.GpuProcessExited)
+                    {
+                        try { webView.CoreWebView2.Resume(); } catch { }
+                    }
+                    else
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            try { webView.Reload(); } catch { }
+                        });
+                    }
+                };
 
                 // Initialize background sync worker sharing same profile
                 await bgSyncWebView.EnsureCoreWebView2Async(_env);

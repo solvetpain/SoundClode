@@ -1421,25 +1421,48 @@ async function fetchWaveform(track) {
   return out;
 }
 
-// DRAW WAVEFORM CANVAS
+// DRAW WAVEFORM CANVAS (OPTIMIZED: Reuses GPU backing store & eliminates layout thrashing)
+var _cachedColorOn = '#ffffff';
+var _cachedColorOff = '#333333';
+function updateCachedWaveColors() {
+  try {
+    var st = getComputedStyle(document.documentElement);
+    _cachedColorOn = st.getPropertyValue('--on').trim() || '#ffffff';
+    _cachedColorOff = st.getPropertyValue('--wave').trim() || '#333333';
+  } catch(e) {}
+}
+
 function drawWave(c, track, isCurrentPlaying) {
   if (!c) return;
   var d = window.devicePixelRatio || 1;
   var w = c.clientWidth, h = c.clientHeight;
   if (!w || !h) return;
 
-  c.width = w * d;
-  c.height = h * d;
+  var targetW = Math.round(w * d);
+  var targetH = Math.round(h * d);
   var ctx = c.getContext('2d');
-  ctx.scale(d, d);
+  if (c.width !== targetW || c.height !== targetH) {
+    c.width = targetW;
+    c.height = targetH;
+    ctx.scale(d, d);
+  } else {
+    ctx.clearRect(0, 0, w, h);
+  }
 
-  var st = getComputedStyle(document.documentElement);
-  var colorOn = st.getPropertyValue('--on').trim() || '#ffffff';
-  var colorOff = st.getPropertyValue('--wave').trim() || '#333';
+  var colorOn = _cachedColorOn;
+  var colorOff = _cachedColorOff;
 
   var pk = track.peaks || [];
   if (!pk.length) {
-    fetchWaveform(track).then(function(){ drawWave(c, track, isCurrentPlaying); });
+    if (!track._fetchingWave) {
+      track._fetchingWave = true;
+      fetchWaveform(track).then(function(){
+        track._fetchingWave = false;
+        drawWave(c, track, isCurrentPlaying);
+      }).catch(function(){
+        track._fetchingWave = false;
+      });
+    }
     return;
   }
 
@@ -2755,8 +2778,10 @@ au.ontimeupdate = function() {
   }
   $('#tm').textContent = fmt(au.currentTime) + ' / ' + fmt(d);
   
-  var c = document.querySelector('.trk.cur canvas');
-  if (c && currentTrack) drawWave(c, currentTrack, true);
+  if (!document.hidden) {
+    var c = document.querySelector('.trk.cur canvas');
+    if (c && currentTrack) drawWave(c, currentTrack, true);
+  }
 
   if (typeof updateDiscordPresence === 'function') updateDiscordPresence(false);
 
@@ -3187,11 +3212,17 @@ window.addEventListener('focus', function() {
     syncUserProfile();
   }
 });
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden && currentTrack) {
+    var c = document.querySelector('.trk.cur canvas');
+    if (c) drawWave(c, currentTrack, true);
+  }
+});
 setInterval(function() {
-  if (user && (user.id || user.permalink)) {
+  if (user && (user.id || user.permalink) && !document.hidden) {
     syncUserProfile();
   }
-}, 60000);
+}, 300000);
 
 // HOTKEYS
 document.addEventListener('keydown', function(e) {
@@ -3646,6 +3677,7 @@ function applyConfig() {
   document.title = nm;
 
   applyLanguage();
+  updateCachedWaveColors();
 }
 
 function syncSettingsInputs() {
