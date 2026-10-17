@@ -2566,6 +2566,16 @@ function toggleLikeRemote(trackId, isLiked) {
   var token = localStorage.getItem('soundclode_oauth_token');
   var isEn = (cfg.lang === 'en');
   if (token && user && user.id) {
+    if (window.chrome && window.chrome.webview) {
+      window.chrome.webview.postMessage({
+        type: 'LIKE_TRACK',
+        trackId: trackId,
+        isLiked: isLiked,
+        token: token,
+        userId: user.id
+      });
+      return;
+    }
     fetch('https://api-v2.soundcloud.com/users/' + user.id + '/track_likes/' + trackId + '?client_id=' + clientId, {
       method: isLiked ? 'PUT' : 'DELETE',
       headers: { 'Authorization': 'OAuth ' + token }
@@ -3005,6 +3015,9 @@ async function loginWithOAuthToken(token) {
       var meData = await res.json();
       if (meData && (meData.id || meData.username)) {
         localStorage.setItem('soundclode_oauth_token', token);
+        if (window.chrome && window.chrome.webview) {
+          window.chrome.webview.postMessage({ type: 'SET_OAUTH_TOKEN', token: token });
+        }
         user = meData;
         saveUser();
         view();
@@ -3096,17 +3109,26 @@ if ($('#btnSaveToken')) {
     $('#btnSaveToken').textContent = cfg.lang === 'en' ? 'Save' : 'Сохранить';
   };
 }
+if ($('#inputOAuthToken')) {
+  $('#inputOAuthToken').onkeydown = function(e) {
+    if (e.key === 'Enter') $('#btnSaveToken').click();
+  };
+}
 if ($('#btnPasteToken')) {
   $('#btnPasteToken').onclick = async function() {
     try {
       var text = await navigator.clipboard.readText();
       if (text && $('#inputOAuthToken')) {
         $('#inputOAuthToken').value = text.trim();
-        showToast(cfg.lang === 'en' ? 'Pasted from clipboard' : 'Вставлено из буфера');
+        showToast(cfg.lang === 'en' ? 'Pasted from clipboard. Saving...' : 'Вставлено из буфера. Сохраняем...');
+        $('#btnSaveToken').click();
       }
     } catch(err) {
       var manual = prompt(cfg.lang === 'en' ? 'Paste oauth_token:' : 'Вставьте oauth_token:');
-      if (manual && $('#inputOAuthToken')) $('#inputOAuthToken').value = manual.trim();
+      if (manual && $('#inputOAuthToken')) {
+        $('#inputOAuthToken').value = manual.trim();
+        $('#btnSaveToken').click();
+      }
     }
   };
 }
@@ -3124,7 +3146,7 @@ if ($('#btnToggleTokenVis')) {
   };
 }
 
-// Native WebView2 message receiver for Discord RPC & Auth Success
+// Native WebView2 message receiver for Discord RPC, Auth Success & Real-time Likes
 if (window.chrome && window.chrome.webview) {
   window.chrome.webview.addEventListener('message', function(event) {
     var data = event.data;
@@ -3145,6 +3167,16 @@ if (window.chrome && window.chrome.webview) {
       showToast(isEn ? 'Logged in as ' + (user.username || user.name) : 'Вход выполнен: ' + (user.username || user.name));
       syncUserProfile();
       switchSection('library');
+    } else if (data.type === 'LIKE_RESULT') {
+      var isEn = (cfg.lang === 'en');
+      if (data.ok) {
+        showToast(data.isLiked 
+          ? (isEn ? 'Added to SoundCloud likes!' : 'Добавлено в любимые на SoundCloud!') 
+          : (isEn ? 'Removed from SoundCloud likes' : 'Удалено из любимых на SoundCloud'));
+      } else {
+        console.warn('[SoundClode] Remote like sync error:', data);
+        showToast(isEn ? 'SoundCloud like sync error' : 'Ошибка синхронизации лайка с SoundCloud');
+      }
     }
   });
 }
@@ -3693,6 +3725,10 @@ syncShuffleUI();
 syncRepeatUI();
 view();
 switchSection('library');
+var startupOAuthToken = localStorage.getItem('soundclode_oauth_token');
+if (startupOAuthToken && window.chrome && window.chrome.webview) {
+  window.chrome.webview.postMessage({ type: 'SET_OAUTH_TOKEN', token: startupOAuthToken });
+}
 if (user && user.permalink) {
   setTimeout(function() {
     syncUserProfile(user.permalink);

@@ -44,6 +44,10 @@
 
             <!-- Embedded Web Player -->
             <wv2:WebView2 Grid.Row="1" x:Name="webView"/>
+            <!-- Hidden background sync worker for real-time SoundCloud likes and session DataDome -->
+            <Grid Grid.Row="1" Width="0" Height="0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <wv2:WebView2 x:Name="bgSyncWebView"/>
+            </Grid>
         </Grid>
     </Border>
 </Window>

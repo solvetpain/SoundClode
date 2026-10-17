@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -94,6 +95,23 @@ namespace SoundCloudNative
                 webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
                 webView.CoreWebView2.Settings.AreDevToolsEnabled = false;
 
+                // Initialize background sync worker sharing same profile
+                await bgSyncWebView.EnsureCoreWebView2Async(_env);
+                bgSyncWebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
+                bgSyncWebView.CoreWebView2.Settings.AreDevToolsEnabled = false;
+                bgSyncWebView.CoreWebView2.WebMessageReceived += (s, args) =>
+                {
+                    try
+                    {
+                        // Forward like results or background messages to frontend
+                        webView.CoreWebView2.PostWebMessageAsJson(args.WebMessageAsJson);
+                    }
+                    catch { }
+                };
+
+                // Warm up DataDome session in background
+                _ = EnsureBgSyncReadyAsync();
+
                 // Proxy SoundCloud API and Waveform requests to bypass any CORS restrictions
                 webView.CoreWebView2.AddWebResourceRequestedFilter("https://api-v2.soundcloud.com/*", CoreWebView2WebResourceContext.All);
                 webView.CoreWebView2.AddWebResourceRequestedFilter("https://wave.sndcdn.com/*", CoreWebView2WebResourceContext.All);
@@ -103,6 +121,13 @@ namespace SoundCloudNative
                     var deferral = args.GetDeferral();
                     try
                     {
+                        if (args.Request.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var corsHeaders = "Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: *\r\nAccess-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\nAccess-Control-Max-Age: 86400\r\nContent-Type: text/plain\r\n";
+                            args.Response = webView.CoreWebView2.Environment.CreateWebResourceResponse(new MemoryStream(), 200, "OK", corsHeaders);
+                            return;
+                        }
+
                         var method = new HttpMethod(args.Request.Method);
                         using var req = new HttpRequestMessage(method, args.Request.Uri);
                         req.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36");
@@ -136,7 +161,7 @@ namespace SoundCloudNative
                     }
                 };
 
-                // Handle IPC messages from HTML client (Discord RPC, Auth, etc.)
+                // Handle IPC messages from HTML client (Discord RPC, Auth, Likes, etc.)
                 webView.CoreWebView2.WebMessageReceived += (s, args) =>
                 {
                     try
@@ -165,6 +190,27 @@ namespace SoundCloudNative
                                     _discordRpc?.UpdateActivity(title, artist, artwork, duration, current, playing);
                                 }
                             }
+                            else if (type == "LIKE_TRACK")
+                            {
+                                long trackId = root.TryGetProperty("trackId", out var tidProp) ? tidProp.GetInt64() : 0;
+                                bool isLiked = root.TryGetProperty("isLiked", out var likProp) && likProp.GetBoolean();
+                                string? token = root.TryGetProperty("token", out var tokProp) ? tokProp.GetString() : null;
+                                long userId = root.TryGetProperty("userId", out var uidProp) ? uidProp.GetInt64() : 0;
+
+                                if (trackId > 0 && userId > 0 && !string.IsNullOrEmpty(token))
+                                {
+                                    _ = ExecuteTrackLikeAsync(trackId, isLiked, token, userId);
+                                }
+                            }
+                            else if (type == "SET_OAUTH_TOKEN")
+                            {
+                                string? token = root.TryGetProperty("token", out var tokProp) ? tokProp.GetString() : null;
+                                if (!string.IsNullOrEmpty(token))
+                                {
+                                    _bgSyncReady = false;
+                                    _ = EnsureBgSyncReadyAsync(token);
+                                }
+                            }
                             else if (type == "OPEN_AUTH")
                             {
                                 string? provider = root.TryGetProperty("provider", out var p) ? p.GetString() : null;
@@ -173,7 +219,10 @@ namespace SoundCloudNative
                             else if (type == "LOGOUT")
                             {
                                 _discordRpc?.ClearActivity();
+                                _bgSyncReady = false;
+                                _cachedOAuthToken = null;
                                 webView.CoreWebView2.CookieManager.DeleteAllCookies();
+                                bgSyncWebView.CoreWebView2.CookieManager.DeleteAllCookies();
                             }
                         }
                     }
@@ -190,6 +239,94 @@ namespace SoundCloudNative
             catch (Exception ex)
             {
                 MessageBox.Show("Ошибка запуска SoundClode: " + ex.Message);
+            }
+        }
+
+        private bool _bgSyncReady = false;
+        private string? _cachedOAuthToken = null;
+
+        private async Task EnsureBgSyncReadyAsync(string? token = null)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(token))
+                {
+                    _cachedOAuthToken = token;
+                    var oauthCookie = bgSyncWebView.CoreWebView2.CookieManager.CreateCookie("oauth_token", token, ".soundcloud.com", "/");
+                    oauthCookie.IsSecure = true;
+                    oauthCookie.SameSite = CoreWebView2CookieSameSiteKind.Lax;
+                    bgSyncWebView.CoreWebView2.CookieManager.AddOrUpdateCookie(oauthCookie);
+                }
+
+                if (!_bgSyncReady)
+                {
+                    var tcs = new TaskCompletionSource<bool>();
+                    void OnNavCompleted(object? s, CoreWebView2NavigationCompletedEventArgs e)
+                    {
+                        bgSyncWebView.NavigationCompleted -= OnNavCompleted;
+                        tcs.TrySetResult(true);
+                    }
+                    bgSyncWebView.NavigationCompleted += OnNavCompleted;
+                    bgSyncWebView.CoreWebView2.Navigate("https://soundcloud.com");
+
+                    await Task.WhenAny(tcs.Task, Task.Delay(6000));
+                    await Task.Delay(2000); // Allow DataDome JavaScript to execute and issue datadome cookie
+                    _bgSyncReady = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("[SoundClode] BgSync error: " + ex.Message);
+            }
+        }
+
+        private async Task ExecuteTrackLikeAsync(long trackId, bool isLiked, string token, long userId)
+        {
+            try
+            {
+                await EnsureBgSyncReadyAsync(token);
+
+                string method = isLiked ? "PUT" : "DELETE";
+                string isLikedStr = isLiked ? "true" : "false";
+                string script = $@"
+                    (async () => {{
+                        try {{
+                            const r = await fetch('https://api-v2.soundcloud.com/users/{userId}/track_likes/{trackId}?client_id=tHVbSbDP4TaoMbPppngv6Tdry83vNbMQ', {{
+                                method: '{method}',
+                                headers: {{
+                                    'Authorization': 'OAuth {token}',
+                                    'Accept': 'application/json, text/javascript, */*; q=0.01'
+                                }}
+                            }});
+                            const body = await r.text();
+                            window.chrome.webview.postMessage(JSON.stringify({{
+                                type: 'LIKE_RESULT',
+                                trackId: {trackId},
+                                isLiked: {isLikedStr},
+                                status: r.status,
+                                ok: r.ok,
+                                body: body
+                            }}));
+                        }} catch(e) {{
+                            window.chrome.webview.postMessage(JSON.stringify({{
+                                type: 'LIKE_RESULT',
+                                trackId: {trackId},
+                                isLiked: {isLikedStr},
+                                ok: false,
+                                error: (e || '').toString()
+                            }}));
+                        }}
+                    }})()
+                ";
+
+                if (bgSyncWebView?.CoreWebView2 != null)
+                {
+                    await bgSyncWebView.CoreWebView2.ExecuteScriptAsync(script);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("[SoundClode] Like execution error: " + ex.Message);
             }
         }
 
@@ -242,7 +379,67 @@ namespace SoundCloudNative
 
                     authWebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
                     authWebView.CoreWebView2.Settings.AreDevToolsEnabled = false;
-                    authWebView.CoreWebView2.Settings.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+                    authWebView.CoreWebView2.Settings.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+                    await authWebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("try { delete window.chrome.webview; } catch(e){} Object.defineProperty(navigator, 'webdriver', {get: () => undefined});");
+
+                    bool authCompleted = false;
+                    async Task HandleTokenFound(string oauthToken)
+                    {
+                        if (authCompleted || string.IsNullOrWhiteSpace(oauthToken)) return;
+                        authCompleted = true;
+
+                        try
+                        {
+                            using var req = new HttpRequestMessage(HttpMethod.Get, "https://api-v2.soundcloud.com/me");
+                            req.Headers.Add("Authorization", "OAuth " + oauthToken);
+                            req.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36");
+                            var resp = await _httpClient.SendAsync(req);
+                            if (resp.IsSuccessStatusCode)
+                            {
+                                var userJson = await resp.Content.ReadAsStringAsync();
+                                Dispatcher.Invoke(() =>
+                                {
+                                    webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new
+                                    {
+                                        type = "AUTH_SUCCESS",
+                                        token = oauthToken,
+                                        user = JsonSerializer.Deserialize<JsonElement>(userJson)
+                                    }));
+                                    try { currentPopup?.Close(); } catch { }
+                                    try { authWin.Close(); } catch { }
+                                });
+                            }
+                            else
+                            {
+                                authCompleted = false;
+                            }
+                        }
+                        catch
+                        {
+                            authCompleted = false;
+                        }
+                    }
+
+                    // Intercept network requests for immediate Authorization OAuth header detection
+                    authWebView.CoreWebView2.WebResourceResponseReceived += async (s, e) =>
+                    {
+                        try
+                        {
+                            if (e.Request.Headers.Contains("Authorization"))
+                            {
+                                var auth = e.Request.Headers.GetHeader("Authorization");
+                                if (auth.StartsWith("OAuth ", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    var tok = auth.Substring(6).Trim();
+                                    if (!string.IsNullOrEmpty(tok))
+                                    {
+                                        await HandleTokenFound(tok);
+                                    }
+                                }
+                            }
+                        }
+                        catch { }
+                    };
 
                     // Handle OAuth popups (Google, Apple, Facebook) into a proper separate popup window
                     authWebView.CoreWebView2.NewWindowRequested += async (sender, args) =>
@@ -253,8 +450,8 @@ namespace SoundCloudNative
                             var popupWin = new Window
                             {
                                 Title = "SoundClode — Google / Apple Авторизация",
-                                Width = 520,
-                                Height = 680,
+                                Width = 560,
+                                Height = 700,
                                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                                 Owner = authWin,
                                 Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.White),
@@ -269,7 +466,8 @@ namespace SoundCloudNative
 
                             popupWv.CoreWebView2.Settings.IsStatusBarEnabled = false;
                             popupWv.CoreWebView2.Settings.AreDevToolsEnabled = false;
-                            popupWv.CoreWebView2.Settings.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+                            popupWv.CoreWebView2.Settings.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+                            await popupWv.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("try { delete window.chrome.webview; } catch(e){} Object.defineProperty(navigator, 'webdriver', {get: () => undefined});");
 
                             popupWv.CoreWebView2.WindowCloseRequested += (s, e) =>
                             {
@@ -279,20 +477,28 @@ namespace SoundCloudNative
                                 });
                             };
 
-                            popupWv.CoreWebView2.NewWindowRequested += (s2, e2) =>
+                            popupWv.CoreWebView2.WebResourceResponseReceived += async (s, e) =>
                             {
-                                e2.Handled = true;
-                                if (!string.IsNullOrEmpty(e2.Uri)) popupWv.CoreWebView2.Navigate(e2.Uri);
+                                try
+                                {
+                                    if (e.Request.Headers.Contains("Authorization"))
+                                    {
+                                        var auth = e.Request.Headers.GetHeader("Authorization");
+                                        if (auth.StartsWith("OAuth ", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            var tok = auth.Substring(6).Trim();
+                                            if (!string.IsNullOrEmpty(tok))
+                                            {
+                                                await HandleTokenFound(tok);
+                                            }
+                                        }
+                                    }
+                                }
+                                catch { }
                             };
 
                             args.NewWindow = popupWv.CoreWebView2;
-
                             popupWin.Show();
-
-                            if (!string.IsNullOrEmpty(args.Uri))
-                            {
-                                popupWv.CoreWebView2.Navigate(args.Uri);
-                            }
                         }
                         catch (Exception ex)
                         {
@@ -304,21 +510,17 @@ namespace SoundCloudNative
                         }
                     };
 
-                    var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(750) };
+                    var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
                     timer.Tick += async (ts, te) =>
                     {
+                        if (authCompleted) return;
                         try
                         {
-                            var cookies = await authWebView.CoreWebView2.CookieManager.GetCookiesAsync("https://soundcloud.com");
-                            if (cookies == null || cookies.Count == 0)
-                            {
-                                cookies = await authWebView.CoreWebView2.CookieManager.GetCookiesAsync("https://secure.soundcloud.com");
-                            }
-
+                            var cookies = await authWebView.CoreWebView2.CookieManager.GetCookiesAsync("");
                             string? oauthToken = null;
                             foreach (var c in cookies)
                             {
-                                if (c.Name == "oauth_token")
+                                if (c.Name == "oauth_token" && !string.IsNullOrWhiteSpace(c.Value))
                                 {
                                     oauthToken = c.Value;
                                     break;
@@ -327,24 +529,7 @@ namespace SoundCloudNative
 
                             if (!string.IsNullOrEmpty(oauthToken))
                             {
-                                timer.Stop();
-
-                                using var req = new HttpRequestMessage(HttpMethod.Get, "https://api-v2.soundcloud.com/me");
-                                req.Headers.Add("Authorization", "OAuth " + oauthToken);
-                                req.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36");
-                                var resp = await _httpClient.SendAsync(req);
-                                if (resp.IsSuccessStatusCode)
-                                {
-                                    var userJson = await resp.Content.ReadAsStringAsync();
-                                    webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new
-                                      {
-                                          type = "AUTH_SUCCESS",
-                                          token = oauthToken,
-                                          user = JsonSerializer.Deserialize<JsonElement>(userJson)
-                                      }));
-                                    try { currentPopup?.Close(); } catch { }
-                                    authWin.Close();
-                                }
+                                await HandleTokenFound(oauthToken);
                             }
                         }
                         catch { }
