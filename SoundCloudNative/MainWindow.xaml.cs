@@ -68,6 +68,36 @@ namespace SoundCloudNative
         private const int ICON_SMALL = 0;
         private const int ICON_BIG = 1;
 
+        private static string GetOrExtractAssetPath(string fileName)
+        {
+            try
+            {
+                var localPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
+                if (File.Exists(localPath)) return localPath;
+
+                var assetsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SoundClode", "Assets");
+                Directory.CreateDirectory(assetsDir);
+                var targetPath = Path.Combine(assetsDir, fileName);
+
+                var asm = System.Reflection.Assembly.GetExecutingAssembly();
+                var resName = System.Linq.Enumerable.FirstOrDefault(asm.GetManifestResourceNames(), n => n.EndsWith(fileName, StringComparison.OrdinalIgnoreCase));
+                if (resName != null)
+                {
+                    using var s = asm.GetManifestResourceStream(resName);
+                    if (s != null)
+                    {
+                        using var fs = new FileStream(targetPath, FileMode.Create, FileAccess.Write);
+                        s.CopyTo(fs);
+                    }
+                }
+                return File.Exists(targetPath) ? targetPath : localPath;
+            }
+            catch
+            {
+                return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
+            }
+        }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -77,7 +107,7 @@ namespace SoundCloudNative
 
             try
             {
-                var icoPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "soundcloud.ico");
+                var icoPath = GetOrExtractAssetPath("soundcloud.ico");
                 if (File.Exists(icoPath))
                 {
                     Icon = System.Windows.Media.Imaging.BitmapFrame.Create(new Uri(icoPath));
@@ -89,7 +119,7 @@ namespace SoundCloudNative
             {
                 try
                 {
-                    var icoPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "soundcloud.ico");
+                    var icoPath = GetOrExtractAssetPath("soundcloud.ico");
                     if (File.Exists(icoPath))
                     {
                         var helper = new System.Windows.Interop.WindowInteropHelper(this);
@@ -178,6 +208,7 @@ namespace SoundCloudNative
                 _ = EnsureBgSyncReadyAsync();
 
                 // Proxy SoundCloud API, Waveform, and asset requests to bypass any CORS restrictions
+                webView.CoreWebView2.AddWebResourceRequestedFilter("https://soundclode.local/*", CoreWebView2WebResourceContext.All);
                 webView.CoreWebView2.AddWebResourceRequestedFilter("https://api-v2.soundcloud.com/*", CoreWebView2WebResourceContext.All);
                 webView.CoreWebView2.AddWebResourceRequestedFilter("https://wave.sndcdn.com/*", CoreWebView2WebResourceContext.All);
                 webView.CoreWebView2.AddWebResourceRequestedFilter("https://soundcloud.com/*", CoreWebView2WebResourceContext.All);
@@ -188,6 +219,27 @@ namespace SoundCloudNative
                     var deferral = args.GetDeferral();
                     try
                     {
+                        if (args.Request.Uri.StartsWith("https://soundclode.local", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var localUri = new Uri(args.Request.Uri);
+                            var localPath = localUri.AbsolutePath.TrimStart('/');
+                            if (string.IsNullOrEmpty(localPath) || localPath.Equals("index.html", StringComparison.OrdinalIgnoreCase))
+                            {
+                                var asm = System.Reflection.Assembly.GetExecutingAssembly();
+                                var htmlRes = System.Linq.Enumerable.FirstOrDefault(asm.GetManifestResourceNames(), n => n.EndsWith("index.html", StringComparison.OrdinalIgnoreCase));
+                                if (htmlRes != null)
+                                {
+                                    var resStream = asm.GetManifestResourceStream(htmlRes);
+                                    if (resStream != null)
+                                    {
+                                        var localHeaders = "Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: *\r\nAccess-Control-Allow-Methods: *\r\nContent-Type: text/html; charset=utf-8\r\n";
+                                        args.Response = webView.CoreWebView2.Environment.CreateWebResourceResponse(resStream, 200, "OK", localHeaders);
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+
                         if (args.Request.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
                         {
                             var corsHeaders = "Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: *\r\nAccess-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\nAccess-Control-Max-Age: 86400\r\nContent-Type: text/plain\r\n";
@@ -319,8 +371,9 @@ namespace SoundCloudNative
                     }
                 };
 
-                var appDir = AppDomain.CurrentDomain.BaseDirectory;
-                webView.CoreWebView2.SetVirtualHostNameToFolderMapping("soundclode.local", appDir, CoreWebView2HostResourceAccessKind.Allow);
+                var localHtml = GetOrExtractAssetPath("index.html");
+                var htmlFolder = Path.GetDirectoryName(localHtml) ?? AppDomain.CurrentDomain.BaseDirectory;
+                webView.CoreWebView2.SetVirtualHostNameToFolderMapping("soundclode.local", htmlFolder, CoreWebView2HostResourceAccessKind.Allow);
                 webView.Source = new Uri("https://soundclode.local/index.html");
 
                 // Broadcast fresh scraped client ID on launch

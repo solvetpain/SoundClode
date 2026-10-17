@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>soundcloud.ico</ApplicationIcon>
+    <AssemblyName>SoundClode</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="index.html" />
+    <EmbeddedResource Include="soundcloud.ico" />
     <None Update="index.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
