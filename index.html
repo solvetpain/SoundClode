@@ -783,7 +783,7 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
 
       <button class="altbtn" id="btnByLink">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-        Загрузить raisethedead
+        Войти по нику или ссылке
       </button>
     </div>
 
@@ -797,7 +797,7 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
     <h2 id="modalTitle">Синхронизация SoundCloud</h2>
     <p id="modalDesc">Ссылка на ваш профиль SoundCloud или никнейм:</p>
     
-    <input id="inputProfile" value="https://soundcloud.com/vetcs" placeholder="https://soundcloud.com/vetcs" autocomplete="off">
+    <input id="inputProfile" value="" placeholder="например: nick или https://soundcloud.com/ваш_ник" autocomplete="off">
     <div id="authStatus" style="font-size:12px;color:var(--mut);margin-bottom:10px" hidden></div>
     
     <div class="row">
@@ -838,7 +838,7 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
       <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     </button>
     
-    <button id="av" title="Мой профиль raisethedead" aria-label="Профиль"></button>
+    <button id="av" title="Мой профиль" aria-label="Профиль"></button>
   </header>
 
   <main>
@@ -1079,14 +1079,14 @@ var hls = null;
 
 // Initial seed
 try {
-  user = JSON.parse(localStorage.getItem('soundclode_user') || 'null') || window.SEED_USER;
+  user = JSON.parse(localStorage.getItem('soundclode_user') || 'null');
   if (user && user.avatar_url && user.avatar_url.includes('avatars-ENkpB1PZhpwWbu03')) {
     user.avatar_url = 'https://i1.sndcdn.com/avatars-ENkpB1PZhpwWbu1y-5EjzbQ-large.jpg';
     saveUser();
   }
-  libraryTracks = JSON.parse(localStorage.getItem('soundclode_tracks') || 'null') || window.SEED_TRACKS || [];
-  feedTracks = window.SEED_FEED_TRACKS || [];
-  followings = window.SEED_FOLLOWINGS || [];
+  libraryTracks = JSON.parse(localStorage.getItem('soundclode_tracks') || 'null') || [];
+  feedTracks = JSON.parse(localStorage.getItem('soundclode_feed') || 'null') || [];
+  followings = JSON.parse(localStorage.getItem('soundclode_followings') || 'null') || [];
   
   likes = JSON.parse(localStorage.getItem('soundclode_likes') || 'null');
   if (!likes || !Object.keys(likes).length) {
@@ -2669,7 +2669,8 @@ $('.vol-wrap').onwheel = function(e) {
 // SYNC PROFILE & LOAD TRACKS
 async function syncUserProfile(profileInput) {
   var clean = (profileInput || '').trim().replace(/^https?:\/\/(www\.)?soundcloud\.com\//, '').replace(/\/$/, '').replace(/^@/, '');
-  if (!clean) clean = (user && (user.permalink || user.username)) || 'vetcs';
+  if (!clean) clean = (user && (user.permalink || user.username));
+  if (!clean) return;
 
   try {
     // 1. Resolve user profile info to keep avatar, username, followers up to date
@@ -2685,7 +2686,8 @@ async function syncUserProfile(profileInput) {
       }
     }
 
-    var uid = (user && user.id) ? user.id : 1531003096;
+    if (!user || !user.id) return;
+    var uid = user.id;
     var likesRes = await fetch('https://api-v2.soundcloud.com/users/' + uid + '/likes?client_id=' + clientId + '&limit=100');
     if (likesRes.ok) {
       var likesData = await likesRes.json();
@@ -2716,38 +2718,44 @@ $('#btnSync').onclick = function() {
     icon.style.transition = 'transform 0.6s ease';
     setTimeout(function(){ icon.style.transform = 'none'; icon.style.transition = 'none'; }, 600);
   }
-  syncUserProfile((user && user.permalink) || 'vetcs');
+  if (user && user.permalink) syncUserProfile(user.permalink);
 };
 
 $('#gin').onclick = function() {
   window.open('https://soundcloud.com/signin', '_blank', 'width=600,height=700');
   var isEn = (cfg.lang === 'en');
   $('#modalTitle').textContent = isEn ? 'Sign in via Google' : 'Вход через Google';
-  $('#modalDesc').textContent = isEn ? 'After signing in to SoundCloud via Google, click "Load tracks":' : 'После входа в SoundCloud через Google, нажмите «Загрузить треки»:';
-  $('#inputProfile').value = (user && user.permalink) ? 'https://soundcloud.com/' + user.permalink : 'https://soundcloud.com/vetcs';
+  $('#modalDesc').textContent = isEn ? 'After signing in to SoundCloud via Google, click "Load tracks":' : 'После входа в SoundCloud через Google, введите ваш никнейм:';
+  $('#inputProfile').value = (user && user.permalink) ? 'https://soundcloud.com/' + user.permalink : '';
   $('#btnSyncGo').textContent = isEn ? 'Load tracks' : 'Загрузить треки';
   $('#btnModalCancel').textContent = isEn ? 'Cancel' : 'Отмена';
   $('#modal').hidden = false;
   $('#inputProfile').focus();
 };
-$('#btnByLink').onclick = async function() {
-  user = window.SEED_USER;
-  saveUser();
-  view();
-  switchSection('library');
-  syncUserProfile('vetcs');
+$('#btnByLink').onclick = function() {
+  var isEn = (cfg.lang === 'en');
+  $('#modalTitle').textContent = isEn ? 'Sign in to SoundCloud' : 'Вход в SoundCloud';
+  $('#modalDesc').textContent = isEn ? 'Enter your SoundCloud profile link or username:' : 'Введите никнейм или ссылку на ваш профиль:';
+  $('#inputProfile').value = '';
+  $('#inputProfile').placeholder = isEn ? 'e.g. username or https://soundcloud.com/...' : 'например: nick или https://soundcloud.com/...';
+  $('#btnSyncGo').textContent = isEn ? 'Log in' : 'Войти';
+  $('#btnModalCancel').textContent = isEn ? 'Cancel' : 'Отмена';
+  $('#modal').hidden = false;
+  $('#inputProfile').focus();
 };
 $('#btnModalCancel').onclick = function() { $('#modal').hidden = true; };
 $('#btnSyncGo').onclick = async function() {
   var val = ($('#inputProfile').value || '').trim();
-  $('#modal').hidden = true;
-  if (!user) {
-    user = window.SEED_USER;
-    saveUser();
+  if (!val) {
+    alert(cfg.lang === 'en' ? 'Please enter a username or profile link' : 'Пожалуйста, введите никнейм или ссылку на профиль');
+    return;
   }
+  $('#btnSyncGo').textContent = cfg.lang === 'en' ? 'Loading...' : 'Загрузка...';
+  await syncUserProfile(val);
+  $('#btnSyncGo').textContent = cfg.lang === 'en' ? 'Log in' : 'Войти';
+  $('#modal').hidden = true;
   view();
   switchSection('library');
-  await syncUserProfile(val || 'vetcs');
 };
 
 // HOTKEYS
@@ -3224,9 +3232,9 @@ syncShuffleUI();
 syncRepeatUI();
 view();
 switchSection('library');
-if (user) {
+if (user && user.permalink) {
   setTimeout(function() {
-    syncUserProfile((user && user.permalink) || 'vetcs');
+    syncUserProfile(user.permalink);
   }, 800);
 }
 </script>
