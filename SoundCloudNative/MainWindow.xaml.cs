@@ -12,9 +12,10 @@ namespace SoundCloudNative
 {
     public partial class MainWindow : Window
     {
-        private bool _isPinned;
         private static readonly HttpClient _httpClient = new HttpClient();
         private DiscordRpcClient? _discordRpc;
+        private CoreWebView2Environment? _env;
+        private Window? _currentAuthWin;
 
         [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true, CharSet = System.Runtime.InteropServices.CharSet.Auto)]
         private static extern IntPtr LoadImage(IntPtr hinst, string lpszName, uint uType, int cxDesired, int cyDesired, uint fuLoad);
@@ -87,8 +88,8 @@ namespace SoundCloudNative
             {
                 var userDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SoundClode", "WebViewProfile");
                 var options = new CoreWebView2EnvironmentOptions("--disable-web-security --allow-running-insecure-content");
-                var env = await CoreWebView2Environment.CreateAsync(null, userDataDir, options);
-                await webView.EnsureCoreWebView2Async(env);
+                _env = await CoreWebView2Environment.CreateAsync(null, userDataDir, options);
+                await webView.EnsureCoreWebView2Async(_env);
 
                 webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
                 webView.CoreWebView2.Settings.AreDevToolsEnabled = false;
@@ -186,92 +187,102 @@ namespace SoundCloudNative
         {
             Dispatcher.Invoke(async () =>
             {
-                var authWin = new Window
+                try
                 {
-                    Title = "SoundClode — Вход в SoundCloud",
-                    Width = 560,
-                    Height = 720,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                    Owner = this,
-                    Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(15, 17, 23)),
-                    ResizeMode = ResizeMode.CanResize
-                };
+                    if (_currentAuthWin != null && _currentAuthWin.IsVisible)
+                    {
+                        _currentAuthWin.Activate();
+                        return;
+                    }
 
-                var authWebView = new Microsoft.Web.WebView2.Wpf.WebView2();
-                authWin.Content = authWebView;
-
-                authWin.Loaded += async (s, e) =>
-                {
-                    try
+                    if (_env == null)
                     {
                         var userDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SoundClode", "WebViewProfile");
                         var options = new CoreWebView2EnvironmentOptions("--disable-web-security --allow-running-insecure-content");
-                        var env = await CoreWebView2Environment.CreateAsync(null, userDataDir, options);
-                        await authWebView.EnsureCoreWebView2Async(env);
+                        _env = await CoreWebView2Environment.CreateAsync(null, userDataDir, options);
+                    }
 
-                        authWebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
-                        authWebView.CoreWebView2.Settings.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+                    var authWin = new Window
+                    {
+                        Title = "SoundClode — Вход в SoundCloud",
+                        Width = 560,
+                        Height = 720,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                        Owner = this,
+                        Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(18, 19, 24)),
+                        ResizeMode = ResizeMode.CanResize
+                    };
+                    _currentAuthWin = authWin;
 
-                        authWebView.CoreWebView2.NewWindowRequested += (sender, args) =>
+                    var authWebView = new Microsoft.Web.WebView2.Wpf.WebView2();
+                    authWin.Content = authWebView;
+
+                    authWin.Closed += (s, e) => { _currentAuthWin = null; };
+                    authWin.Show(); // non-blocking!
+
+                    await authWebView.EnsureCoreWebView2Async(_env);
+
+                    authWebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
+                    authWebView.CoreWebView2.Settings.AreDevToolsEnabled = false;
+                    authWebView.CoreWebView2.Settings.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+
+                    authWebView.CoreWebView2.NewWindowRequested += (sender, args) =>
+                    {
+                        var deferral = args.GetDeferral();
+                        args.Handled = true;
+                        authWebView.CoreWebView2.Navigate(args.Uri);
+                        deferral.Complete();
+                    };
+
+                    var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(750) };
+                    timer.Tick += async (ts, te) =>
+                    {
+                        try
                         {
-                            var deferral = args.GetDeferral();
-                            args.Handled = true;
-                            authWebView.CoreWebView2.Navigate(args.Uri);
-                            deferral.Complete();
-                        };
-
-                        var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-                        timer.Tick += async (ts, te) =>
-                        {
-                            try
+                            var cookies = await authWebView.CoreWebView2.CookieManager.GetCookiesAsync("https://soundcloud.com");
+                            string? oauthToken = null;
+                            foreach (var c in cookies)
                             {
-                                var cookies = await authWebView.CoreWebView2.CookieManager.GetCookiesAsync("https://soundcloud.com");
-                                string? oauthToken = null;
-                                foreach (var c in cookies)
+                                if (c.Name == "oauth_token")
                                 {
-                                    if (c.Name == "oauth_token")
-                                    {
-                                        oauthToken = c.Value;
-                                        break;
-                                    }
-                                }
-
-                                if (!string.IsNullOrEmpty(oauthToken))
-                                {
-                                    timer.Stop();
-
-                                    using var req = new HttpRequestMessage(HttpMethod.Get, "https://api-v2.soundcloud.com/me");
-                                    req.Headers.Add("Authorization", "OAuth " + oauthToken);
-                                    req.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36");
-                                    var resp = await _httpClient.SendAsync(req);
-                                    if (resp.IsSuccessStatusCode)
-                                    {
-                                        var userJson = await resp.Content.ReadAsStringAsync();
-                                        webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new
-                                        {
-                                            type = "AUTH_SUCCESS",
-                                            token = oauthToken,
-                                            user = JsonSerializer.Deserialize<JsonElement>(userJson)
-                                        }));
-                                        authWin.Close();
-                                    }
+                                    oauthToken = c.Value;
+                                    break;
                                 }
                             }
-                            catch { }
-                        };
-                        timer.Start();
 
-                        authWin.Closed += (cs, ce) => timer.Stop();
+                            if (!string.IsNullOrEmpty(oauthToken))
+                            {
+                                timer.Stop();
 
-                        authWebView.Source = new Uri("https://soundcloud.com/signin");
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("Ошибка окна авторизации: " + ex.Message);
-                    }
-                };
+                                using var req = new HttpRequestMessage(HttpMethod.Get, "https://api-v2.soundcloud.com/me");
+                                req.Headers.Add("Authorization", "OAuth " + oauthToken);
+                                req.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36");
+                                var resp = await _httpClient.SendAsync(req);
+                                if (resp.IsSuccessStatusCode)
+                                {
+                                    var userJson = await resp.Content.ReadAsStringAsync();
+                                    webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new
+                                    {
+                                        type = "AUTH_SUCCESS",
+                                        token = oauthToken,
+                                        user = JsonSerializer.Deserialize<JsonElement>(userJson)
+                                    }));
+                                    authWin.Close();
+                                }
+                            }
+                        }
+                        catch { }
+                    };
+                    timer.Start();
 
-                authWin.ShowDialog();
+                    authWin.Closed += (cs, ce) => timer.Stop();
+
+                    authWebView.CoreWebView2.Navigate("https://soundcloud.com/signin");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Ошибка окна авторизации: " + ex.Message);
+                }
             });
         }
 

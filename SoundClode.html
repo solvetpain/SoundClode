@@ -1117,9 +1117,11 @@ var DEF_CFG = {
 var cfg = Object.assign({}, DEF_CFG);
 try {
   Object.assign(cfg, JSON.parse(localStorage.getItem('soundclode_cfg') || '{}'));
+  cfg.name = 'SoundClode';
   if (cfg.accent === 'orange' || !cfg.accent) cfg.accent = 'mono';
   if (!cfg.lang || (cfg.lang !== 'ru' && cfg.lang !== 'en')) cfg.lang = 'ru';
   if (!cfg.fd || cfg.fd === 'unb' || cfg.fd === 'fancy') cfg.fd = 'pts';
+  localStorage.setItem('soundclode_cfg', JSON.stringify(cfg));
 } catch(e) {}
 
 function saveCfg(){ try{ localStorage.setItem('soundclode_cfg', JSON.stringify(cfg)); }catch(e){} }
