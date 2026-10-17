@@ -1,0 +1,24 @@
+# Build and publish outputs
+bin/
+obj/
+publish/
+*.exe.config
+
+# User and IDE files
+*.user
+*.suo
+.vs/
+.idea/
+.vscode/
+
+# WebView2 Runtime and user profile data
+WebViewProfile/
+EBWebView/
+
+# OS and temp files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.tmp
+*.log

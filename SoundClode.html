@@ -1,0 +1,3234 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SoundClode</title>
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAR5SURBVHhe7ZvPTxtXEMcXIy8mBYEwyPwyP8Qv8yPYcAFXjZC4VAjhcOFGhAApPXGAAxZnnFy4OI2AFKSGCycskBB/AUdANXG5pxckfpM4geZQM9WMeQvxW+O1vRZV9430lXfGy9s3H8/O7nsSkiRJP0uS9NrAkt5IkgQGFlGIDRpJAoAAoBI0kgQAAUAlaCQJAAKAStBIEgAEAJWgkSQACAAqQSNJABAAVIJG0n8LQFNTEzx/7oHx8XEYHh6GZ89+gsLCQu48HfX4ACwWC0xMTMDe3h5E/olArB0fH8PKygp0dnZyf6uDHheA2+2GUCj0fcY3ADc3N6T7FolE4PWrV9wYaSqzAGTZDFarFWSzmfsOS/vi4iKa823CD4lZIBAAU7aJGy9FZQZAXl4efS4sLMDl5SX4ZmfBXlkJi4uLUFdXR798bW0tfP3yVTOA+xCWlpa4a6YofQG4XC7Y3t4Gr9dL/ubmJk14eXkZamtq6Pjq6gqCwX2oqKhIqgJiIXg8Hu76KUhfAB/292lyMzMz5AfWAuTPz89DVVWVMnm870tttpQAMAgHBweQnZ3NzSFJpQ8gR5ahpKSEjkMfog1tenqa/HgAgsEglJaWpgUAraenh5tPkkofwNtf38LY2BgdY2JoDMBahgAwCD7fLDefJJUeALvdThMZGhoiP/hHFIDXywCsZRTA+voGOJ1O+OXlS5icnIT+/n6lAWuUdgA48OjoKIyMjMAPT55QzOfz0UQGBgbIZxXAmuB9ANXV1boCQH37+5syJrOPf32EFy+GufnHkTYAJpMJOjo6lIs0NjaCLMtwcX5OPuvI8QAsaAEQ4RNMJGaxPtrU1BSXh4oeBpBrscD7399Dfn4+tLS0KIM3NDQQAHzGo8UCyHQTJD0AjFl3dzeXU1IA5ubmaCCsgObmZmXg+vp6AnAepwLummCaPeCBJBMJbWtri8tJM4CioiK4vr6GcDhMr56pAchgBSQQGs692GrlctMEoLe3lwY5PTnhKoDdAokB3PWAxwCA9vRpG5ebJgCeAQ8NcJIWgLsKqK5K0AR1FjOHo4nLTRMA1vTOzs44AFpvgftNMOFTIJ5S7ANoh4eHkJuby+WmCUBWVhZtUuBgePwdgAZtAJJ6DOosNL/fz+WlGQDqR7ebKgAfh6lUQKZfhOIJ7ejoCGw2G5dTUgBQuBWFZdTe3q4kwF6EPn/6RP7g4CCdy3Z32GpwY32D/N/evYOa2+Uw2p+hEJSVlUH4c1iJ6Wm4jdbV1cXloqLEAJja2tqUC+BmhtlshtPTU/L7+vronJ2dHfLxvRz91dVV8t/4/VBeXq78Oru7u1BcXAznZ9EK0svwV8e9B3zixM4/jrQDwLV3a2srCZsixvBWwMWInJNDvt1eSZsibEGCy2T0cVsMfYfDQT4uotDHSsJXbJfLSfF4cjpR7BwnOG8V/S76iT9QQUEBN+8E0g7gfyoBQABQCRpJAoAAoBI0kgQAAUAlaCQJAAKAStBIEgAEAJWgkSQACAAqQSPJ2P89/i96+/ulhsUpHAAAAABJRU5ErkJggg==">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Instrument+Sans:wght@400;500;600;700&family=PT+Serif+Caption:ital@0;1&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
+<script src="tracks.js"></script>
+<style>
+:root{
+  --bg:#07080a;
+  --card:#101115;
+  --card-hover:#17181f;
+  --ink:#ffffff;
+  --mut:#858899;
+  --a:#ffffff;
+  --b:#ffffff;
+  --onA:#000000;
+  --line:#20212b;
+  --wave:#2e303c;
+  --on:#ffffff;
+  --slider-bg:rgba(255,255,255,0.15);
+  color-scheme:dark;
+  box-sizing:border-box;
+}
+
+:root[data-theme="light"]{
+  --bg:#ffffff;
+  --card:#f2f3f7;
+  --card-hover:#e5e7ee;
+  --ink:#000000;
+  --mut:#66697a;
+  --a:#000000;
+  --b:#000000;
+  --onA:#ffffff;
+  --line:#d2d4de;
+  --wave:#c0c2cc;
+  --on:#000000;
+  --slider-bg:rgba(0,0,0,0.12);
+  color-scheme:light;
+}
+
+:root[data-accent="mono"]{--on:#ffffff;--b:#ffffff}
+:root[data-accent="orange"]{--on:#ffffff;--b:#ffffff}
+:root[data-accent="purple"]{--on:#ffffff;--b:#ffffff}
+:root[data-accent="green"]{--on:#ffffff;--b:#ffffff}
+
+:root[data-theme="light"][data-accent="mono"]{--on:#000000;--b:#000000}
+:root[data-theme="light"][data-accent="orange"]{--on:#000000;--b:#000000}
+:root[data-theme="light"][data-accent="purple"]{--on:#000000;--b:#000000}
+:root[data-theme="light"][data-accent="green"]{--on:#000000;--b:#000000}
+
+*{box-sizing:border-box}
+/* Sleek custom dark scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #272832;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3e4152;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #272832 transparent;
+}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font:400 15px/1.5 var(--fb, "Instrument Sans", system-ui, sans-serif);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+[hidden]{display:none!important}
+button,input{font:inherit;color:inherit;border:0;background:none}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--b);outline-offset:2px}
+h1,h2,.logo{font-family:var(--fd, Unbounded, system-ui, sans-serif);letter-spacing:-.03em}
+.logo{font-weight:800}
+
+/* LOGIN HERO */
+#login{min-height:100vh;display:grid;place-items:center;padding:24px;text-align:left}
+.hero{max-width:740px;width:100%}
+.hero h1{font-size:clamp(38px,11vw,88px);line-height:.92;margin:0 0 20px;font-weight:800}
+.hero .bars{display:flex;align-items:flex-end;gap:5px;height:65px;margin-bottom:28px}
+.hero .bars i{flex:1;background:var(--a);border-radius:3px;height:var(--h);animation:bob 1.6s ease-in-out infinite;animation-delay:var(--d)}
+.hero .bars i:nth-child(5n){opacity:.35}
+@keyframes bob{50%{transform:scaleY(.3)}}
+@media (prefers-reduced-motion:reduce){.hero .bars i{animation:none}}
+.hero p{max-width:50ch;color:var(--mut);margin:0 0 28px;font-size:17px}
+.auth-btns{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.gbtn{
+  display:inline-flex;align-items:center;gap:12px;
+  background:#fff;color:#1f1f1f;font-weight:700;font-size:15px;
+  padding:14px 24px;border-radius:var(--rp,999px);border:2px solid var(--ink);
+  transition:transform .15s, opacity .15s;
+}
+.gbtn:hover{transform:translateY(-1px);opacity:.95}
+.gbtn svg{width:20px;height:20px}
+.altbtn{
+  display:inline-flex;align-items:center;gap:10px;
+  background:var(--card);color:var(--ink);font-weight:600;font-size:15px;
+  padding:14px 22px;border-radius:var(--rp,999px);border:2px solid var(--line);
+  transition:border-color .15s, background .15s;
+}
+.altbtn:hover{border-color:var(--ink);background:var(--card-hover)}
+.note{font-size:13px;color:var(--mut);margin-top:18px}
+
+/* MODAL */
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:grid;place-items:center;padding:20px;z-index:60;backdrop-filter:blur(8px)}
+.box{background:var(--card);border-radius:var(--r,20px);padding:26px;width:min(440px,100%);border:2px solid var(--line)}
+.box h2{font-size:20px;margin:0 0 8px}
+.box p{color:var(--mut);font-size:13px;margin:0 0 16px}
+.box input{
+  width:100%;padding:13px 16px;margin-bottom:12px;border-radius:var(--rp,999px);
+  border:2px solid var(--line);background:var(--bg);color:var(--ink);
+}
+.box .row{display:flex;gap:10px;margin-top:8px}
+.btn{padding:12px 20px;border-radius:var(--rp,999px);font-weight:700;background:var(--ink);color:var(--bg);border:none;cursor:pointer}
+.btn.ghost{background:none;color:var(--ink);border:2px solid var(--line)}
+.btn.accent{background:var(--ink);color:var(--bg)}
+.btn:hover{opacity:.9}
+
+/* MAIN APP HEADER */
+header{
+  display:flex;align-items:center;gap:14px;
+  padding:14px clamp(16px,4vw,40px);
+  position:sticky;top:0;background:var(--bg);z-index:20;
+  border-bottom:1px solid var(--line);
+}
+header .logo{font-size:20px;cursor:pointer;flex-shrink:0}
+
+/* NAVIGATION TABS: Feed and Library (Exact match for SoundCloud / Photo 2) */
+.nav-links{display:flex;align-items:center;gap:20px;margin:0 4px 0 12px;flex-shrink:0}
+.nav-link{
+  font-family:var(--fb, "Instrument Sans", sans-serif);
+  font-size:16px;font-weight:700;color:var(--mut);
+  cursor:pointer;padding:8px 0;position:relative;
+  transition:color .2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav-link:hover{color:var(--ink)}
+.nav-link.active{color:var(--ink)}
+.nav-link.active::after{
+  content:'';position:absolute;bottom:-4px;left:0;right:0;height:2px;
+  background:var(--on);border-radius:2px;
+}
+
+.search-wrap{flex:1;position:relative;display:flex;align-items:center;min-width:180px}
+header input{
+  width:100%;padding:10px 38px 10px 16px;border-radius:var(--rp,999px);
+  border:2px solid var(--line);background:var(--card);color:var(--ink);
+  transition:border-color .2s ease, box-shadow .2s ease;font-size:14px;
+}
+header input:focus{border-color:var(--ink);box-shadow:0 0 12px rgba(255,255,255,0.06)}
+.search-icon{
+  position:absolute;right:14px;color:var(--mut);pointer-events:none;
+  display:grid;place-items:center;
+}
+.search-icon svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* GLOBAL 60FPS SMOOTH ANIMATIONS */
+button, input, select, .tab, .header-btn, .ctl, .btn, .altbtn, .back-btn, .album-card, .artist-chip, .following-card, .trk {
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes viewFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+#viewFeed:not([hidden]), #viewLibrary:not([hidden]), #viewSearch:not([hidden]), #viewProfile:not([hidden]) {
+  animation: viewFadeIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* SEARCH AUTOCOMPLETE DROPDOWN (Image 1 Parity) */
+.search-dropdown{
+  position:absolute;top:calc(100% + 8px);left:0;right:0;
+  background:var(--card);border:1px solid var(--line);
+  border-radius:14px;box-shadow:0 18px 48px rgba(0,0,0,0.4), 0 0 0 1px var(--line);
+  z-index:120;overflow:hidden;
+  animation:sdIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  max-height:420px;overflow-y:auto;
+}
+@keyframes sdIn{
+  from{opacity:0;transform:translateY(-8px) scale(0.98)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+.sd-header{
+  padding:12px 16px;font-size:13px;color:var(--mut);border-bottom:1px solid var(--line);
+  cursor:pointer;display:flex;align-items:center;gap:8px;
+  transition:all 0.15s ease;
+}
+.sd-header b{color:var(--ink)}
+.sd-header:hover, .sd-header.focused{
+  background:var(--card-hover);color:var(--ink);
+}
+.sd-item{
+  padding:10px 14px;display:flex;align-items:center;gap:12px;
+  cursor:pointer;transition:all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  color:var(--ink);text-decoration:none;
+}
+.sd-item:hover, .sd-item.focused{
+  background:var(--card-hover);
+}
+.sd-art{
+  width:32px;height:32px;border-radius:6px;background:var(--card-hover);
+  background-size:cover;background-position:center;flex-shrink:0;
+}
+.sd-art-user{
+  border-radius:50%;
+}
+.sd-text{
+  min-width:0;flex:1;display:flex;flex-direction:column;gap:2px;
+}
+.sd-title{
+  font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--ink);
+}
+.sd-sub{
+  font-size:11px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.sd-icon{
+  width:18px;height:18px;color:var(--mut);flex-shrink:0;margin-left:auto;
+  transition:color 0.15s;
+}
+.sd-item:hover .sd-icon, .sd-item.focused .sd-icon{
+  color:var(--ink);
+}
+.sd-loading{
+  padding:16px;text-align:center;font-size:13px;color:var(--mut);
+}
+
+.header-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:38px;height:38px;border-radius:50%;
+  border:1px solid var(--line);background:none;color:var(--ink);
+  transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);flex-shrink:0;
+}
+.header-btn:hover{border-color:var(--ink);background:var(--card);transform:scale(1.08)}
+.header-btn:active{transform:scale(0.92)}
+.header-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+
+#av{
+  width:38px;height:38px;border-radius:var(--rb,50%);
+  background:var(--card);color:var(--ink);font-weight:800;
+  display:grid;place-items:center;overflow:hidden;flex-shrink:0;
+  background-size:cover;background-position:center;border:1.5px solid var(--line);
+  cursor:pointer;transition:transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+#av:hover{transform:scale(1.08);border-color:var(--ink)}
+#av:active{transform:scale(0.94)}
+
+/* MAIN WORKSPACE */
+main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
+
+/* SUB TABS */
+.tabs{display:flex;gap:8px;margin-bottom:18px;align-items:center;flex-wrap:wrap}
+.tab{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:8px 18px;border-radius:var(--rp,999px);
+  border:2px solid var(--line);font-weight:600;font-size:14px;
+  transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor:pointer;
+}
+.tab svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+.tab:hover{border-color:var(--ink);transform:translateY(-1px)}
+.tab:active{transform:scale(0.96)}
+.tab[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab[aria-pressed="true"] svg{stroke:var(--bg)}
+.tabs .sp{flex:1}
+.cnt-tag{font-size:13px;color:var(--mut)}
+
+/* FEED STORIES / FOLLOWED ARTISTS BAR */
+.feed-section-title{
+  font-family:var(--fd, Unbounded, sans-serif);
+  font-size:16px;font-weight:700;margin:8px 0 16px;
+  letter-spacing:-.02em;display:flex;align-items:center;gap:10px;
+  scroll-margin-top:90px;
+}
+.artists-scroll{
+  display:flex;gap:14px;overflow-x:auto;
+  padding:20px 10px 18px 10px;margin:0 -10px 24px -10px;
+  scrollbar-width:thin;scrollbar-color:var(--line) transparent;
+}
+.artist-chip{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  background:var(--card);border:1px solid var(--line);
+  border-radius:18px;padding:12px 14px;min-width:104px;max-width:120px;
+  cursor:pointer;
+  transition:all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align:center;flex-shrink:0;
+  backface-visibility:hidden;
+  transform:translateZ(0);
+}
+.artist-chip:hover{
+  background:var(--card-hover);
+  border-color:var(--ink);
+  box-shadow:0 6px 20px rgba(0,0,0,0.25);
+  transform:scale(1.03);
+}
+.artist-chip-avatar{
+  width:52px;height:52px;border-radius:50%;overflow:hidden;background:var(--card-hover);
+  background-size:cover;background-position:center;border:2px solid var(--line);
+  transition:border-color 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.artist-chip:hover .artist-chip-avatar{
+  border-color:var(--ink);
+}
+.artist-chip-name{
+  font-size:12px;font-weight:600;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  transition:color 0.2s ease;
+}
+.artist-chip:hover .artist-chip-name{
+  color:var(--ink);
+}
+.artist-chip-stat{
+  font-size:11px;color:var(--mut);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* FOLLOWING GRID (Inside Library tab) */
+.following-grid{
+  display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:14px;
+  padding:12px 6px;margin:-8px -6px 0 -6px;
+}
+.following-card{
+  display:flex;align-items:center;gap:14px;background:var(--card);
+  border-radius:var(--r, 20px);padding:14px;border:1px solid var(--line);
+  cursor:pointer;
+  transition:all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  backface-visibility:hidden;
+  transform:translateZ(0);
+}
+.following-card:hover{
+  background:var(--card-hover);
+  border-color:var(--ink);
+  box-shadow:0 6px 20px rgba(0,0,0,0.2);
+  transform:translateY(-3px) scale(1.01);
+}
+.following-card-avatar{
+  width:52px;height:52px;border-radius:50%;background:var(--card-hover);
+  background-size:cover;background-position:center;flex-shrink:0;
+  border:2px solid var(--line);
+  transition:border-color 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.following-card:hover .following-card-avatar{
+  border-color:var(--ink);
+}
+.following-card-info{min-width:0;flex:1}
+.following-card-name{
+  font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  transition:color 0.2s ease;
+}
+.following-card:hover .following-card-name{
+  color:var(--ink);
+}
+.following-card-stat{
+  font-size:12px;color:var(--mut);margin-top:2px;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ARTIST PROFILE VIEW */
+#viewProfile{padding-top:4px}
+.back-btn{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 14px;
+  border-radius:var(--rp,999px);border:1px solid var(--line);
+  color:var(--mut);font-size:13px;font-weight:600;margin-bottom:16px;
+  transition:all .15s;
+}
+.back-btn:hover{color:var(--ink);border-color:var(--ink);background:var(--card)}
+.back-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+
+.prof-hero{
+  display:flex;gap:24px;align-items:center;background:var(--card);
+  border-radius:var(--r, 24px);padding:24px 28px;border:1px solid var(--line);
+  margin-bottom:24px;
+}
+.prof-avatar{
+  width:108px;height:108px;border-radius:50%;background:#222;
+  background-size:cover;background-position:center;border:3px solid var(--line);
+  flex-shrink:0;box-shadow:0 8px 24px rgba(0,0,0,.5);
+}
+.prof-info{min-width:0;flex:1}
+.prof-name{
+  font-family:var(--fd, Unbounded, sans-serif);
+  font-size:clamp(22px,4vw,32px);margin:0 0 4px;font-weight:800;
+  display:flex;align-items:center;gap:10px;
+}
+.prof-handle{font-size:14px;color:var(--mut);margin-bottom:8px}
+.prof-bio{font-size:13px;color:var(--ink);opacity:.85;margin:0 0 12px;max-width:65ch;line-height:1.4}
+.prof-stats{display:flex;gap:18px;margin-bottom:14px;font-size:13px;color:var(--mut)}
+.prof-stats b{color:var(--ink);font-weight:700}
+.prof-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn-play-all{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--ink);color:var(--bg);
+  font-weight:700;font-size:13px;padding:10px 22px;
+  border-radius:var(--rp,999px);border:0;cursor:pointer;
+  box-shadow:0 4px 18px rgba(0,0,0,0.2);
+  transition:all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-play-all:hover{
+  background:var(--ink);opacity:0.9;transform:scale(1.04);
+  box-shadow:0 6px 24px rgba(0,0,0,0.25);
+}
+.btn-play-all:active{transform:scale(0.96)}
+.btn-play-all svg{width:14px;height:14px;fill:var(--bg)}
+
+/* ARTIST PROFILE TABS (Exact match for SoundCloud Photo 2) */
+.prof-nav-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  border-bottom:1px solid var(--line);margin:24px 0 18px;
+  flex-wrap:wrap;
+}
+.prof-nav-tabs{
+  display:flex;align-items:center;gap:26px;overflow-x:auto;
+  scrollbar-width:none;
+}
+.prof-nav-tabs::-webkit-scrollbar{display:none}
+.prof-nav-tab{
+  font-family:var(--fb, "Instrument Sans", sans-serif);
+  font-size:15px;font-weight:700;color:var(--mut);
+  cursor:pointer;padding:10px 0;position:relative;
+  transition:color .2s cubic-bezier(0.16, 1, 0.3, 1);
+  background:none;border:0;white-space:nowrap;
+}
+.prof-nav-tab:hover{color:var(--ink)}
+.prof-nav-tab.active{color:var(--ink)}
+.prof-nav-tab.active::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;
+  background:var(--ink);border-radius:2px;
+}
+
+/* ALBUM & PLAYLIST CARDS */
+.albums-grid{
+  display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:16px;
+}
+.album-card{
+  background:var(--card);border:1px solid var(--line);
+  border-radius:18px;padding:12px;cursor:pointer;
+  transition:all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display:flex;flex-direction:column;gap:10px;
+  backface-visibility:hidden;transform:translateZ(0);
+}
+.album-card:hover{
+  background:var(--card-hover);
+  border-color:var(--ink);
+  box-shadow:0 8px 28px rgba(0,0,0,0.2);
+  transform:translateY(-4px) scale(1.02);
+}
+.album-art-wrap{
+  width:100%;aspect-ratio:1/1;border-radius:12px;overflow:hidden;
+  background:var(--card-hover);position:relative;
+}
+.album-art-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.album-play-btn{
+  position:absolute;right:10px;bottom:10px;width:40px;height:40px;
+  border-radius:50%;background:var(--ink);color:var(--bg);
+  display:grid;place-items:center;opacity:0;transform:translateY(6px);
+  transition:all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow:0 4px 16px rgba(0,0,0,0.3);border:0;cursor:pointer;
+}
+.album-card:hover .album-play-btn{
+  opacity:1;transform:translateY(0);
+}
+.album-play-btn:hover{transform:scale(1.1);background:var(--ink);box-shadow:0 6px 20px rgba(0,0,0,0.25)}
+.album-play-btn svg{width:16px;height:16px;fill:var(--bg)}
+.album-title{
+  font-weight:700;font-size:14px;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  -webkit-font-smoothing:antialiased;
+}
+.album-card:hover .album-title{color:var(--ink)}
+.album-meta{
+  font-size:12px;color:var(--mut);display:flex;align-items:center;gap:6px;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* TRACK ITEM */
+.trk{
+  display:grid;grid-template-columns:52px 1fr 44px;gap:8px 16px;align-items:center;
+  background:var(--card);border-radius:var(--r,20px);padding:14px 18px;margin-bottom:10px;
+  border:1px solid var(--line);
+  transition:all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  backface-visibility:hidden;
+  transform:translateZ(0);
+}
+.trk:hover{
+  background:var(--card-hover);
+  border-color:var(--line);
+  transform:translateY(-2px) translateZ(0);
+  box-shadow:0 6px 22px rgba(0,0,0,0.15);
+}
+.trk.cur{
+  border:1px solid var(--ink) !important;
+  background:var(--card-hover) !important;
+  box-shadow:0 6px 26px rgba(0,0,0,0.18), 0 0 16px rgba(0,0,0,0.06);
+}
+.trk.cur .ti{color:var(--ink) !important}
+.art-thumb{
+  width:52px;height:52px;border-radius:12px;overflow:hidden;background:var(--card-hover);
+  position:relative;cursor:pointer;flex-shrink:0;grid-row:span 2;
+}
+.art-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.art-fallback{
+  width:100%;height:100%;display:grid;place-items:center;
+  background:var(--card-hover);color:var(--mut);border-radius:inherit;
+}
+.art-fallback svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+.pb-overlay{
+  position:absolute;inset:0;background:rgba(0,0,0,.4);
+  display:grid;place-items:center;color:#fff;opacity:0;transition:opacity .15s;
+}
+.trk:hover .pb-overlay, .trk.cur .pb-overlay{opacity:1}
+.trk.cur .pb-overlay{background:rgba(0,0,0,0.55)}
+.trk.cur .pb-overlay svg{fill:#ffffff !important}
+.pb-overlay svg{width:22px;height:22px;fill:currentColor}
+.trk-info{min-width:0;display:flex;flex-direction:column;justify-content:center}
+.ti{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.ti:hover{color:var(--ink);opacity:0.85}
+.trk-artist{
+  font-size:12px;color:var(--mut);margin-top:2px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;cursor:pointer;
+  transition:color .15s;display:inline-block;max-width:max-content;
+}
+.trk-artist:hover{color:var(--ink);text-decoration:underline}
+.lk{
+  width:40px;height:40px;color:var(--mut);display:grid;place-items:center;border-radius:50%;grid-row:span 2;
+  transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.lk:hover{color:var(--ink);background:var(--card-hover);transform:scale(1.12)}
+.lk:active{transform:scale(0.88)}
+.lk svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;transition:transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)}
+.lk.on{color:var(--ink) !important}.lk.on svg{fill:var(--ink) !important;stroke:var(--ink) !important}
+.trk canvas{grid-column:2;width:100%;height:44px;cursor:pointer;display:block}
+
+.empty{color:var(--mut);text-align:center;padding:50px 20px;font-size:15px}
+.empty b{color:var(--ink);display:block;margin-bottom:6px;font-size:17px}
+
+/* STICKY BOTTOM PLAYER BAR - Dynamic Theme */
+#bar{
+  position:fixed;left:0;right:0;bottom:0;
+  background:var(--card);color:var(--ink);
+  border-top:none;
+  padding:12px clamp(16px,4vw,40px) 16px;
+  display:grid;grid-template-columns:minmax(0,1.2fr) auto minmax(0,1fr);
+  gap:8px 20px;align-items:center;z-index:50;
+  box-shadow:0 -12px 36px rgba(0,0,0,.35);
+}
+#sk{
+  -webkit-appearance:none;appearance:none;
+  position:absolute;top:-5px;left:0;right:0;width:100%;height:10px;
+  background:transparent;margin:0;padding:0;cursor:pointer;
+  border:none;outline:none;z-index:10;
+}
+#sk:focus{outline:none;border:none}
+#sk::-webkit-slider-runnable-track{
+  width:100%;height:3px;
+  background:linear-gradient(to right, var(--ink) 0%, var(--ink) var(--pct, 0%), var(--slider-bg) var(--pct, 0%), var(--slider-bg) 100%);
+  border:none;outline:none;border-radius:999px;
+  transition:height .15s ease;
+}
+#bar:hover #sk::-webkit-slider-runnable-track,
+#sk:active::-webkit-slider-runnable-track{
+  height:4px;
+}
+#sk::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:12px;height:12px;border-radius:50%;
+  background:var(--ink);border:none;outline:none;
+  margin-top:-4.5px;
+  box-shadow:0 1px 4px rgba(0,0,0,.5);
+  opacity:0;transform:scale(0.8);
+  transition:opacity .15s ease, transform .15s ease;
+}
+#bar:hover #sk::-webkit-slider-thumb,
+#sk:hover::-webkit-slider-thumb,
+#sk:active::-webkit-slider-thumb{
+  opacity:1;transform:scale(1);
+}
+.bar-track{display:flex;align-items:center;gap:12px;min-width:0}
+.bar-art{width:46px;height:46px;border-radius:10px;background:var(--card-hover);overflow:hidden;flex-shrink:0;position:relative}
+.bar-art img{width:100%;height:100%;object-fit:cover;display:block}
+#bar .ti{font-size:14px;color:var(--ink);font-weight:700}
+#bar .trk-artist{font-size:12px;color:var(--mut);opacity:1}
+#bar .trk-artist:hover{color:var(--ink)}
+.bar-like{
+  width:36px;height:36px;display:grid;place-items:center;
+  color:var(--mut);border-radius:50%;cursor:pointer;
+  transition:all .18s cubic-bezier(0.16, 1, 0.3, 1);
+  background:transparent;border:0;flex-shrink:0;margin-left:4px;
+}
+.bar-like:hover{
+  color:var(--ink);background:var(--card-hover);transform:scale(1.1);
+}
+.bar-like svg{
+  width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;
+  transition:transform .2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.bar-like.on{
+  color:var(--ink) !important;
+}
+.bar-like.on svg{
+  fill:var(--ink) !important;
+  stroke:var(--ink) !important;
+}
+.bar-like:active svg{
+  transform:scale(0.85);
+}
+.cg{display:flex;gap:6px;align-items:center}
+.ctl{
+  width:38px;height:38px;display:grid;place-items:center;
+  color:var(--mut);border-radius:50%;position:relative;
+  transition:all .15s;cursor:pointer;background:transparent;border:0;
+}
+.ctl:hover{background:var(--card-hover);color:var(--ink);transform:scale(1.05)}
+.ctl.main{
+  background:var(--ink);
+  color:var(--bg);
+  width:44px;
+  height:44px;
+  box-shadow:0 4px 18px rgba(0,0,0,0.2);
+  border:0;
+  transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ctl.main:hover{
+  background:var(--ink) !important;
+  color:var(--bg) !important;
+  transform:scale(1.09);
+  box-shadow:0 6px 24px rgba(0,0,0,0.25);
+}
+.ctl.main:active{
+  transform:scale(0.94);
+}
+.ctl.main svg{
+  width:20px;
+  height:20px;
+  fill:var(--bg) !important;
+}
+
+.ctl.active{
+  color:var(--ink) !important;
+  background:var(--card-hover) !important;
+  box-shadow:0 0 14px rgba(0,0,0,0.15) !important;
+}
+.ctl.active svg{stroke:var(--ink) !important;fill:var(--ink) !important}
+.ctl.outline.active svg{fill:none !important;stroke:var(--ink) !important}
+.ctl.active::after{
+  content:'';position:absolute;bottom:4px;width:4px;height:4px;
+  border-radius:50%;background:var(--ink);
+}
+.ctl svg{width:18px;height:18px;fill:currentColor}
+.ctl.outline svg{fill:none;stroke:currentColor;stroke-width:2}
+.rep-one-badge{
+  position:absolute;top:6px;right:6px;font-size:9px;font-weight:900;
+  color:var(--ink);line-height:1;pointer-events:none;
+}
+
+.right{display:flex;gap:12px;align-items:center;justify-content:flex-end}
+.tm{font-size:12px;font-variant-numeric:tabular-nums;color:var(--mut)}
+.vol-wrap{display:flex;align-items:center;gap:6px}
+.vol-btn{
+  width:32px;height:32px;display:grid;place-items:center;
+  color:var(--ink);border-radius:50%;cursor:pointer;
+  transition:all .15s;background:transparent;border:0;
+}
+.vol-btn:hover{background:var(--card-hover);color:var(--ink);transform:scale(1.08)}
+.vol-btn svg{width:18px;height:18px;display:block}
+.vol-btn svg polygon{fill:currentColor;stroke:currentColor;stroke-width:1}
+.vol-btn svg path, .vol-btn svg line{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#vol{
+  -webkit-appearance:none;appearance:none;
+  width:86px;height:12px;background:transparent;
+  cursor:pointer;border:none;outline:none;margin:0;padding:0;
+}
+#vol:focus{outline:none;border:none}
+#vol::-webkit-slider-runnable-track{
+  width:100%;height:3px;
+  background:linear-gradient(to right, var(--ink) 0%, var(--ink) var(--vol-pct, 85%), var(--slider-bg) var(--vol-pct, 85%), var(--slider-bg) 100%);
+  border:none;outline:none;border-radius:999px;
+  transition:height .15s ease;
+}
+#vol:hover::-webkit-slider-runnable-track{height:4px}
+#vol::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:10px;height:10px;border-radius:50%;
+  background:var(--ink);border:none;outline:none;
+  margin-top:-3.5px;
+  box-shadow:0 1px 3px rgba(0,0,0,.4);
+  transition:transform .15s ease;
+}
+#vol:hover::-webkit-slider-thumb{transform:scale(1.2)}
+
+@media (max-width:760px){
+  #vol,.vol-val,.bar-art{display:none}
+}
+@media (max-width:540px){
+  #bar{grid-template-columns:minmax(0,1fr) auto}
+  .right{display:none}
+}
+
+/* TOAST NOTIFICATION */
+#toast{
+  position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:var(--bg);
+  padding:10px 22px;border-radius:var(--rp, 999px);
+  font-size:13px;font-weight:700;z-index:90;
+  box-shadow:0 8px 24px rgba(0,0,0,0.35);
+  pointer-events:none;opacity:0;transition:all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#toast.show{
+  opacity:1;transform:translateX(-50%) translateY(0);
+}
+
+/* SETTINGS ASIDE */
+#set{
+  position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);
+  background:var(--card);border-left:2px solid var(--line);z-index:70;
+  padding:24px;overflow:auto;transform:translateX(100%);
+  transition:transform .25s ease-out;visibility:hidden;
+}
+#set.open{transform:none;visibility:visible}
+.fld{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:16px 0}
+#set select,#set input[type=text]{
+  padding:8px 14px;border-radius:var(--rp,999px);
+  border:2px solid var(--line);background:var(--bg);color:var(--ink);
+  font:inherit;max-width:200px;
+}
+#set input[type=range]{accent-color:var(--ink);width:150px}
+#set input[type=checkbox]{width:22px;height:22px;accent-color:var(--on)}
+
+.tab,.btn,.gbtn,.altbtn,header input,#set select,#set input[type=text]{border-radius:var(--rp,999px)}
+.trk,.box,.prof-hero{border-radius:var(--r,20px)}
+#av{border-radius:var(--rb,50%)}
+.cmp .trk{padding:10px 14px;margin-bottom:6px}.cmp .trk canvas{height:30px}
+.nowave .trk canvas{display:none}
+</style>
+</head>
+<body>
+
+<!-- 1. LOGIN HERO SCREEN -->
+<section id="login">
+  <div class="hero">
+    <div class="bars" id="bars" aria-hidden="true"></div>
+    <h1 class="logo">SoundClode</h1>
+    <p>Все твои треки SoundCloud, чистый звук без рекламы и лёгкий тёмный дизайн. Войди через Google или синхронизируй профиль, чтобы начать.</p>
+    
+    <div class="auth-btns">
+      <button class="gbtn" id="gin">
+        <svg viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.5-4.1 7-10.2 7-17.6z"/>
+          <path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/>
+          <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/>
+        </svg>
+        Войти через Google
+      </button>
+
+      <button class="altbtn" id="btnByLink">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        Загрузить raisethedead
+      </button>
+    </div>
+
+    <p class="note">Поддерживает автоматический вход через Google OAuth, а также прямую загрузку всех лайков из профиля SoundCloud.</p>
+  </div>
+</section>
+
+<!-- 2. LOGIN MODAL -->
+<div id="modal" hidden>
+  <div class="box" role="dialog" aria-modal="true">
+    <h2 id="modalTitle">Синхронизация SoundCloud</h2>
+    <p id="modalDesc">Ссылка на ваш профиль SoundCloud или никнейм:</p>
+    
+    <input id="inputProfile" value="https://soundcloud.com/vetcs" placeholder="https://soundcloud.com/vetcs" autocomplete="off">
+    <div id="authStatus" style="font-size:12px;color:var(--mut);margin-bottom:10px" hidden></div>
+    
+    <div class="row">
+      <button class="btn accent" id="btnSyncGo">Загрузить треки</button>
+      <button class="btn ghost" id="btnModalCancel">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- 3. MAIN APP INTERFACE -->
+<div id="app" hidden>
+  <header>
+    <span class="logo" id="logoClick" title="На главную">SoundClode</span>
+    
+    <!-- Feed & Library Navigation (Photo 2) -->
+    <nav class="nav-links">
+      <button class="nav-link" id="navFeed">Feed</button>
+      <button class="nav-link active" id="navLibrary">Library</button>
+    </nav>
+
+    <div class="search-wrap">
+      <input id="q" type="search" placeholder="Search" aria-label="Search" autocomplete="off">
+      <span class="search-icon">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <div id="searchDropdown" class="search-dropdown" hidden></div>
+    </div>
+    
+    <button id="btnSync" class="header-btn" title="Синхронизировать треки">
+      <svg viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+    </button>
+
+    <button id="gs" class="header-btn" title="Настройки" aria-label="Настройки">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    
+    <button id="th" class="header-btn" title="Сменить тему" aria-label="Сменить тему">
+      <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    
+    <button id="av" title="Мой профиль raisethedead" aria-label="Профиль"></button>
+  </header>
+
+  <main>
+    <!-- VIEW 1: FEED -->
+    <div id="viewFeed" hidden>
+      <div class="feed-section-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Подписки</span>
+      </div>
+      <div class="artists-scroll" id="feedArtistsScroll"></div>
+
+      <div class="feed-section-title" style="margin-top:20px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h5l3 9 4-18 3 9h5"/></svg>
+        <span>Лента свежих треков</span>
+      </div>
+      <div id="feedList"></div>
+    </div>
+
+    <!-- VIEW 2: LIBRARY -->
+    <div id="viewLibrary">
+      <div class="tabs">
+        <button class="tab" data-t="liked" aria-pressed="true">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span>Мне нравится</span>
+        </button>
+        <button class="tab" data-t="following" aria-pressed="false">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Подписки</span>
+        </button>
+        <button class="tab" data-t="all" aria-pressed="false">
+          <span>Все треки</span>
+        </button>
+        <span class="sp"></span>
+        <span class="cnt-tag" id="cnt"></span>
+      </div>
+
+      <div id="libraryList"></div>
+      <div id="followingGrid" class="following-grid" hidden></div>
+    </div>
+
+
+    <!-- VIEW 3: SEARCH -->
+    <div id="viewSearch" hidden>
+      <div class="tabs">
+        <button class="tab" aria-pressed="true">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span id="searchHeader">Результаты поиска</span>
+        </button>
+      </div>
+      <div id="searchList"></div>
+    </div>
+
+    <!-- VIEW 4: ARTIST / PERSON PROFILE -->
+    <div id="viewProfile" hidden>
+      <button class="back-btn" id="btnBack">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        <span>Назад</span>
+      </button>
+
+      <div class="prof-hero">
+        <div class="prof-avatar" id="profAvatar"></div>
+        <div class="prof-info">
+          <h1 class="prof-name" id="profName">Artist</h1>
+          <div class="prof-handle" id="profHandle">@artist</div>
+          <p class="prof-bio" id="profBio"></p>
+          <div class="prof-stats">
+            <span><b id="profFollowers">0</b> <span id="profFollowersLabel">подписчиков</span></span>
+            <span><b id="profTracksCount">0</b> <span id="profTracksLabel">треков</span></span>
+          </div>
+          <div class="prof-actions">
+            <button class="btn-play-all" id="btnProfPlayAll" hidden>
+              <svg viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+              <span id="btnProfPlayAllText">Слушать все</span>
+            </button>
+            <a class="altbtn" id="btnProfExternal" target="_blank" rel="noopener" style="padding:10px 18px;font-size:13px">В SoundCloud ↗</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation tabs like SoundCloud (Image 2) -->
+      <div class="prof-nav-bar">
+        <div class="prof-nav-tabs">
+          <button class="prof-nav-tab" data-ptab="all">All</button>
+          <button class="prof-nav-tab active" data-ptab="popular">Popular tracks</button>
+          <button class="prof-nav-tab" data-ptab="tracks">Tracks</button>
+          <button class="prof-nav-tab" data-ptab="albums">Albums</button>
+          <button class="prof-nav-tab" data-ptab="playlists">Playlists</button>
+          <button class="prof-nav-tab" data-ptab="reposts">Reposts</button>
+        </div>
+        <span class="cnt-tag" id="profTracksNum"></span>
+      </div>
+
+      <div id="profList"></div>
+      <div id="profAlbumsGrid" class="albums-grid" hidden></div>
+    </div>
+  </main>
+
+  <!-- SETTINGS ASIDE -->
+  <aside id="set" aria-label="Настройки">
+    <div class="fld">
+      <h2 style="margin:0;font-size:20px" id="lblSettingsTitle">Настройки</h2>
+      <button class="tab" id="sx" aria-label="Закрыть">✕</button>
+    </div>
+
+    <label class="fld" id="fldLang"><span id="lblLang">Язык меню</span>
+      <select data-k="lang" id="selLang">
+        <option value="ru">Русский</option>
+        <option value="en">English</option>
+      </select>
+    </label>
+    <label class="fld"><span id="lblAppName">Название приложения</span><input type="text" data-k="name" maxlength="16"></label>
+    <label class="fld"><span id="lblAccent">Цветовой акцент</span>
+      <select data-k="accent" id="selAccent">
+        <option value="orange">SoundCloud Оранжевый</option>
+        <option value="mono">Монохромный (Белый)</option>
+        <option value="purple">Фиолетовый неон</option>
+        <option value="green">Зелёный киберпанк</option>
+      </select>
+    </label>
+    <label class="fld"><span id="lblTheme">Тема</span>
+      <select data-k="theme" id="selTheme">
+        <option value="dark">Чёрная</option>
+        <option value="light">Белая</option>
+        <option value="auto">Как в системе</option>
+      </select>
+    </label>
+    <label class="fld"><span id="lblFd">Шрифт заголовков</span>
+      <select data-k="fd" id="selFd">
+        <option value="unb">Unbounded</option>
+        <option value="ins">Instrument Sans</option>
+        <option value="pts">PT Serif Caption</option>
+        <option value="sys">Системный</option>
+      </select>
+    </label>
+    <label class="fld"><span id="lblRad">Углы карточек</span>
+      <select data-k="rad" id="selRad">
+        <option value="soft">Мягкие (20px)</option>
+        <option value="round">Очень круглые (34px)</option>
+        <option value="sharp">Острые (0px)</option>
+      </select>
+    </label>
+    <label class="fld"><span id="lblWave">Стиль волны трека</span>
+      <select data-k="wave" id="selWave">
+        <option value="bars">Столбики</option>
+        <option value="thin">Тонкие линии</option>
+        <option value="base">От нижней линии</option>
+      </select>
+    </label>
+    <label class="fld"><span id="lblDense">Компактный список</span><input type="checkbox" data-k="dense"></label>
+    <label class="fld"><span id="lblHide">Скрыть волну</span><input type="checkbox" data-k="hide"></label>
+    <label class="fld"><span id="lblAuto">Авто-переход к следующему</span><input type="checkbox" data-k="auto"></label>
+    <label class="fld"><span id="lblKeys">Горячие клавиши (Пробел, ←, →, N, P, L)</span><input type="checkbox" data-k="keys"></label>
+    
+    <div class="fld" style="margin-top:24px">
+      <button class="btn ghost" id="btnRelog">Сменить аккаунт</button>
+      <button class="btn ghost" id="rs">Сбросить всё</button>
+    </div>
+  </aside>
+
+  <!-- STICKY BOTTOM PLAYER BAR -->
+  <div id="bar">
+    <input type="range" id="sk" min="0" max="1000" value="0" aria-label="Перемотка">
+    
+    <div class="bar-track">
+      <div class="bar-art" id="barArtWrap">
+        <img id="barArt" src="" alt="" style="display:none" onerror="this.style.display='none';document.getElementById('barArtFallback').style.display='grid'" onload="if(this.src && !this.src.endsWith('/')) { this.style.display='block'; document.getElementById('barArtFallback').style.display='none'; }">
+        <div class="art-fallback" id="barArtFallback" style="display:grid">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>
+        </div>
+      </div>
+      <div style="min-width:0;flex:1">
+        <div class="ti" id="bt">Ничего не играет</div>
+        <div class="trk-artist" id="bm">Включите трек из библиотеки или ленты</div>
+      </div>
+      <button class="bar-like" id="barLike" title="Добавить в любимые (L)" aria-label="Нравится">
+        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </button>
+    </div>
+
+    <div class="cg">
+      <button class="ctl outline" id="shuf" title="Перемешать (S)" aria-label="Перемешать">
+        <svg viewBox="0 0 24 24"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+      </button>
+      <button class="ctl" id="pv" title="Предыдущий (P)" aria-label="Предыдущий">
+        <svg viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2"/></svg>
+      </button>
+      <button class="ctl main" id="pp" title="Воспроизведение / Пауза (Пробел)" aria-label="Играть">
+        <svg viewBox="0 0 24 24" id="pi"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+      </button>
+      <button class="ctl" id="nx" title="Следующий (N)" aria-label="Следующий">
+        <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"/></svg>
+      </button>
+      <button class="ctl outline" id="rep" title="Повтор (R)" aria-label="Повтор">
+        <svg viewBox="0 0 24 24"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        <span class="rep-one-badge" id="repOneBadge" hidden>1</span>
+      </button>
+    </div>
+
+    <div class="right">
+      <span class="tm" id="tm">0:00 / 0:00</span>
+      <div class="vol-wrap">
+        <button class="vol-btn" id="btnMute" title="Громкость / Без звука (M)">
+          <svg id="volIcon" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+        </button>
+        <input type="range" id="vol" min="0" max="1" step="0.01" value="0.85" aria-label="Громкость">
+        <span class="vol-val" id="volVal">85%</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+var $ = function(s){ return document.querySelector(s); };
+var $$ = function(s){ return document.querySelectorAll(s); };
+
+// State
+var user = null;
+var libraryTracks = [];
+var feedTracks = [];
+var profileTracks = [];
+var searchResults = [];
+var followings = [];
+
+var activeSection = 'library'; // 'library', 'feed', 'search', 'profile'
+var previousSection = 'library';
+var libTab = 'liked'; // 'liked', 'following', 'all'
+var currentProfile = null;
+
+// Currently playing
+var playingList = [];
+var cur = -1;
+var currentTrack = null;
+var likes = {};
+var clientId = 'tHVbSbDP4TaoMbPppngv6Tdry83vNbMQ';
+var hls = null;
+
+// Initial seed
+try {
+  user = JSON.parse(localStorage.getItem('soundclode_user') || 'null') || window.SEED_USER;
+  if (user && user.avatar_url && user.avatar_url.includes('avatars-ENkpB1PZhpwWbu03')) {
+    user.avatar_url = 'https://i1.sndcdn.com/avatars-ENkpB1PZhpwWbu1y-5EjzbQ-large.jpg';
+    saveUser();
+  }
+  libraryTracks = JSON.parse(localStorage.getItem('soundclode_tracks') || 'null') || window.SEED_TRACKS || [];
+  feedTracks = window.SEED_FEED_TRACKS || [];
+  followings = window.SEED_FOLLOWINGS || [];
+  
+  likes = JSON.parse(localStorage.getItem('soundclode_likes') || 'null');
+  if (!likes || !Object.keys(likes).length) {
+    likes = {};
+    libraryTracks.forEach(function(t){ likes[t.id] = 1; });
+  }
+} catch(e) {}
+
+var DEF_CFG = {
+  name: 'SoundClode',
+  theme: 'dark',
+  accent: 'mono',
+  lang: 'ru',
+  fd: 'pts',
+  fb: 'ins',
+  rad: 'soft',
+  wave: 'bars',
+  dense: false,
+  hide: false,
+  vol: 0.85,
+  shuffle: false,
+  repeat: 'all',
+  auto: true,
+  keys: true
+};
+var cfg = Object.assign({}, DEF_CFG);
+try {
+  Object.assign(cfg, JSON.parse(localStorage.getItem('soundclode_cfg') || '{}'));
+  if (cfg.accent === 'orange' || !cfg.accent) cfg.accent = 'mono';
+  if (!cfg.lang || (cfg.lang !== 'ru' && cfg.lang !== 'en')) cfg.lang = 'ru';
+  if (!cfg.fd || cfg.fd === 'unb' || cfg.fd === 'fancy') cfg.fd = 'pts';
+} catch(e) {}
+
+function saveCfg(){ try{ localStorage.setItem('soundclode_cfg', JSON.stringify(cfg)); }catch(e){} }
+function saveTracks(){ try{ localStorage.setItem('soundclode_tracks', JSON.stringify(libraryTracks)); }catch(e){} }
+function saveLikes(){ try{ localStorage.setItem('soundclode_likes', JSON.stringify(likes)); }catch(e){} }
+function saveUser(){ try{ localStorage.setItem('soundclode_user', JSON.stringify(user)); }catch(e){} }
+
+var au = new Audio();
+au.volume = cfg.vol;
+
+var PLAY = '<polygon points="6 4 20 12 6 20 6 4"/>';
+var PAUSE = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+
+function esc(s){ var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+function fmt(t){
+  if (!isFinite(t) || isNaN(t)) t = 0;
+  var m = Math.floor(t / 60), s = Math.floor(t % 60);
+  return m + ':' + (s < 10 ? '0' : '') + s;
+}
+function formatNumber(n) {
+  if (!n) return '0';
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  return n.toString();
+}
+
+// Generate animated bars in hero
+var barsEl = $('#bars');
+if (barsEl) {
+  for (var i = 0; i < 36; i++) {
+    var b = document.createElement('i');
+    b.style.setProperty('--h', (18 + Math.abs(Math.sin(i * 0.65)) * 48 + Math.random() * 8) + 'px');
+    b.style.setProperty('--d', (i * 0.06) + 's');
+    barsEl.appendChild(b);
+  }
+}
+
+// Sync User Avatar UI without bright white flash
+function syncUserAvatarUI() {
+  var av = $('#av');
+  if (!av) return;
+  if (user && user.avatar_url) {
+    var rawUrl = user.avatar_url;
+    if (rawUrl.includes('avatars-ENkpB1PZhpwWbu03')) {
+      rawUrl = rawUrl.replace('avatars-ENkpB1PZhpwWbu03-P2k9pQ', 'avatars-ENkpB1PZhpwWbu1y-5EjzbQ');
+      user.avatar_url = rawUrl;
+      saveUser();
+    }
+    var avUrl = rawUrl.replace('-large.jpg', '-t500x500.jpg');
+    var testImg = new Image();
+    testImg.onload = function() {
+      av.style.backgroundImage = 'url("' + avUrl + '")';
+      av.textContent = '';
+    };
+    testImg.onerror = function() {
+      av.style.backgroundImage = 'none';
+      av.textContent = (user.username || user.name || '?').charAt(0).toUpperCase();
+    };
+    testImg.src = avUrl;
+  } else if (user) {
+    av.style.backgroundImage = 'none';
+    av.textContent = (user.username || user.name || '?').charAt(0).toUpperCase();
+  }
+}
+
+// App View State
+function view() {
+  $('#login').hidden = !!user;
+  $('#app').hidden = !user;
+  if (user) {
+    syncUserAvatarUI();
+    $('#av').title = 'Профиль ' + (user.username || user.name);
+  }
+}
+
+// Soundcloud API helpers
+async function getFreshClientId() {
+  try {
+    var res = await fetch('https://soundcloud.com');
+    var html = await res.text();
+    var scripts = html.match(/https:\/\/a-v2\.sndcdn\.com\/assets\/[^"]+\.js/g) || [];
+    for (var i = scripts.length - 1; i >= Math.max(0, scripts.length - 6); i--) {
+      var js = await (await fetch(scripts[i])).text();
+      var m = js.match(/client_id[:=]["']?([a-zA-Z0-9]{32})["']?/);
+      if (m && m[1]) {
+        clientId = m[1];
+        return clientId;
+      }
+    }
+  } catch(e) {}
+  return clientId;
+}
+
+// Find playable unencrypted alternative for DRM-locked or inaccessible tracks
+async function findPlayableAlternative(track) {
+  try {
+    var artistName = (track.user && track.user.username) ? track.user.username : '';
+    var query = (artistName ? artistName + ' ' : '') + (track.title || '');
+    if (!query.trim()) return null;
+    
+    var searchUrl = 'https://api-v2.soundcloud.com/search/tracks?q=' + encodeURIComponent(query.trim()) + '&client_id=' + clientId + '&limit=15';
+    var res = await fetch(searchUrl);
+    if (!res.ok) return null;
+    var data = await res.json();
+    if (!data.collection || !data.collection.length) return null;
+
+    var targetDur = track.duration || 0;
+    var candidates = [];
+    for (var i = 0; i < data.collection.length; i++) {
+      var cand = data.collection[i];
+      if (cand.id === track.id) continue;
+      if (!cand.media || !cand.media.transcodings) continue;
+      var unenc = cand.media.transcodings.filter(function(t) {
+        return t && t.format && (t.format.protocol === 'progressive' || t.format.protocol === 'hls');
+      });
+      if (!unenc.length) continue;
+      
+      var durDiff = targetDur ? Math.abs(cand.duration - targetDur) : 0;
+      var isModified = /slowed|sped up|nightcore|reverb|remix|edit/i.test(cand.title || '');
+      var origHasMod = /slowed|sped up|nightcore|reverb|remix|edit/i.test(track.title || '');
+      var penalty = (!origHasMod && isModified) ? 1000000 : 0;
+      candidates.push({ cand: cand, unenc: unenc, score: penalty + durDiff });
+    }
+
+    candidates.sort(function(a, b) { return a.score - b.score; });
+    if (!candidates.length) return null;
+
+    for (var j = 0; j < Math.min(3, candidates.length); j++) {
+      var item = candidates[j];
+      var tc = item.unenc.find(function(t){ return t.format.protocol === 'progressive'; })
+            || item.unenc.find(function(t){ return t.format.protocol === 'hls'; })
+            || item.unenc[0];
+      var authParam = item.cand.track_authorization ? '&track_authorization=' + encodeURIComponent(item.cand.track_authorization) : '';
+      var sRes = await fetch(tc.url + '?client_id=' + clientId + authParam);
+      if (sRes.ok) {
+        var sData = await sRes.json();
+        if (sData.url) {
+          track.stream_url = sData.url;
+          track._streamUrlTime = Date.now();
+          track.is_hls = (tc.format && tc.format.protocol === 'hls');
+          return sData.url;
+        }
+      }
+    }
+  } catch(e) {
+    console.warn('findPlayableAlternative error:', e);
+  }
+  return null;
+}
+
+// Resolve stream URL
+async function resolveStreamUrl(track) {
+  // If track has a cached stream_url that is less than 10 minutes old, reuse it
+  if (track.stream_url && track._streamUrlTime && (Date.now() - track._streamUrlTime < 600000)) {
+    return track.stream_url;
+  }
+
+  if (!track.media || !track.media.transcodings) {
+    if (track.id) {
+      try {
+        var r = await fetch('https://api-v2.soundcloud.com/tracks/' + track.id + '?client_id=' + clientId);
+        if (r.ok) {
+          var td = await r.json();
+          track.media = td.media;
+          if (!track.title) track.title = td.title;
+          if (!track.duration) track.duration = td.duration;
+          if (!track.artwork_url) track.artwork_url = td.artwork_url;
+          if (!track.waveform_url) track.waveform_url = td.waveform_url;
+          if (td.track_authorization) track.track_authorization = td.track_authorization;
+        }
+      } catch(err) {}
+    }
+  }
+
+  if (track.media && track.media.transcodings && track.media.transcodings.length) {
+    var validTranscodings = track.media.transcodings.filter(function(t) {
+      if (!t || !t.format || !t.url) return false;
+      var proto = t.format.protocol;
+      return proto === 'progressive' || proto === 'hls';
+    });
+
+    if (validTranscodings.length) {
+      var tc = validTranscodings.find(function(t){ return t.format.protocol === 'progressive'; })
+            || validTranscodings.find(function(t){ return t.format.protocol === 'hls'; })
+            || validTranscodings[0];
+
+      if (tc && tc.url) {
+        try {
+          var authParam = track.track_authorization ? '&track_authorization=' + encodeURIComponent(track.track_authorization) : '';
+          var res = await fetch(tc.url + '?client_id=' + clientId + authParam);
+          if (!res.ok && (res.status === 401 || res.status === 403)) {
+            await getFreshClientId();
+            res = await fetch(tc.url + '?client_id=' + clientId + authParam);
+          }
+          if (res.ok) {
+            var data = await res.json();
+            if (data.url) {
+              track.stream_url = data.url;
+              track._streamUrlTime = Date.now();
+              track.is_hls = (tc.format && tc.format.protocol === 'hls');
+              return data.url;
+            }
+          }
+        } catch(e) {
+          console.error('Direct stream resolve error:', e);
+        }
+      }
+    }
+  }
+
+  // Fallback to playable unencrypted alternative for DRM-locked or inaccessible tracks
+  var altStream = await findPlayableAlternative(track);
+  if (altStream) {
+    return altStream;
+  }
+
+  return null;
+}
+
+// Fetch waveform peaks
+async function fetchWaveform(track) {
+  if (track.peaks && track.peaks.length) return track.peaks;
+  if (track.waveform_url) {
+    try {
+      var res = await fetch(track.waveform_url);
+      var data = await res.json();
+      if (data && data.samples) {
+        var s = data.samples;
+        var N = 100, step = Math.floor(s.length / N) || 1, pk = [];
+        var max = 1;
+        for (var i = 0; i < N; i++) {
+          var val = s[i * step] || 0;
+          if (val > max) max = val;
+          pk.push(val);
+        }
+        track.peaks = pk.map(function(v){ return Math.max(0.08, v / max); });
+        return track.peaks;
+      }
+    } catch(e) {}
+  }
+
+  // Fallback synthetic wave
+  var out = [];
+  for (var k = 0; k < 100; k++) {
+    out.push(0.15 + 0.65 * Math.abs(Math.sin(k * 0.35 + (track.id || 1))));
+  }
+  track.peaks = out;
+  return out;
+}
+
+// DRAW WAVEFORM CANVAS
+function drawWave(c, track, isCurrentPlaying) {
+  if (!c) return;
+  var d = window.devicePixelRatio || 1;
+  var w = c.clientWidth, h = c.clientHeight;
+  if (!w || !h) return;
+
+  c.width = w * d;
+  c.height = h * d;
+  var ctx = c.getContext('2d');
+  ctx.scale(d, d);
+
+  var st = getComputedStyle(document.documentElement);
+  var colorOn = st.getPropertyValue('--on').trim() || '#ffffff';
+  var colorOff = st.getPropertyValue('--wave').trim() || '#333';
+
+  var pk = track.peaks || [];
+  if (!pk.length) {
+    fetchWaveform(track).then(function(){ drawWave(c, track, isCurrentPlaying); });
+    return;
+  }
+
+  var progress = (isCurrentPlaying && au.duration) ? (au.currentTime / au.duration) : 0;
+  var n = pk.length;
+  var bw = w / n;
+  var barWidth = cfg.wave === 'thin' ? Math.max(1, bw * 0.35) : Math.max(1, bw - 2);
+
+  for (var i = 0; i < n; i++) {
+    ctx.fillStyle = (i / n < progress) ? colorOn : colorOff;
+    var barHeight = Math.max(3, pk[i] * h);
+    var y = cfg.wave === 'base' ? (h - barHeight) : (h - barHeight) / 2;
+    ctx.fillRect(i * bw + (bw - barWidth) / 2, y, barWidth, barHeight);
+  }
+}
+
+// HTML GENERATOR FOR TRACK LIST
+function buildTrackListHtml(tracks, listType) {
+  var lang = (cfg.lang === 'en') ? 'en' : 'ru';
+  var t = (typeof I18N !== 'undefined' && I18N[lang]) ? I18N[lang] : null;
+  if (!tracks || !tracks.length) {
+    var title = t ? t.empty_title : 'Пока ничего нет';
+    var desc = listType === 'liked' ? (t ? t.empty_liked : 'У вас нет сохранённых лайков. Включите трек из ленты или найдите в поиске!') : (t ? t.empty_tracks : 'Треки не найдены.');
+    return '<div class="empty"><b>' + title + '</b>' + desc + '</div>';
+  }
+
+  return tracks.map(function(trackItem, idx) {
+    var isThis = !!(currentTrack && trackItem && (String(currentTrack.id) === String(trackItem.id) || currentTrack.title === trackItem.title));
+    var isPlaying = isThis && !au.paused;
+    var art = trackItem.artwork_url ? trackItem.artwork_url.replace('-large.jpg', '-t500x500.jpg') : (trackItem.user && trackItem.user.avatar_url ? trackItem.user.avatar_url : '');
+    var artistName = (trackItem.user && trackItem.user.username) ? trackItem.user.username : 'SoundCloud';
+    var artistId = (trackItem.user && trackItem.user.id) ? trackItem.user.id : '';
+    var artistPermalink = (trackItem.user && trackItem.user.permalink) ? trackItem.user.permalink : '';
+
+    var vinylSvg = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>';
+    var imgHtml = art ? '<img src="' + art + '" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'" onload="this.style.display=\'block\';this.nextElementSibling.style.display=\'none\'">' : '';
+    var fallbackHtml = '<div class="art-fallback" style="' + (art ? 'display:none' : 'display:grid') + '">' + vinylSvg + '</div>';
+    var likeAria = t ? t.like_aria : 'Нравится';
+
+    return '<div class="trk' + (isThis ? ' cur' : '') + '" data-tid="' + trackItem.id + '" data-i="' + idx + '" data-list="' + listType + '">' +
+      '<div class="art-thumb" data-a="play">' +
+        imgHtml +
+        fallbackHtml +
+        '<div class="pb-overlay"><svg viewBox="0 0 24 24">' + (isPlaying ? PAUSE : PLAY) + '</svg></div>' +
+      '</div>' +
+      '<div class="trk-info">' +
+        '<div class="ti" data-a="play">' + esc(trackItem.title || trackItem.name) + '</div>' +
+        '<div class="trk-artist" data-a="artist" data-aid="' + artistId + '" data-apermalink="' + artistPermalink + '" data-aname="' + esc(artistName) + '">' + esc(artistName) + '</div>' +
+      '</div>' +
+      '<button class="lk' + (likes[trackItem.id] ? ' on' : '') + '" data-a="like" aria-label="' + likeAria + '">' +
+        '<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' +
+      '</button>' +
+      '<canvas></canvas>' +
+    '</div>';
+  }).join('');
+}
+
+function attachWaveformCanvases(containerEl, tracks, listType) {
+  if (!containerEl) return;
+  containerEl.querySelectorAll('.trk[data-list="' + listType + '"]').forEach(function(el) {
+    var idx = +el.dataset.i;
+    if (tracks[idx]) {
+      var isCur = !!(currentTrack && String(currentTrack.id) === String(tracks[idx].id));
+      drawWave(el.querySelector('canvas'), tracks[idx], isCur);
+    }
+  });
+}
+
+// NAVIGATION SWITCHING (Feed / Library)
+function switchSection(sec) {
+  if (activeSection !== 'profile') previousSection = activeSection;
+  activeSection = sec;
+
+  $('#navFeed').classList.toggle('active', sec === 'feed');
+  $('#navLibrary').classList.toggle('active', sec === 'library');
+
+  $('#viewFeed').hidden = (sec !== 'feed');
+  $('#viewLibrary').hidden = (sec !== 'library');
+  $('#viewSearch').hidden = (sec !== 'search');
+  $('#viewProfile').hidden = (sec !== 'profile');
+
+  if (sec === 'feed') renderFeed();
+  else if (sec === 'library') renderLibrary();
+}
+
+$('#navFeed').onclick = function(){ switchSection('feed'); };
+$('#navLibrary').onclick = function(){ switchSection('library'); };
+$('#logoClick').onclick = function(){ switchSection('library'); };
+
+// 1. RENDER FEED
+function renderFeed() {
+  // Render Followed Artists row
+  var fRow = $('#feedArtistsScroll');
+  if (followings && followings.length) {
+    fRow.innerHTML = followings.map(function(u) {
+      return '<div class="artist-chip" data-aid="' + u.id + '" data-apermalink="' + u.permalink + '" data-aname="' + esc(u.username) + '">' +
+        '<div class="artist-chip-avatar" style="background-image:url(' + (u.avatar_url || '') + ')"></div>' +
+        '<div class="artist-chip-name">' + esc(u.username) + '</div>' +
+        '<div class="artist-chip-stat">' + formatNumber(u.followers_count || 0) + '</div>' +
+      '</div>';
+    }).join('');
+  } else {
+    fRow.innerHTML = '<div style="color:var(--mut);font-size:13px;padding:10px">Нет подписок</div>';
+  }
+
+  // Render Feed Tracks
+  var container = $('#feedList');
+  container.innerHTML = buildTrackListHtml(feedTracks, 'feed');
+  attachWaveformCanvases(container, feedTracks, 'feed');
+}
+
+// 2. RENDER LIBRARY
+function getVisibleLibraryTracks() {
+  if (libTab === 'liked') return libraryTracks.filter(function(t){ return likes[t.id]; });
+  return libraryTracks;
+}
+
+function renderLibrary() {
+  var lang = (cfg.lang === 'en') ? 'en' : 'ru';
+  var isFollowing = (libTab === 'following');
+  $('#libraryList').hidden = isFollowing;
+  $('#followingGrid').hidden = !isFollowing;
+
+  if (isFollowing) {
+    var fGrid = $('#followingGrid');
+    fGrid.innerHTML = followings.map(function(u) {
+      return '<div class="following-card" data-aid="' + u.id + '" data-apermalink="' + u.permalink + '" data-aname="' + esc(u.username) + '">' +
+        '<div class="following-card-avatar" style="background-image:url(' + (u.avatar_url || '') + ')"></div>' +
+        '<div class="following-card-info">' +
+          '<div class="following-card-name">' + esc(u.username) + '</div>' +
+          '<div class="following-card-stat">' + formatNumber(u.followers_count || 0) + ' ' + (lang === 'en' ? 'followers' : 'подписчиков') + (u.city ? ' • ' + esc(u.city) : '') + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    $('#cnt').textContent = followings.length + ' ' + (lang === 'en' ? 'following' : 'подписок');
+  } else {
+    var tracks = getVisibleLibraryTracks();
+    $('#cnt').textContent = tracks.length ? tracks.length + ' ' + (lang === 'en' ? 'tracks' : 'треков') : '';
+    var container = $('#libraryList');
+    container.innerHTML = buildTrackListHtml(tracks, 'library');
+    attachWaveformCanvases(container, tracks, 'library');
+  }
+}
+
+// LIBRARY SUB-TABS
+$$('.tabs .tab').forEach(function(b) {
+  b.onclick = function() {
+    if (!b.dataset.t) return;
+    libTab = b.dataset.t;
+    $$('.tabs .tab').forEach(function(o){ o.setAttribute('aria-pressed', o === b); });
+    renderLibrary();
+  };
+});
+
+// 3. ARTIST / PERSON PROFILE VIEW & TABS (All, Popular tracks, Tracks, Albums, Playlists, Reposts)
+var artistTab = 'popular';
+var artistTabsCache = {};
+
+async function loadArtistTab(tab) {
+  if (!currentProfile) return;
+  var u = currentProfile;
+  artistTab = tab;
+  var lang = (cfg.lang === 'en') ? 'en' : 'ru';
+  var t = (typeof I18N !== 'undefined' && I18N[lang]) ? I18N[lang] : null;
+
+  // Update tabs active state
+  $$('.prof-nav-tab').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.ptab === tab);
+  });
+
+  var listContainer = $('#profList');
+  var albumsContainer = $('#profAlbumsGrid');
+
+  // Check if own profile with likes
+  var isOwn = (user && (u.id == user.id || u.permalink === 'vetcs' || u.username === user.username));
+  if (isOwn && libraryTracks.length && (tab === 'all' || tab === 'popular' || tab === 'tracks')) {
+    profileTracks = libraryTracks;
+    listContainer.hidden = false;
+    albumsContainer.hidden = true;
+    $('#profTracksNum').textContent = profileTracks.length + ' ' + (lang === 'en' ? 'liked tracks' : 'понравившихся треков');
+    $('#btnProfPlayAll').hidden = false;
+    $('#btnProfPlayAllText').textContent = (lang === 'en' ? 'Play all' : 'Слушать все') + ' (' + profileTracks.length + ')';
+    listContainer.innerHTML = buildTrackListHtml(profileTracks, 'profile');
+    attachWaveformCanvases(listContainer, profileTracks, 'profile');
+    return;
+  }
+
+  // Set containers visibility & loading state
+  if (tab === 'albums' || tab === 'playlists') {
+    listContainer.hidden = true;
+    albumsContainer.hidden = false;
+    albumsContainer.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>' + (lang === 'en' ? 'Loading...' : 'Загрузка...') + '</b></div>';
+  } else {
+    listContainer.hidden = false;
+    albumsContainer.hidden = true;
+    listContainer.innerHTML = '<div class="empty"><b>' + (lang === 'en' ? 'Loading tracks...' : 'Загрузка треков...') + '</b></div>';
+  }
+
+  try {
+    if (tab === 'popular') {
+      if (!artistTabsCache.popular) {
+        var res = await fetch('https://api-v2.soundcloud.com/users/' + u.id + '/toptracks?client_id=' + clientId + '&limit=40');
+        if (res.ok) {
+          var data = await res.json();
+          artistTabsCache.popular = (data.collection || []).map(function(tTrack) {
+            return {
+              id: tTrack.id,
+              title: tTrack.title,
+              user: tTrack.user || u,
+              duration: tTrack.duration,
+              artwork_url: tTrack.artwork_url || u.avatar_url,
+              waveform_url: tTrack.waveform_url,
+              media: tTrack.media,
+              playback_count: tTrack.playback_count
+            };
+          });
+        }
+        // Fallback if toptracks is empty
+        if (!artistTabsCache.popular || !artistTabsCache.popular.length) {
+          var fbRes = await fetch('https://api-v2.soundcloud.com/users/' + u.id + '/tracks?client_id=' + clientId + '&limit=40');
+          if (fbRes.ok) {
+            var fbData = await fbRes.json();
+            artistTabsCache.popular = (fbData.collection || []).map(function(tTrack) {
+              return {
+                id: tTrack.id,
+                title: tTrack.title,
+                user: tTrack.user || u,
+                duration: tTrack.duration,
+                artwork_url: tTrack.artwork_url || u.avatar_url,
+                waveform_url: tTrack.waveform_url,
+                media: tTrack.media,
+                playback_count: tTrack.playback_count
+              };
+            });
+          }
+        }
+      }
+
+      profileTracks = artistTabsCache.popular || [];
+      $('#profTracksNum').textContent = profileTracks.length + ' ' + (lang === 'en' ? 'popular tracks' : 'популярных треков');
+      $('#btnProfPlayAll').hidden = !profileTracks.length;
+      $('#btnProfPlayAllText').textContent = (lang === 'en' ? 'Play popular' : 'Слушать популярные') + ' (' + profileTracks.length + ')';
+      listContainer.innerHTML = buildTrackListHtml(profileTracks, 'profile');
+      attachWaveformCanvases(listContainer, profileTracks, 'profile');
+
+    } else if (tab === 'tracks' || tab === 'all') {
+      if (!artistTabsCache.tracks) {
+        var res = await fetch('https://api-v2.soundcloud.com/users/' + u.id + '/tracks?client_id=' + clientId + '&limit=50');
+        if (res.ok) {
+          var data = await res.json();
+          artistTabsCache.tracks = (data.collection || []).map(function(tTrack) {
+            return {
+              id: tTrack.id,
+              title: tTrack.title,
+              user: tTrack.user || u,
+              duration: tTrack.duration,
+              artwork_url: tTrack.artwork_url || u.avatar_url,
+              waveform_url: tTrack.waveform_url,
+              media: tTrack.media
+            };
+          });
+        }
+      }
+
+      profileTracks = artistTabsCache.tracks || [];
+      $('#profTracksNum').textContent = profileTracks.length + ' ' + (lang === 'en' ? 'tracks' : 'треков');
+      $('#btnProfPlayAll').hidden = !profileTracks.length;
+      $('#btnProfPlayAllText').textContent = (lang === 'en' ? 'Play all' : 'Слушать все') + ' (' + profileTracks.length + ')';
+      listContainer.innerHTML = buildTrackListHtml(profileTracks, 'profile');
+      attachWaveformCanvases(listContainer, profileTracks, 'profile');
+
+    } else if (tab === 'albums') {
+      if (!artistTabsCache.albums) {
+        var res = await fetch('https://api-v2.soundcloud.com/users/' + u.id + '/albums?client_id=' + clientId + '&limit=30');
+        if (res.ok) {
+          var data = await res.json();
+          artistTabsCache.albums = data.collection || [];
+        }
+      }
+
+      var albums = artistTabsCache.albums || [];
+      $('#profTracksNum').textContent = albums.length + ' ' + (lang === 'en' ? 'albums' : 'альбомов');
+      $('#btnProfPlayAll').hidden = true;
+
+      if (!albums.length) {
+        albumsContainer.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>' + (lang === 'en' ? 'No albums found' : 'Альбомы не найдены') + '</b>' + (lang === 'en' ? 'This artist has no albums.' : 'У этого артиста нет отдельных альбомов.') + '</div>';
+      } else {
+        albumsContainer.innerHTML = albums.map(function(alb, idx) {
+          var art = alb.artwork_url ? alb.artwork_url.replace('-large.jpg', '-t500x500.jpg') : (u.avatar_url || '');
+          var year = alb.release_date ? new Date(alb.release_date).getFullYear() : (alb.created_at ? new Date(alb.created_at).getFullYear() : '');
+          var count = alb.track_count || (alb.tracks ? alb.tracks.length : 0);
+          return '<div class="album-card" data-album-idx="' + idx + '">' +
+            '<div class="album-art-wrap">' +
+              (art ? '<img src="' + art + '" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'" onload="this.style.display=\'block\';this.nextElementSibling.style.display=\'none\'">' : '') +
+              '<div class="art-fallback" style="' + (art ? 'display:none' : 'display:grid') + '"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg></div>' +
+              '<button class="album-play-btn" title="' + (lang === 'en' ? 'Play album' : 'Слушать альбом') + '" aria-label="' + (t ? t.play_aria : 'Слушать') + '">' +
+                '<svg viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"/></svg>' +
+              '</button>' +
+            '</div>' +
+            '<div class="album-title" title="' + esc(alb.title) + '">' + esc(alb.title) + '</div>' +
+            '<div class="album-meta">' + (year ? year + ' • ' : '') + count + ' ' + (lang === 'en' ? 'tracks' : 'треков') + '</div>' +
+          '</div>';
+        }).join('');
+      }
+
+    } else if (tab === 'playlists') {
+      if (!artistTabsCache.playlists) {
+        var res = await fetch('https://api-v2.soundcloud.com/users/' + u.id + '/playlists?client_id=' + clientId + '&limit=30');
+        if (res.ok) {
+          var data = await res.json();
+          artistTabsCache.playlists = data.collection || [];
+        }
+      }
+
+      var playlists = artistTabsCache.playlists || [];
+      $('#profTracksNum').textContent = playlists.length + ' ' + (lang === 'en' ? 'playlists' : 'плейлистов');
+      $('#btnProfPlayAll').hidden = true;
+
+      if (!playlists.length) {
+        albumsContainer.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>' + (lang === 'en' ? 'No playlists found' : 'Плейлисты не найдены') + '</b>' + (lang === 'en' ? 'This artist has no public playlists.' : 'У этого артиста нет публичных плейлистов.') + '</div>';
+      } else {
+        albumsContainer.innerHTML = playlists.map(function(pl, idx) {
+          var art = pl.artwork_url ? pl.artwork_url.replace('-large.jpg', '-t500x500.jpg') : (u.avatar_url || '');
+          var count = pl.track_count || (pl.tracks ? pl.tracks.length : 0);
+          return '<div class="album-card" data-playlist-idx="' + idx + '">' +
+            '<div class="album-art-wrap">' +
+              (art ? '<img src="' + art + '" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'" onload="this.style.display=\'block\';this.nextElementSibling.style.display=\'none\'">' : '') +
+              '<div class="art-fallback" style="' + (art ? 'display:none' : 'display:grid') + '"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg></div>' +
+              '<button class="album-play-btn" title="' + (lang === 'en' ? 'Play playlist' : 'Слушать плейлист') + '" aria-label="' + (t ? t.play_aria : 'Слушать') + '">' +
+                '<svg viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"/></svg>' +
+              '</button>' +
+            '</div>' +
+            '<div class="album-title" title="' + esc(pl.title) + '">' + esc(pl.title) + '</div>' +
+            '<div class="album-meta">' + count + ' ' + (lang === 'en' ? 'tracks' : 'треков') + '</div>' +
+          '</div>';
+        }).join('');
+      }
+
+    } else if (tab === 'reposts') {
+      if (!artistTabsCache.reposts) {
+        var res = await fetch('https://api-v2.soundcloud.com/stream/users/' + u.id + '/reposts?client_id=' + clientId + '&limit=40');
+        if (res.ok) {
+          var data = await res.json();
+          artistTabsCache.reposts = (data.collection || []).filter(function(item){ return item.track; }).map(function(item) {
+            var tTrack = item.track;
+            return {
+              id: tTrack.id,
+              title: tTrack.title,
+              user: tTrack.user || u,
+              duration: tTrack.duration,
+              artwork_url: tTrack.artwork_url || (tTrack.user && tTrack.user.avatar_url),
+              waveform_url: tTrack.waveform_url,
+              media: tTrack.media
+            };
+          });
+        }
+      }
+
+      profileTracks = artistTabsCache.reposts || [];
+      $('#profTracksNum').textContent = profileTracks.length + ' ' + (lang === 'en' ? 'reposts' : 'репостов');
+      $('#btnProfPlayAll').hidden = !profileTracks.length;
+      $('#btnProfPlayAllText').textContent = (lang === 'en' ? 'Play all' : 'Слушать все') + ' (' + profileTracks.length + ')';
+      listContainer.innerHTML = buildTrackListHtml(profileTracks, 'profile');
+      attachWaveformCanvases(listContainer, profileTracks, 'profile');
+    }
+  } catch(e) {
+    console.error('Error loading tab ' + tab + ':', e);
+    var errTitle = lang === 'en' ? 'Loading error' : 'Ошибка загрузки';
+    if (tab === 'albums' || tab === 'playlists') {
+      albumsContainer.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>' + errTitle + '</b>' + esc(e.message) + '</div>';
+    } else {
+      listContainer.innerHTML = '<div class="empty"><b>' + errTitle + '</b>' + esc(e.message) + '</div>';
+    }
+  }
+}
+
+// Open artist profile
+async function openArtistProfile(artistId, artistUsername, artistPermalink) {
+  switchSection('profile');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  var name = artistUsername || 'Артист';
+  $('#profName').textContent = name;
+  $('#profHandle').textContent = artistPermalink ? '@' + artistPermalink : '@' + name;
+  $('#profBio').textContent = '';
+  $('#profFollowers').textContent = '...';
+  $('#profTracksCount').textContent = '...';
+  $('#profTracksNum').textContent = '';
+  $('#profAvatar').style.backgroundImage = 'none';
+  $('#btnProfExternal').href = 'https://soundcloud.com/' + (artistPermalink || artistUsername || '');
+  $('#profList').innerHTML = '<div class="empty"><b>Загрузка профиля...</b></div>';
+  $('#profAlbumsGrid').hidden = true;
+  $('#profList').hidden = false;
+
+  artistTabsCache = {};
+
+  var found = followings.find(function(f){ return f.id == artistId || f.username == name || f.permalink == artistPermalink; });
+  if (found) {
+    $('#profName').textContent = found.username;
+    $('#profHandle').textContent = '@' + found.permalink;
+    if (found.avatar_url) $('#profAvatar').style.backgroundImage = 'url(' + found.avatar_url + ')';
+    if (found.followers_count) $('#profFollowers').textContent = formatNumber(found.followers_count);
+    if (found.description) $('#profBio').textContent = found.description;
+  }
+
+  try {
+    var u = null;
+    if (artistId) {
+      var uRes = await fetch('https://api-v2.soundcloud.com/users/' + artistId + '?client_id=' + clientId);
+      if (uRes.ok) u = await uRes.json();
+    } else if (artistPermalink || artistUsername) {
+      var uRes = await fetch('https://api-v2.soundcloud.com/resolve?url=https://soundcloud.com/' + encodeURIComponent(artistPermalink || artistUsername) + '&client_id=' + clientId);
+      if (uRes.ok) u = await uRes.json();
+    }
+
+    if (u) {
+      currentProfile = u;
+      $('#profName').textContent = u.username;
+      $('#profHandle').textContent = '@' + (u.permalink || u.username);
+      if (u.avatar_url) $('#profAvatar').style.backgroundImage = 'url(' + u.avatar_url.replace('-large.jpg', '-t500x500.jpg') + ')';
+      $('#profFollowers').textContent = formatNumber(u.followers_count || 0);
+      $('#profTracksCount').textContent = formatNumber(u.track_count || 0);
+      if (u.description) $('#profBio').textContent = u.description;
+      $('#btnProfExternal').href = u.permalink_url || ('https://soundcloud.com/' + u.permalink);
+
+      loadArtistTab('popular');
+    }
+  } catch(e) {
+    console.error('Error loading profile:', e);
+    var fallback = feedTracks.filter(function(t){ return t.user && (t.user.id == artistId || t.user.username == name); });
+    if (fallback.length) {
+      profileTracks = fallback;
+      var container = $('#profList');
+      container.innerHTML = buildTrackListHtml(profileTracks, 'profile');
+      attachWaveformCanvases(container, profileTracks, 'profile');
+    } else {
+      $('#profList').innerHTML = '<div class="empty"><b>Не удалось загрузить артиста</b>' + esc(e.message) + '</div>';
+    }
+  }
+}
+
+// Open album or playlist
+async function openAlbumOrPlaylist(item, type) {
+  var listContainer = $('#profList');
+  var albumsContainer = $('#profAlbumsGrid');
+  albumsContainer.hidden = true;
+  listContainer.hidden = false;
+  listContainer.innerHTML = '<div class="empty"><b>Загрузка ' + (type === 'album' ? 'альбома' : 'плейлиста') + '...</b>' + esc(item.title) + '</div>';
+
+  var tracks = [];
+  if (item.tracks && item.tracks.length && item.tracks[0].title) {
+    tracks = item.tracks;
+  } else {
+    try {
+      var res = await fetch('https://api-v2.soundcloud.com/playlists/' + item.id + '?client_id=' + clientId);
+      if (res.ok) {
+        var data = await res.json();
+        tracks = data.tracks || [];
+      }
+    } catch(err) {
+      console.warn('Could not fetch full playlist/album tracks:', err);
+    }
+  }
+
+  var formattedTracks = (tracks || []).filter(function(t){ return t && (t.id || t.title); }).map(function(t) {
+    return {
+      id: t.id,
+      title: t.title || 'Track',
+      user: t.user || (item.user || currentProfile || {}),
+      duration: t.duration,
+      artwork_url: t.artwork_url || item.artwork_url || (item.user && item.user.avatar_url),
+      waveform_url: t.waveform_url,
+      media: t.media
+    };
+  });
+
+  if (!formattedTracks.length) {
+    listContainer.innerHTML = '<div class="empty"><b>В этом ' + (type === 'album' ? 'альбоме' : 'плейлисте') + ' нет доступных треков</b></div>';
+    return;
+  }
+
+  profileTracks = formattedTracks;
+  $('#profTracksNum').textContent = item.title + ' • ' + profileTracks.length + ' треков';
+  $('#btnProfPlayAll').hidden = false;
+  $('#btnProfPlayAllText').textContent = 'Слушать весь ' + (type === 'album' ? 'альбом' : 'плейлист');
+
+  var backBtnHtml = '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">' +
+    '<button class="back-btn" id="btnBackToCollection" style="margin-bottom:0">' +
+      '<svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>' +
+      '<span>Назад к ' + (type === 'album' ? 'альбомам' : 'плейлистам') + '</span>' +
+    '</button>' +
+    '<span style="font-weight:700;font-size:16px;color:var(--ink)">' + esc(item.title) + '</span>' +
+  '</div>';
+
+  listContainer.innerHTML = backBtnHtml + buildTrackListHtml(profileTracks, 'profile');
+  attachWaveformCanvases(listContainer, profileTracks, 'profile');
+
+  var backBtn = $('#btnBackToCollection');
+  if (backBtn) {
+    backBtn.onclick = function() {
+      loadArtistTab(type === 'album' ? 'albums' : 'playlists');
+    };
+  }
+
+  playTrackInList(profileTracks, 0);
+}
+
+// Artist tabs click listeners
+$$('.prof-nav-tab').forEach(function(btn) {
+  btn.onclick = function() {
+    var tab = btn.dataset.ptab;
+    if (tab) loadArtistTab(tab);
+  };
+});
+
+$('#btnBack').onclick = function() {
+  switchSection(previousSection || 'library');
+};
+
+$('#btnProfPlayAll').onclick = function() {
+  if (profileTracks && profileTracks.length) {
+    playTrackInList(profileTracks, 0);
+  }
+};
+
+// USER PROFILE / LOGOUT
+$('#av').onclick = function() {
+  if (user) {
+    openArtistProfile(user.id, user.username, user.permalink || 'vetcs');
+  }
+};
+
+// SEARCH SOUNDCLOUD
+async function searchSoundCloud(q) {
+  if (!q) return;
+  switchSection('search');
+  $('#searchHeader').textContent = 'Поиск: «' + q + '»';
+  $('#searchList').innerHTML = '<div class="empty"><b>Поиск в SoundCloud...</b>Ищем «' + esc(q) + '»</div>';
+
+  try {
+    var res = await fetch('https://api-v2.soundcloud.com/search/tracks?q=' + encodeURIComponent(q) + '&client_id=' + clientId + '&limit=40');
+    var data = await res.json();
+    searchResults = (data.collection || []).map(function(t) {
+      return {
+        id: t.id,
+        title: t.title,
+        user: t.user,
+        duration: t.duration,
+        artwork_url: t.artwork_url,
+        waveform_url: t.waveform_url,
+        media: t.media
+      };
+    });
+
+    var container = $('#searchList');
+    container.innerHTML = buildTrackListHtml(searchResults, 'search');
+    attachWaveformCanvases(container, searchResults, 'search');
+  } catch(e) {
+    $('#searchList').innerHTML = '<div class="empty"><b>Ошибка поиска</b>' + esc(e.message) + '</div>';
+  }
+}
+
+// SEARCH AUTOCOMPLETE DROPDOWN (Image 1 Parity)
+var searchDropdown = $('#searchDropdown');
+var searchInput = $('#q');
+var searchDebounceTimer = null;
+var dropdownItems = [];
+var focusedIndex = -1;
+
+function closeSearchDropdown() {
+  if (searchDropdown) {
+    searchDropdown.hidden = true;
+    searchDropdown.innerHTML = '';
+  }
+  focusedIndex = -1;
+  dropdownItems = [];
+}
+
+async function updateSearchDropdown(query) {
+  var q = (query || '').trim();
+  if (q.length < 2) {
+    closeSearchDropdown();
+    return;
+  }
+
+  searchDropdown.hidden = false;
+  focusedIndex = -1;
+
+  var qLower = q.toLowerCase();
+  var localArtists = (followings || []).filter(function(f) {
+    return (f.username && f.username.toLowerCase().includes(qLower)) ||
+           (f.permalink && f.permalink.toLowerCase().includes(qLower));
+  }).slice(0, 3);
+
+  var allKnownTracks = [].concat(libraryTracks || [], feedTracks || []);
+  var localTracks = allKnownTracks.filter(function(t) {
+    return t && t.title && t.title.toLowerCase().includes(qLower);
+  }).slice(0, 4);
+
+  renderDropdownResults(q, localArtists, localTracks, true);
+
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(async function() {
+    try {
+      var [uRes, tRes] = await Promise.all([
+        fetch('https://api-v2.soundcloud.com/search/users?q=' + encodeURIComponent(q) + '&client_id=' + clientId + '&limit=4'),
+        fetch('https://api-v2.soundcloud.com/search/tracks?q=' + encodeURIComponent(q) + '&client_id=' + clientId + '&limit=5')
+      ]);
+
+      var remoteUsers = [];
+      var remoteTracks = [];
+
+      if (uRes.ok) {
+        var uData = await uRes.json();
+        remoteUsers = uData.collection || [];
+      }
+      if (tRes.ok) {
+        var tData = await tRes.json();
+        remoteTracks = tData.collection || [];
+      }
+
+      var mergedArtists = [];
+      var seenUsers = {};
+      [].concat(localArtists, remoteUsers).forEach(function(u) {
+        if (u && u.id && !seenUsers[u.id]) {
+          seenUsers[u.id] = true;
+          mergedArtists.push(u);
+        }
+      });
+
+      var mergedTracks = [];
+      var seenTracks = {};
+      [].concat(localTracks, remoteTracks).forEach(function(t) {
+        if (t && t.id && !seenTracks[t.id]) {
+          seenTracks[t.id] = true;
+          mergedTracks.push(t);
+        }
+      });
+
+      if (searchInput.value.trim() === q) {
+        renderDropdownResults(q, mergedArtists.slice(0, 4), mergedTracks.slice(0, 5), false);
+      }
+    } catch(err) {
+      console.warn('Autocomplete fetch error:', err);
+    }
+  }, 180);
+}
+
+function renderDropdownResults(q, artists, tracks, isInitial) {
+  var html = '<div class="sd-header" data-action="full-search">' +
+    '<span>Search for "<b>' + esc(q) + '</b>"</span>' +
+  '</div>';
+
+  if (!artists.length && !tracks.length && isInitial) {
+    html += '<div class="sd-loading">Поиск...</div>';
+    searchDropdown.innerHTML = html;
+    dropdownItems = Array.from(searchDropdown.querySelectorAll('.sd-header'));
+    return;
+  }
+
+  artists.forEach(function(a) {
+    var avatar = a.avatar_url ? a.avatar_url.replace('-large.jpg', '-t300x300.jpg') : '';
+    html += '<div class="sd-item sd-artist" data-aid="' + a.id + '" data-aname="' + esc(a.username) + '" data-apermalink="' + (a.permalink || '') + '">' +
+      '<div class="sd-art sd-art-user" style="background-image:url(' + avatar + ')"></div>' +
+      '<div class="sd-text">' +
+        '<div class="sd-title">' + esc(a.username) + '</div>' +
+      '</div>' +
+      '<svg class="sd-icon" viewBox="0 0 24 24" fill="currentColor">' +
+        '<path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>' +
+      '</svg>' +
+    '</div>';
+  });
+
+  window._sdTracks = tracks;
+  tracks.forEach(function(t, idx) {
+    var art = t.artwork_url ? t.artwork_url.replace('-large.jpg', '-t300x300.jpg') : (t.user && t.user.avatar_url ? t.user.avatar_url : '');
+    html += '<div class="sd-item sd-track" data-sd-track-idx="' + idx + '">' +
+      '<div class="sd-art" style="background-image:url(' + art + ')"></div>' +
+      '<div class="sd-text">' +
+        '<div class="sd-title">' + esc(t.title) + '</div>' +
+      '</div>' +
+      '<svg class="sd-icon" viewBox="0 0 24 24" fill="currentColor">' +
+        '<rect x="2" y="9" width="2.5" height="6" rx="1"/>' +
+        '<rect x="7" y="5" width="2.5" height="14" rx="1"/>' +
+        '<rect x="12" y="2" width="2.5" height="20" rx="1"/>' +
+        '<rect x="17" y="5" width="2.5" height="14" rx="1"/>' +
+        '<rect x="22" y="9" width="2.5" height="6" rx="1"/>' +
+      '</svg>' +
+    '</div>';
+  });
+
+  searchDropdown.innerHTML = html;
+  dropdownItems = Array.from(searchDropdown.querySelectorAll('.sd-header, .sd-item'));
+}
+
+searchInput.addEventListener('input', function() {
+  updateSearchDropdown(this.value);
+});
+
+searchInput.addEventListener('keydown', function(e) {
+  if (searchDropdown.hidden) {
+    if (e.key === 'Enter') {
+      var val = this.value.trim();
+      if (val) searchSoundCloud(val);
+    }
+    return;
+  }
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (!dropdownItems.length) return;
+    focusedIndex = (focusedIndex + 1) % dropdownItems.length;
+    dropdownItems.forEach(function(el, i) { el.classList.toggle('focused', i === focusedIndex); });
+    dropdownItems[focusedIndex].scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (!dropdownItems.length) return;
+    focusedIndex = (focusedIndex - 1 + dropdownItems.length) % dropdownItems.length;
+    dropdownItems.forEach(function(el, i) { el.classList.toggle('focused', i === focusedIndex); });
+    dropdownItems[focusedIndex].scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (focusedIndex >= 0 && dropdownItems[focusedIndex]) {
+      dropdownItems[focusedIndex].click();
+    } else {
+      var val = this.value.trim();
+      closeSearchDropdown();
+      if (val) searchSoundCloud(val);
+    }
+  } else if (e.key === 'Escape') {
+    closeSearchDropdown();
+  }
+});
+
+searchDropdown.addEventListener('click', function(e) {
+  var header = e.target.closest('[data-action="full-search"]');
+  if (header) {
+    var val = searchInput.value.trim();
+    closeSearchDropdown();
+    if (val) searchSoundCloud(val);
+    return;
+  }
+
+  var artistItem = e.target.closest('.sd-artist');
+  if (artistItem) {
+    var aid = artistItem.dataset.aid;
+    var aname = artistItem.dataset.aname;
+    var aperm = artistItem.dataset.apermalink;
+    closeSearchDropdown();
+    openArtistProfile(aid, aname, aperm);
+    return;
+  }
+
+  var trackItem = e.target.closest('.sd-track');
+  if (trackItem) {
+    var idx = +trackItem.dataset.sdTrackIdx;
+    var trk = window._sdTracks && window._sdTracks[idx];
+    closeSearchDropdown();
+    if (trk) {
+      playTrackInList([trk], 0);
+    }
+    return;
+  }
+});
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.search-wrap')) {
+    closeSearchDropdown();
+  }
+});
+
+// TOAST NOTIFICATION HELPER
+var _toastTimeout = null;
+function showToast(msg) {
+  var t = $('#toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(_toastTimeout);
+  _toastTimeout = setTimeout(function() {
+    t.classList.remove('show');
+  }, 2600);
+}
+
+// PLAYBACK ENGINE WITH AUTO-RECOVERY & AUTO-SKIP
+var consecutivePlaybackErrors = 0;
+
+function handleTrackPlaybackError(msg) {
+  consecutivePlaybackErrors++;
+  showToast(msg || 'Трек недоступен. Переключаем на следующий...');
+  
+  if (consecutivePlaybackErrors > 8) {
+    console.error('Too many consecutive playback errors. Pausing playback.');
+    consecutivePlaybackErrors = 0;
+    au.pause();
+    syncPlayer();
+    showToast('Несколько треков подряд недоступны в SoundCloud.');
+    return;
+  }
+
+  // Auto skip to next track without freezing
+  setTimeout(function() {
+    playNext();
+  }, 450);
+}
+
+async function playTrackInList(list, idx) {
+  if (!list || idx < 0 || idx >= list.length) return;
+  playingList = list;
+  cur = idx;
+  var track = list[idx];
+  currentTrack = track;
+
+  $('#bt').textContent = track.title || track.name;
+  var aName = (track.user && track.user.username) ? track.user.username : 'SoundCloud';
+  $('#bm').textContent = aName;
+  $('#bm').dataset.aid = (track.user && track.user.id) || '';
+  $('#bm').dataset.apermalink = (track.user && track.user.permalink) || '';
+  $('#bm').dataset.aname = aName;
+  
+  var art = track.artwork_url ? track.artwork_url.replace('-large.jpg', '-t500x500.jpg') : (track.user && track.user.avatar_url ? track.user.avatar_url : '');
+  var barArt = $('#barArt');
+  var barFallback = $('#barArtFallback');
+  if (art) {
+    barArt.src = art;
+  } else {
+    barArt.src = '';
+    barArt.style.display = 'none';
+    if (barFallback) barFallback.style.display = 'grid';
+  }
+
+  // Reset progress and timer for new track immediately
+  var skEl = $('#sk');
+  if (skEl) {
+    skEl.value = 0;
+    skEl.style.setProperty('--pct', '0%');
+  }
+  var expectedDur = track.duration ? Math.round(track.duration / 1000) : 0;
+  $('#tm').textContent = '0:00 / ' + (expectedDur ? fmt(expectedDur) : '0:00');
+
+  // Update visual cur states
+  syncPlayer();
+
+  var streamUrl = await resolveStreamUrl(track);
+  if (!streamUrl) {
+    console.warn('Could not resolve playable stream for:', track.title);
+    handleTrackPlaybackError('Трек «' + (track.title || 'SoundCloud') + '» недоступен. Переключаем...');
+    return;
+  }
+
+  consecutivePlaybackErrors = 0;
+
+  // Handle HLS vs MP3
+  try {
+    if (track.is_hls || streamUrl.includes('.m3u8')) {
+      if (Hls.isSupported()) {
+        if (hls) { hls.destroy(); hls = null; }
+        hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: false,
+          backBufferLength: 90
+        });
+        hls.loadSource(streamUrl);
+        hls.attachMedia(au);
+        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+          au.volume = cfg.vol !== undefined ? cfg.vol : 0.85;
+          au.play().catch(function(err){
+            console.warn('HLS play() was blocked or interrupted:', err);
+          });
+        });
+        hls.on(Hls.Events.ERROR, function(event, data) {
+          if (data && data.fatal) {
+            console.warn('Fatal HLS error:', data.type, data.details);
+            switch(data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                hls.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                hls.recoverMediaError();
+                break;
+              default:
+                if (hls) { hls.destroy(); hls = null; }
+                handleTrackPlaybackError('Ошибка потока. Переключаем...');
+                break;
+            }
+          }
+        });
+        hls.on(Hls.Events.BUFFER_EOS, function() {
+          setTimeout(function() {
+            if (!au.paused && au.duration && (au.currentTime >= au.duration - 1)) {
+              handleTrackEnded();
+            }
+          }, 350);
+        });
+      } else if (au.canPlayType('application/vnd.apple.mpegurl')) {
+        if (hls) { hls.destroy(); hls = null; }
+        au.src = streamUrl;
+        au.volume = cfg.vol !== undefined ? cfg.vol : 0.85;
+        au.play().catch(function(err){
+          console.warn('Native HLS play error:', err);
+        });
+      } else {
+        handleTrackPlaybackError('HLS не поддерживается.');
+      }
+    } else {
+      if (hls) { hls.destroy(); hls = null; }
+      au.src = streamUrl;
+      au.volume = cfg.vol !== undefined ? cfg.vol : 0.85;
+      au.play().catch(function(err){
+        console.warn('Direct MP3 play error:', err);
+      });
+    }
+  } catch(e) {
+    console.error('Audio setup exception:', e);
+    handleTrackPlaybackError('Ошибка запуска трека. Переключаем...');
+  }
+}
+
+function togglePlay() {
+  if (cur < 0) {
+    var currentList = (activeSection === 'feed') ? feedTracks :
+                      (activeSection === 'profile') ? profileTracks :
+                      (activeSection === 'search') ? searchResults :
+                      getVisibleLibraryTracks();
+    if (currentList.length) playTrackInList(currentList, 0);
+    return;
+  }
+  au.paused ? au.play() : au.pause();
+}
+
+function syncBarLike() {
+  var btn = $('#barLike');
+  if (!btn) return;
+  var lang = (cfg.lang === 'en') ? 'en' : 'ru';
+  var t = (typeof I18N !== 'undefined' && I18N[lang]) ? I18N[lang] : null;
+  var isLiked = !!(currentTrack && likes[currentTrack.id]);
+  btn.classList.toggle('on', isLiked);
+  if (t) {
+    btn.title = isLiked ? t.like_remove : t.like_add;
+    btn.setAttribute('aria-label', t.like_aria);
+  } else {
+    btn.title = isLiked ? 'Удалить из любимых (L)' : 'Добавить в любимые (L)';
+  }
+}
+
+function syncPlayer() {
+  var lang = (cfg.lang === 'en') ? 'en' : 'ru';
+  var t = (typeof I18N !== 'undefined' && I18N[lang]) ? I18N[lang] : null;
+  $('#pi').innerHTML = au.paused ? PLAY : PAUSE;
+  $('#pp').setAttribute('aria-label', au.paused ? (t ? t.play_aria : 'Играть') : (t ? t.pause_aria : 'Пауза'));
+  syncBarLike();
+  $$('.trk').forEach(function(el) {
+    var tid = el.dataset.tid;
+    var isThis = !!(currentTrack && tid && (String(currentTrack.id) === String(tid)));
+    el.classList.toggle('cur', isThis);
+    var overlay = el.querySelector('.pb-overlay svg');
+    if (overlay) overlay.innerHTML = (isThis && !au.paused) ? PAUSE : PLAY;
+  });
+}
+
+// GLOBAL EVENT DELEGATION FOR CLICKS (Tracks, Artists, Waveforms)
+document.addEventListener('click', function(e) {
+  // Click on artist chip or link
+  var artistEl = e.target.closest('[data-a="artist"], .artist-chip, .following-card, #bm');
+  if (artistEl) {
+    e.stopPropagation();
+    e.preventDefault();
+    var aid = artistEl.dataset.aid;
+    var aname = artistEl.dataset.aname || artistEl.textContent.trim();
+    var aperm = artistEl.dataset.apermalink;
+    openArtistProfile(aid, aname, aperm);
+    return;
+  }
+
+  // Click on album card
+  var albCard = e.target.closest('[data-album-idx]');
+  if (albCard) {
+    e.stopPropagation();
+    e.preventDefault();
+    var idx = +albCard.dataset.albumIdx;
+    var albums = artistTabsCache.albums || [];
+    var alb = albums[idx];
+    if (alb) openAlbumOrPlaylist(alb, 'album');
+    return;
+  }
+
+  // Click on playlist card
+  var plCard = e.target.closest('[data-playlist-idx]');
+  if (plCard) {
+    e.stopPropagation();
+    e.preventDefault();
+    var idx = +plCard.dataset.playlistIdx;
+    var playlists = artistTabsCache.playlists || [];
+    var pl = playlists[idx];
+    if (pl) openAlbumOrPlaylist(pl, 'playlist');
+    return;
+  }
+
+  // Click on track item
+  var trkEl = e.target.closest('.trk');
+  if (trkEl) {
+    var idx = +trkEl.dataset.i;
+    var listType = trkEl.dataset.list;
+    var list = (listType === 'feed') ? feedTracks :
+               (listType === 'profile') ? profileTracks :
+               (listType === 'search') ? searchResults :
+               getVisibleLibraryTracks();
+    var track = list[idx];
+    if (!track) return;
+
+    // Click on canvas to seek
+    if (e.target.tagName === 'CANVAS') {
+      if (playingList !== list || cur !== idx) {
+        playTrackInList(list, idx);
+      }
+      var r = e.target.getBoundingClientRect();
+      var pct = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      if (au.duration) au.currentTime = pct * au.duration;
+      return;
+    }
+
+    // Click on like button
+    var likeBtn = e.target.closest('.lk');
+    if (likeBtn) {
+      if (likes[track.id]) {
+        delete likes[track.id];
+      } else {
+        likes[track.id] = 1;
+        if (!libraryTracks.some(function(t){ return t.id === track.id; })) {
+          libraryTracks.unshift(track);
+          saveTracks();
+        }
+      }
+      saveLikes();
+      likeBtn.classList.toggle('on', !!likes[track.id]);
+      syncBarLike();
+      if (activeSection === 'library') renderLibrary();
+      return;
+    }
+
+    // Play/Pause
+    if (playingList === list && cur === idx) {
+      togglePlay();
+    } else {
+      playTrackInList(list, idx);
+    }
+  }
+});
+
+// BOTTOM BAR LIKE BUTTON
+$('#barLike').onclick = function(e) {
+  e.stopPropagation();
+  if (!currentTrack) return;
+  var tid = currentTrack.id;
+  if (likes[tid]) {
+    delete likes[tid];
+  } else {
+    likes[tid] = 1;
+    if (!libraryTracks.some(function(t){ return t.id === tid; })) {
+      libraryTracks.unshift(currentTrack);
+      saveTracks();
+    }
+  }
+  saveLikes();
+  syncBarLike();
+
+  $$('.trk[data-tid="' + tid + '"] .lk').forEach(function(b) {
+    b.classList.toggle('on', !!likes[tid]);
+  });
+
+  if (activeSection === 'library' && libTab === 'liked') {
+    renderLibrary();
+  }
+};
+
+// BOTTOM CONTROLS & PLAYBACK ENGINE
+var isShuffle = !!cfg.shuffle;
+var repeatMode = cfg.repeat || 'all'; // 'all', 'one', 'off'
+
+function syncShuffleUI() {
+  var lang = (cfg.lang === 'en') ? 'en' : 'ru';
+  var t = (typeof I18N !== 'undefined' && I18N[lang]) ? I18N[lang] : null;
+  $('#shuf').classList.toggle('active', isShuffle);
+  $('#shuf').title = isShuffle ? (lang === 'en' ? 'Shuffle enabled (S)' : 'Перемешивание включено (S)') : (t ? t.shuffle_btn : 'Перемешать (S)');
+}
+
+function syncRepeatUI() {
+  var lang = (cfg.lang === 'en') ? 'en' : 'ru';
+  var t = (typeof I18N !== 'undefined' && I18N[lang]) ? I18N[lang] : null;
+  $('#rep').classList.toggle('active', repeatMode !== 'off');
+  $('#repOneBadge').hidden = (repeatMode !== 'one');
+  if (t) {
+    if (repeatMode === 'one') {
+      $('#rep').title = t.rep_one;
+    } else if (repeatMode === 'all') {
+      $('#rep').title = t.rep_all;
+    } else {
+      $('#rep').title = t.rep_off;
+    }
+  } else {
+    if (repeatMode === 'one') {
+      $('#rep').title = 'Повтор текущего трека (R)';
+    } else if (repeatMode === 'all') {
+      $('#rep').title = 'Повтор всего плейлиста (R)';
+    } else {
+      $('#rep').title = 'Повтор выключен (R)';
+    }
+  }
+}
+
+function playNext() {
+  if (!playingList || !playingList.length) return;
+  if (isShuffle && playingList.length > 1) {
+    var nextIdx = cur;
+    var attempts = 0;
+    while (nextIdx === cur && attempts < 20) {
+      nextIdx = Math.floor(Math.random() * playingList.length);
+      attempts++;
+    }
+    playTrackInList(playingList, nextIdx);
+  } else {
+    playTrackInList(playingList, (cur + 1) % playingList.length);
+  }
+}
+
+function playPrev() {
+  if (!playingList || !playingList.length) return;
+  if (au.currentTime > 3) {
+    au.currentTime = 0;
+    return;
+  }
+  if (isShuffle && playingList.length > 1) {
+    var prevIdx = cur;
+    var attempts = 0;
+    while (prevIdx === cur && attempts < 20) {
+      prevIdx = Math.floor(Math.random() * playingList.length);
+      attempts++;
+    }
+    playTrackInList(playingList, prevIdx);
+  } else {
+    playTrackInList(playingList, (cur - 1 + playingList.length) % playingList.length);
+  }
+}
+
+$('#pp').onclick = togglePlay;
+$('#nx').onclick = playNext;
+$('#pv').onclick = playPrev;
+
+$('#shuf').onclick = function() {
+  isShuffle = !isShuffle;
+  cfg.shuffle = isShuffle;
+  saveCfg();
+  syncShuffleUI();
+};
+
+$('#rep').onclick = function() {
+  if (repeatMode === 'all') repeatMode = 'one';
+  else if (repeatMode === 'one') repeatMode = 'off';
+  else repeatMode = 'all';
+  cfg.repeat = repeatMode;
+  saveCfg();
+  syncRepeatUI();
+};
+
+au.onplay = function() {
+  syncPlayer();
+  au.volume = cfg.vol !== undefined ? cfg.vol : 0.85;
+};
+au.onpause = function() { syncPlayer(); };
+
+function handleTrackEnded() {
+  if (repeatMode === 'one') {
+    au.currentTime = 0;
+    au.play().catch(function(){});
+    return;
+  }
+  if (repeatMode === 'all' || cfg.auto) {
+    playNext();
+  } else {
+    syncPlayer();
+  }
+}
+
+au.onended = handleTrackEnded;
+
+au.onerror = function(e) {
+  console.warn('HTMLAudioElement error event:', e);
+  if (currentTrack) {
+    delete currentTrack.stream_url;
+    delete currentTrack._streamUrlTime;
+  }
+  handleTrackPlaybackError('Ошибка аудиопотока. Переключаем...');
+};
+
+var _eosCheckTimer = null;
+au.ontimeupdate = function() {
+  var d = au.duration || (currentTrack && currentTrack.duration ? currentTrack.duration / 1000 : 0);
+  var pct = d ? (au.currentTime / d * 100) : 0;
+  var skEl = $('#sk');
+  if (skEl) {
+    skEl.value = d ? (au.currentTime / d * 1000) : 0;
+    skEl.style.setProperty('--pct', pct + '%');
+  }
+  $('#tm').textContent = fmt(au.currentTime) + ' / ' + fmt(d);
+  
+  var c = document.querySelector('.trk.cur canvas');
+  if (c && currentTrack) drawWave(c, currentTrack, true);
+
+  // EOF fallback: handles cases where browser/HLS reaches end but does not fire onended
+  if (d > 0 && au.currentTime >= (d - 0.35) && !au.paused) {
+    if (!_eosCheckTimer) {
+      _eosCheckTimer = setTimeout(function() {
+        _eosCheckTimer = null;
+        if (!au.paused && au.duration > 0 && au.currentTime >= (au.duration - 0.4)) {
+          console.log('EOF fallback triggered: track reached end, advancing...');
+          handleTrackEnded();
+        }
+      }, 450);
+    }
+  }
+};
+
+$('#sk').oninput = function() {
+  var pct = this.value / 10;
+  this.style.setProperty('--pct', pct + '%');
+  if (au.duration) au.currentTime = (this.value / 1000) * au.duration;
+};
+
+// VOLUME CONTROL LOGIC
+var lastVol = (cfg.vol > 0) ? cfg.vol : 0.85;
+
+function updateVolIcon(v) {
+  var svg = $('#volIcon');
+  if (!svg) return;
+  if (v <= 0.001) {
+    svg.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
+  } else if (v < 0.5) {
+    svg.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>';
+  } else {
+    svg.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>';
+  }
+}
+
+function setVolume(v, save) {
+  v = Math.max(0, Math.min(1, Math.round(v * 100) / 100));
+  au.volume = v;
+  var volEl = $('#vol');
+  if (volEl) {
+    volEl.value = v;
+    volEl.style.setProperty('--vol-pct', Math.round(v * 100) + '%');
+  }
+  $('#volVal').textContent = Math.round(v * 100) + '%';
+  if (save !== false) {
+    cfg.vol = v;
+    if (v > 0) lastVol = v;
+    saveCfg();
+  }
+  updateVolIcon(v);
+}
+
+$('#vol').oninput = function() {
+  setVolume(+this.value);
+};
+
+$('#btnMute').onclick = function() {
+  if (au.volume > 0) {
+    lastVol = au.volume;
+    setVolume(0);
+  } else {
+    setVolume(lastVol || 0.85);
+  }
+};
+
+$('.vol-wrap').onwheel = function(e) {
+  e.preventDefault();
+  var delta = e.deltaY < 0 ? 0.05 : -0.05;
+  setVolume(au.volume + delta);
+};
+
+// SYNC PROFILE & LOAD TRACKS
+async function syncUserProfile(profileInput) {
+  var clean = (profileInput || '').trim().replace(/^https?:\/\/(www\.)?soundcloud\.com\//, '').replace(/\/$/, '').replace(/^@/, '');
+  if (!clean) clean = (user && (user.permalink || user.username)) || 'vetcs';
+
+  try {
+    // 1. Resolve user profile info to keep avatar, username, followers up to date
+    var uRes = await fetch('https://api-v2.soundcloud.com/resolve?url=' + encodeURIComponent('https://soundcloud.com/' + clean) + '&client_id=' + clientId);
+    if (uRes.ok) {
+      var uData = await uRes.json();
+      if (uData && (uData.id || uData.username)) {
+        user = uData;
+        saveUser();
+        syncUserAvatarUI();
+        if ($('#profAvatar')) $('#profAvatar').style.backgroundImage = 'url("' + (user.avatar_url || '').replace('-large.jpg', '-t500x500.jpg') + '")';
+        if ($('#profName')) $('#profName').textContent = user.username || user.name || 'User';
+      }
+    }
+
+    var uid = (user && user.id) ? user.id : 1531003096;
+    var likesRes = await fetch('https://api-v2.soundcloud.com/users/' + uid + '/likes?client_id=' + clientId + '&limit=100');
+    if (likesRes.ok) {
+      var likesData = await likesRes.json();
+      libraryTracks = [];
+      likes = {};
+      if (likesData.collection) {
+        likesData.collection.forEach(function(item) {
+          var t = item.track || item;
+          if (t && t.id) {
+            libraryTracks.push(t);
+            likes[t.id] = 1;
+          }
+        });
+      }
+      saveTracks();
+      saveLikes();
+      renderLibrary();
+    }
+  } catch(e) {
+    console.warn('syncUserProfile error:', e);
+  }
+}
+
+$('#btnSync').onclick = function() {
+  var icon = this.querySelector('svg');
+  if (icon) {
+    icon.style.transform = 'rotate(360deg)';
+    icon.style.transition = 'transform 0.6s ease';
+    setTimeout(function(){ icon.style.transform = 'none'; icon.style.transition = 'none'; }, 600);
+  }
+  syncUserProfile((user && user.permalink) || 'vetcs');
+};
+
+$('#gin').onclick = function() {
+  window.open('https://soundcloud.com/signin', '_blank', 'width=600,height=700');
+  var isEn = (cfg.lang === 'en');
+  $('#modalTitle').textContent = isEn ? 'Sign in via Google' : 'Вход через Google';
+  $('#modalDesc').textContent = isEn ? 'After signing in to SoundCloud via Google, click "Load tracks":' : 'После входа в SoundCloud через Google, нажмите «Загрузить треки»:';
+  $('#inputProfile').value = (user && user.permalink) ? 'https://soundcloud.com/' + user.permalink : 'https://soundcloud.com/vetcs';
+  $('#btnSyncGo').textContent = isEn ? 'Load tracks' : 'Загрузить треки';
+  $('#btnModalCancel').textContent = isEn ? 'Cancel' : 'Отмена';
+  $('#modal').hidden = false;
+  $('#inputProfile').focus();
+};
+$('#btnByLink').onclick = async function() {
+  user = window.SEED_USER;
+  saveUser();
+  view();
+  switchSection('library');
+  syncUserProfile('vetcs');
+};
+$('#btnModalCancel').onclick = function() { $('#modal').hidden = true; };
+$('#btnSyncGo').onclick = async function() {
+  var val = ($('#inputProfile').value || '').trim();
+  $('#modal').hidden = true;
+  if (!user) {
+    user = window.SEED_USER;
+    saveUser();
+  }
+  view();
+  switchSection('library');
+  await syncUserProfile(val || 'vetcs');
+};
+
+// HOTKEYS
+document.addEventListener('keydown', function(e) {
+  if (user && cfg.keys && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) {
+    if (e.code === 'Space' && document.activeElement.tagName !== 'BUTTON') {
+      e.preventDefault();
+      togglePlay();
+    } else if (e.key === 'ArrowRight' && au.duration) {
+      au.currentTime = Math.min(au.duration, au.currentTime + 5);
+    } else if (e.key === 'ArrowLeft') {
+      au.currentTime = Math.max(0, au.currentTime - 5);
+    } else if (e.key === 'n' || e.key === 'N') {
+      $('#nx').click();
+    } else if (e.key === 'p' || e.key === 'P') {
+      $('#pv').click();
+    } else if (e.key === 's' || e.key === 'S') {
+      $('#shuf').click();
+    } else if (e.key === 'r' || e.key === 'R') {
+      $('#rep').click();
+    } else if (e.key === 'm' || e.key === 'M') {
+      $('#btnMute').click();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setVolume(au.volume + 0.05);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setVolume(au.volume - 0.05);
+    } else if (e.key === 'l' || e.key === 'L' || e.key === 'д' || e.key === 'Д') {
+      if ($('#barLike')) $('#barLike').click();
+    }
+  }
+  if (e.key === 'Escape') {
+    $('#modal').hidden = true;
+    $('#set').classList.remove('open');
+  }
+});
+
+// SETTINGS & STYLES APPLICATION
+var FONTS = {
+  unb: 'Unbounded, system-ui, sans-serif',
+  ins: '"Instrument Sans", system-ui, sans-serif',
+  pts: '"PT Serif Caption", Georgia, "Times New Roman", serif',
+  sys: 'system-ui, sans-serif'
+};
+var RAD = {
+  sharp: ['0px', '0px', '0px'],
+  soft: ['20px', '50%', '999px'],
+  round: ['34px', '50%', '999px']
+};
+
+// INTERNATIONALIZATION (RU / EN)
+var I18N = {
+  ru: {
+    home: 'На главную',
+    nav_feed: 'Feed',
+    nav_library: 'Library',
+    search_placeholder: 'Поиск',
+    search_aria: 'Поиск',
+    btn_sync: 'Синхронизировать треки',
+    settings: 'Настройки',
+    theme_btn: 'Сменить тему',
+    profile_title: 'Мой профиль',
+
+    // Feed
+    feed_following: 'Подписки',
+    feed_fresh: 'Лента свежих треков',
+    no_followings: 'Нет подписок',
+
+    // Library tabs
+    tab_liked: 'Мне нравится',
+    tab_following: 'Подписки',
+    tab_all: 'Все треки',
+    empty_title: 'Пока ничего нет',
+    empty_liked: 'У вас нет сохранённых лайков. Включите трек из ленты или найдите в поиске!',
+    empty_tracks: 'Треки не найдены.',
+    tracks_suffix: 'треков',
+    followings_suffix: 'подписок',
+
+    // Search
+    search_title: 'Результаты поиска',
+
+    // Profile
+    back: 'Назад',
+    followers: 'подписчиков',
+    tracks: 'треков',
+    play_all: 'Слушать все',
+    on_soundcloud: 'В SoundCloud ↗',
+    ptab_all: 'All',
+    ptab_popular: 'Popular tracks',
+    ptab_tracks: 'Tracks',
+    ptab_albums: 'Albums',
+    ptab_playlists: 'Playlists',
+    ptab_reposts: 'Reposts',
+
+    // Settings
+    lbl_lang: 'Язык меню',
+    lbl_name: 'Название приложения',
+    lbl_accent: 'Цветовой акцент',
+    opt_accent_orange: 'SoundCloud Оранжевый',
+    opt_accent_mono: 'Монохромный (Белый)',
+    opt_accent_purple: 'Фиолетовый неон',
+    opt_accent_green: 'Зелёный киберпанк',
+    lbl_theme: 'Тема',
+    opt_theme_dark: 'Чёрная',
+    opt_theme_light: 'Белая',
+    opt_theme_auto: 'Как в системе',
+    lbl_font: 'Шрифт заголовков',
+    lbl_corners: 'Углы карточек',
+    opt_rad_soft: 'Мягкие (20px)',
+    opt_rad_round: 'Очень круглые (34px)',
+    opt_rad_sharp: 'Острые (0px)',
+    lbl_wave: 'Стиль волны трека',
+    opt_wave_bars: 'Столбики',
+    opt_wave_thin: 'Тонкие линии',
+    opt_wave_base: 'От нижней линии',
+    lbl_dense: 'Компактный список',
+    lbl_hide: 'Скрыть волну',
+    lbl_auto: 'Авто-переход к следующему',
+    lbl_keys: 'Горячие клавиши (Пробел, ←, →, N, P, L)',
+    btn_relog: 'Сменить аккаунт',
+    btn_reset: 'Сбросить всё',
+
+    // Player
+    seek_aria: 'Перемотка',
+    nothing_playing: 'Ничего не играет',
+    play_hint: 'Включите трек из библиотеки или ленты',
+    like_add: 'Добавить в любимые (L)',
+    like_remove: 'Удалить из любимых (L)',
+    like_aria: 'Нравится',
+    shuffle_btn: 'Перемешать (S)',
+    prev_btn: 'Предыдущий (P)',
+    play_pause: 'Воспроизведение / Пауза (Пробел)',
+    play_aria: 'Играть',
+    pause_aria: 'Пауза',
+    next_btn: 'Следующий (N)',
+    rep_off: 'Повтор выключен (R)',
+    rep_one: 'Повтор текущего трека (R)',
+    rep_all: 'Повтор всего плейлиста (R)',
+    mute_btn: 'Громкость / Без звука (M)',
+    vol_aria: 'Громкость',
+
+    // Modal
+    relog_confirm: 'Сменить профиль?'
+  },
+  en: {
+    home: 'Home',
+    nav_feed: 'Feed',
+    nav_library: 'Library',
+    search_placeholder: 'Search',
+    search_aria: 'Search',
+    btn_sync: 'Sync tracks',
+    settings: 'Settings',
+    theme_btn: 'Switch theme',
+    profile_title: 'My profile',
+
+    // Feed
+    feed_following: 'Following',
+    feed_fresh: 'Fresh tracks feed',
+    no_followings: 'No followings',
+
+    // Library tabs
+    tab_liked: 'Likes',
+    tab_following: 'Following',
+    tab_all: 'All tracks',
+    empty_title: 'Nothing here yet',
+    empty_liked: 'No saved likes. Play a track from feed or search!',
+    empty_tracks: 'No tracks found.',
+    tracks_suffix: 'tracks',
+    followings_suffix: 'following',
+
+    // Search
+    search_title: 'Search results',
+
+    // Profile
+    back: 'Back',
+    followers: 'followers',
+    tracks: 'tracks',
+    play_all: 'Play all',
+    on_soundcloud: 'On SoundCloud ↗',
+    ptab_all: 'All',
+    ptab_popular: 'Popular tracks',
+    ptab_tracks: 'Tracks',
+    ptab_albums: 'Albums',
+    ptab_playlists: 'Playlists',
+    ptab_reposts: 'Reposts',
+
+    // Settings
+    lbl_lang: 'Menu language',
+    lbl_name: 'Application title',
+    lbl_accent: 'Color accent',
+    opt_accent_orange: 'SoundCloud Orange',
+    opt_accent_mono: 'Monochrome (White)',
+    opt_accent_purple: 'Purple Neon',
+    opt_accent_green: 'Green Cyberpunk',
+    lbl_theme: 'Theme',
+    opt_theme_dark: 'Dark',
+    opt_theme_light: 'Light',
+    opt_theme_auto: 'System default',
+    lbl_font: 'Headings font',
+    lbl_corners: 'Card corners',
+    opt_rad_soft: 'Soft (20px)',
+    opt_rad_round: 'Round (34px)',
+    opt_rad_sharp: 'Sharp (0px)',
+    lbl_wave: 'Track waveform style',
+    opt_wave_bars: 'Bars',
+    opt_wave_thin: 'Thin lines',
+    opt_wave_base: 'From baseline',
+    lbl_dense: 'Compact list',
+    lbl_hide: 'Hide waveform',
+    lbl_auto: 'Autoplay next track',
+    lbl_keys: 'Keyboard shortcuts (Space, ←, →, N, P, L)',
+    btn_relog: 'Switch account',
+    btn_reset: 'Reset all',
+
+    // Player
+    seek_aria: 'Seek',
+    nothing_playing: 'Nothing playing',
+    play_hint: 'Play a track from library or feed',
+    like_add: 'Add to favorites (L)',
+    like_remove: 'Remove from favorites (L)',
+    like_aria: 'Like',
+    shuffle_btn: 'Shuffle (S)',
+    prev_btn: 'Previous (P)',
+    play_pause: 'Play / Pause (Space)',
+    play_aria: 'Play',
+    pause_aria: 'Pause',
+    next_btn: 'Next (N)',
+    rep_off: 'Repeat off (R)',
+    rep_one: 'Repeat current track (R)',
+    rep_all: 'Repeat all (R)',
+    mute_btn: 'Volume / Mute (M)',
+    vol_aria: 'Volume',
+
+    // Modal
+    relog_confirm: 'Switch profile?'
+  }
+};
+
+function applyLanguage() {
+  var lang = (cfg.lang === 'en') ? 'en' : 'ru';
+  var t = I18N[lang];
+  if (!t) return;
+
+  // Header
+  var logo = $('#logoClick');
+  if (logo) logo.title = t.home;
+  var q = $('#q');
+  if (q) {
+    q.placeholder = t.search_placeholder;
+    q.setAttribute('aria-label', t.search_aria);
+  }
+  var btnSync = $('#btnSync');
+  if (btnSync) btnSync.title = t.btn_sync;
+  var gs = $('#gs');
+  if (gs) {
+    gs.title = t.settings;
+    gs.setAttribute('aria-label', t.settings);
+  }
+  var th = $('#th');
+  if (th) {
+    th.title = t.theme_btn;
+    th.setAttribute('aria-label', t.theme_btn);
+  }
+
+  // Feed section titles
+  var feedTitles = $$('#viewFeed .feed-section-title span');
+  if (feedTitles.length >= 2) {
+    feedTitles[0].textContent = t.feed_following;
+    feedTitles[1].textContent = t.feed_fresh;
+  }
+
+  // Library tabs
+  var tabLiked = $('[data-t="liked"] span');
+  if (tabLiked) tabLiked.textContent = t.tab_liked;
+  var tabFollowing = $('[data-t="following"] span');
+  if (tabFollowing) tabFollowing.textContent = t.tab_following;
+  var tabAll = $('[data-t="all"] span');
+  if (tabAll) tabAll.textContent = t.tab_all;
+
+  // Search header
+  var searchH = $('#searchHeader');
+  if (searchH) searchH.textContent = t.search_title;
+
+  // Profile
+  var backSpan = $('#btnBack span');
+  if (backSpan) backSpan.textContent = t.back;
+  var playAllSpan = $('#btnProfPlayAllText');
+  if (playAllSpan && !currentProfile) playAllSpan.textContent = t.play_all;
+  var extLink = $('#btnProfExternal');
+  if (extLink) extLink.textContent = t.on_soundcloud;
+  var fLbl = $('#profFollowersLabel');
+  if (fLbl) fLbl.textContent = t.followers;
+  var trkLbl = $('#profTracksLabel');
+  if (trkLbl) trkLbl.textContent = t.tracks;
+
+  $$('.prof-nav-tab').forEach(function(btn) {
+    var key = 'ptab_' + btn.dataset.ptab;
+    if (t[key]) btn.textContent = t[key];
+  });
+
+  // Settings aside
+  var setH2 = $('#lblSettingsTitle');
+  if (setH2) setH2.textContent = t.settings;
+  var lblLang = $('#lblLang');
+  if (lblLang) lblLang.textContent = t.lbl_lang;
+  var lblAppName = $('#lblAppName');
+  if (lblAppName) lblAppName.textContent = t.lbl_name;
+  var lblAccent = $('#lblAccent');
+  if (lblAccent) lblAccent.textContent = t.lbl_accent;
+  var selAccent = $('#selAccent');
+  if (selAccent && selAccent.options) {
+    if (selAccent.options[0]) selAccent.options[0].textContent = t.opt_accent_orange;
+    if (selAccent.options[1]) selAccent.options[1].textContent = t.opt_accent_mono;
+    if (selAccent.options[2]) selAccent.options[2].textContent = t.opt_accent_purple;
+    if (selAccent.options[3]) selAccent.options[3].textContent = t.opt_accent_green;
+  }
+  var lblTheme = $('#lblTheme');
+  if (lblTheme) lblTheme.textContent = t.lbl_theme;
+  var selTheme = $('#selTheme');
+  if (selTheme && selTheme.options) {
+    if (selTheme.options[0]) selTheme.options[0].textContent = t.opt_theme_dark;
+    if (selTheme.options[1]) selTheme.options[1].textContent = t.opt_theme_light;
+    if (selTheme.options[2]) selTheme.options[2].textContent = t.opt_theme_auto;
+  }
+  var lblFd = $('#lblFd');
+  if (lblFd) lblFd.textContent = t.lbl_font;
+  var lblRad = $('#lblRad');
+  if (lblRad) lblRad.textContent = t.lbl_corners;
+  var selRad = $('#selRad');
+  if (selRad && selRad.options) {
+    if (selRad.options[0]) selRad.options[0].textContent = t.opt_rad_soft;
+    if (selRad.options[1]) selRad.options[1].textContent = t.opt_rad_round;
+    if (selRad.options[2]) selRad.options[2].textContent = t.opt_rad_sharp;
+  }
+  var lblWave = $('#lblWave');
+  if (lblWave) lblWave.textContent = t.lbl_wave;
+  var selWave = $('#selWave');
+  if (selWave && selWave.options) {
+    if (selWave.options[0]) selWave.options[0].textContent = t.opt_wave_bars;
+    if (selWave.options[1]) selWave.options[1].textContent = t.opt_wave_thin;
+    if (selWave.options[2]) selWave.options[2].textContent = t.opt_wave_base;
+  }
+  var lblDense = $('#lblDense');
+  if (lblDense) lblDense.textContent = t.lbl_dense;
+  var lblHide = $('#lblHide');
+  if (lblHide) lblHide.textContent = t.lbl_hide;
+  var lblAuto = $('#lblAuto');
+  if (lblAuto) lblAuto.textContent = t.lbl_auto;
+  var lblKeys = $('#lblKeys');
+  if (lblKeys) lblKeys.textContent = t.lbl_keys;
+  var btnRelog = $('#btnRelog');
+  if (btnRelog) btnRelog.textContent = t.btn_relog;
+  var rsBtn = $('#rs');
+  if (rsBtn) rsBtn.textContent = t.btn_reset;
+
+  // Bottom player bar
+  var sk = $('#sk');
+  if (sk) sk.setAttribute('aria-label', t.seek_aria);
+  if (!currentTrack) {
+    var bt = $('#bt');
+    if (bt) bt.textContent = t.nothing_playing;
+    var bm = $('#bm');
+    if (bm) bm.textContent = t.play_hint;
+  }
+  var pv = $('#pv');
+  if (pv) {
+    pv.title = t.prev_btn;
+    pv.setAttribute('aria-label', t.prev_btn);
+  }
+  var pp = $('#pp');
+  if (pp) {
+    pp.title = t.play_pause;
+    pp.setAttribute('aria-label', au.paused ? t.play_aria : t.pause_aria);
+  }
+  var nx = $('#nx');
+  if (nx) {
+    nx.title = t.next_btn;
+    nx.setAttribute('aria-label', t.next_btn);
+  }
+  var btnMute = $('#btnMute');
+  if (btnMute) btnMute.title = t.mute_btn;
+  var vol = $('#vol');
+  if (vol) vol.setAttribute('aria-label', t.vol_aria);
+
+  syncBarLike();
+  syncShuffleUI();
+  syncRepeatUI();
+}
+
+function applyConfig() {
+  var root = document.documentElement;
+  var rd = RAD[cfg.rad] || RAD.soft;
+  root.style.setProperty('--r', rd[0]);
+  root.style.setProperty('--rb', rd[1]);
+  root.style.setProperty('--rp', rd[2]);
+  root.style.setProperty('--fd', FONTS[cfg.fd] || FONTS.pts);
+  root.style.setProperty('--fb', FONTS[cfg.fb] || FONTS.ins);
+  root.setAttribute('data-theme', cfg.theme === 'auto' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : cfg.theme);
+  root.setAttribute('data-accent', cfg.accent || 'mono');
+
+  document.body.classList.toggle('cmp', !!cfg.dense);
+  document.body.classList.toggle('nowave', !!cfg.hide);
+
+  var nm = cfg.name || 'SoundClode';
+  $$('.logo').forEach(function(e){ e.textContent = nm; });
+  document.title = nm;
+
+  applyLanguage();
+}
+
+function syncSettingsInputs() {
+  $$('#set [data-k]').forEach(function(el) {
+    var v = cfg[el.dataset.k];
+    if (el.type === 'checkbox') el.checked = !!v;
+    else el.value = v;
+  });
+}
+
+$$('#set [data-k]').forEach(function(el) {
+  el.oninput = function() {
+    var k = el.dataset.k;
+    cfg[k] = el.type === 'checkbox' ? el.checked : (el.type === 'range' ? +el.value : el.value);
+    saveCfg();
+    applyConfig();
+  };
+});
+
+$('#gs').onclick = function() { $('#set').classList.toggle('open'); };
+$('#sx').onclick = function() { $('#set').classList.remove('open'); };
+$('#th').onclick = function() {
+  cfg.theme = (document.documentElement.getAttribute('data-theme') === 'dark') ? 'light' : 'dark';
+  saveCfg();
+  syncSettingsInputs();
+  applyConfig();
+};
+$('#rs').onclick = function() {
+  cfg = Object.assign({}, DEF_CFG);
+  saveCfg();
+  syncSettingsInputs();
+  applyConfig();
+};
+$('#btnRelog').onclick = function() {
+  var lang = (cfg.lang === 'en') ? 'en' : 'ru';
+  var msg = (lang === 'en') ? 'Switch profile?' : 'Сменить профиль?';
+  if (confirm(msg)) {
+    au.pause();
+    user = null;
+    localStorage.removeItem('soundclode_user');
+    view();
+  }
+};
+
+window.addEventListener('resize', function() {
+  var list = (activeSection === 'feed') ? feedTracks :
+             (activeSection === 'profile') ? profileTracks :
+             (activeSection === 'search') ? searchResults :
+             getVisibleLibraryTracks();
+  $$('.trk').forEach(function(el) {
+    var idx = +el.dataset.i;
+    if (list[idx]) {
+      var isCur = (playingList === list && cur === idx);
+      drawWave(el.querySelector('canvas'), list[idx], isCur);
+    }
+  });
+});
+
+// INITIALIZE
+getFreshClientId();
+syncSettingsInputs();
+applyConfig();
+setVolume(cfg.vol !== undefined ? cfg.vol : 0.85, false);
+syncShuffleUI();
+syncRepeatUI();
+view();
+switchSection('library');
+if (user) {
+  setTimeout(function() {
+    syncUserProfile((user && user.permalink) || 'vetcs');
+  }, 800);
+}
+</script>
+</body>
+</html>

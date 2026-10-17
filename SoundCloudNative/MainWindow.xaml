@@ -1,0 +1,49 @@
+<Window x:Class="SoundCloudNative.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        Title="SoundCloud"
+        Height="760" Width="1160"
+        MinHeight="480" MinWidth="700"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="CanResizeWithGrip"
+        WindowStartupLocation="CenterScreen">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="28" ResizeBorderThickness="8" GlassFrameThickness="0" CornerRadius="0"/>
+    </WindowChrome.WindowChrome>
+
+    <!-- Seamless dark border with soft glow -->
+    <Border Background="#000000" BorderBrush="#1C1E26" BorderThickness="1" CornerRadius="12" ClipToBounds="True">
+        <Border.Effect>
+            <DropShadowEffect Color="#000000" BlurRadius="25" ShadowDepth="4" Opacity="0.5"/>
+        </Border.Effect>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="28"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Minimalist integrated drag bar -->
+            <Grid Grid.Row="0" Background="#000000" MouseDown="TitleBar_MouseDown">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Window action buttons on the right -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0" WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button Click="BtnMinimize_Click" Content="—" Foreground="#717585" Background="Transparent" BorderThickness="0" Width="28" Height="22" Cursor="Hand" FontSize="12"/>
+                    <Button Click="BtnMaximize_Click" Content="🗖" Foreground="#717585" Background="Transparent" BorderThickness="0" Width="28" Height="22" Cursor="Hand" FontSize="11" Margin="2,0,0,0"/>
+                    <Button Click="BtnClose_Click" Content="✕" Foreground="#717585" Background="Transparent" BorderThickness="0" Width="28" Height="22" Cursor="Hand" FontSize="12" Margin="2,0,0,0"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Embedded Web Player -->
+            <wv2:WebView2 Grid.Row="1" x:Name="webView"/>
+        </Grid>
+    </Border>
+</Window>
