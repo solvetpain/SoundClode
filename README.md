@@ -54,9 +54,9 @@
 
 ### Вариант 1. Скачать готовый релиз (Windows .exe)
 Самый простой способ — скачать файл из официального раздела **[Releases](https://github.com/solvetpain/SoundClode/releases/latest)**:
-- **[SoundClode.exe](https://github.com/solvetpain/SoundClode/releases/download/v1.0.0/SoundClode.exe)** (Прямой запуск .exe без распаковки архива, портативный)
-- **[SoundClode-v1.0.0-Windows-x64.zip](https://github.com/solvetpain/SoundClode/releases/download/v1.0.0/SoundClode-v1.0.0-Windows-x64.zip)** (Полный портативный ZIP-пакет со всеми библиотеками)
-- **[SoundClode-SingleFile-v1.0.0.zip](https://github.com/solvetpain/SoundClode/releases/download/v1.0.0/SoundClode-SingleFile-v1.0.0.zip)** (Компактный портативный архив)
+- **[SoundClode.exe](https://github.com/solvetpain/SoundClode/releases/download/v2.0.0/SoundClode.exe)** (Прямой запуск .exe без распаковки архива, портативный)
+- **[SoundClode-v2.0.0-Windows-x64.zip](https://github.com/solvetpain/SoundClode/releases/download/v2.0.0/SoundClode-v2.0.0-Windows-x64.zip)** (Полный портативный ZIP-пакет со всеми библиотеками)
+- **[SoundClode-SingleFile-v2.0.0.zip](https://github.com/solvetpain/SoundClode/releases/download/v2.0.0/SoundClode-SingleFile-v2.0.0.zip)** (Компактный портативный архив)
 
 Скачайте **`SoundClode.exe`** и запустите! Никаких зависимостей или установки .NET не требуется.
 
