@@ -531,6 +531,26 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
   box-shadow:0 6px 26px rgba(0,0,0,0.18), 0 0 16px rgba(0,0,0,0.06);
 }
 .trk.cur .ti{color:var(--ink) !important}
+.trk-playlist-row{
+  display:flex !important;align-items:center;gap:16px;cursor:pointer;
+}
+.trk-playlist-row .art-thumb{grid-row:auto;flex-shrink:0}
+.trk-playlist-row .trk-info{flex:1;min-width:0}
+.trk-playlist-row .lk{flex-shrink:0;margin-left:auto}
+.trk-playlist-row .pl-chevron{
+  display:flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:50%;color:var(--mut);
+  flex-shrink:0;transition:all 0.2s cubic-bezier(0.16,1,0.3,1);
+}
+.trk-playlist-row:hover .pl-chevron{
+  color:var(--ink);transform:translateX(3px);
+}
+.pl-badge{
+  display:inline-flex;align-items:center;padding:2px 7px;
+  font-size:10px;font-weight:700;letter-spacing:0.04em;
+  text-transform:uppercase;border-radius:6px;
+  background:var(--line);color:var(--ink-sec);vertical-align:middle;flex-shrink:0;
+}
 .art-thumb{
   width:52px;height:52px;border-radius:12px;overflow:hidden;background:var(--card-hover);
   position:relative;cursor:pointer;flex-shrink:0;grid-row:span 2;
@@ -890,14 +910,18 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
       <div class="tabs">
         <button class="tab" data-t="liked" aria-pressed="true">
           <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-          <span>Мне нравится</span>
+          <span id="tabLikedLabel">Мне нравится</span>
+        </button>
+        <button class="tab" data-t="playlists" aria-pressed="false">
+          <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          <span id="tabPlaylistsLabel">Плейлисты</span>
         </button>
         <button class="tab" data-t="following" aria-pressed="false">
           <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          <span>Подписки</span>
+          <span id="tabFollowingLabel">Подписки</span>
         </button>
         <button class="tab" data-t="all" aria-pressed="false">
-          <span>Все треки</span>
+          <span id="tabAllLabel">Все треки</span>
         </button>
         <span class="sp"></span>
         <span class="cnt-tag" id="cnt"></span>
@@ -905,6 +929,7 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
 
       <div id="libraryList"></div>
       <div id="followingGrid" class="following-grid" hidden></div>
+      <div id="playlistsGrid" class="albums-grid" hidden></div>
     </div>
 
 
@@ -1109,6 +1134,9 @@ var $$ = function(s){ return document.querySelectorAll(s); };
 // State
 var user = null;
 var libraryTracks = [];
+var libraryPlaylists = [];
+var likedItems = [];
+var playlistLikes = {};
 var feedTracks = [];
 var profileTracks = [];
 var searchResults = [];
@@ -1116,7 +1144,7 @@ var followings = [];
 
 var activeSection = 'library'; // 'library', 'feed', 'search', 'profile'
 var previousSection = 'library';
-var libTab = 'liked'; // 'liked', 'following', 'all'
+var libTab = 'liked'; // 'liked', 'playlists', 'following', 'all'
 var currentProfile = null;
 
 // Currently playing
@@ -1135,6 +1163,9 @@ try {
     saveUser();
   }
   libraryTracks = JSON.parse(localStorage.getItem('soundclode_tracks') || 'null') || [];
+  libraryPlaylists = JSON.parse(localStorage.getItem('soundclode_playlists') || 'null') || [];
+  likedItems = JSON.parse(localStorage.getItem('soundclode_liked_items') || 'null') || [];
+  playlistLikes = JSON.parse(localStorage.getItem('soundclode_playlist_likes') || 'null') || {};
   feedTracks = JSON.parse(localStorage.getItem('soundclode_feed') || 'null') || [];
   followings = JSON.parse(localStorage.getItem('soundclode_followings') || 'null') || [];
   
@@ -1174,6 +1205,9 @@ try {
 
 function saveCfg(){ try{ localStorage.setItem('soundclode_cfg', JSON.stringify(cfg)); }catch(e){} }
 function saveTracks(){ try{ localStorage.setItem('soundclode_tracks', JSON.stringify(libraryTracks)); }catch(e){} }
+function savePlaylists(){ try{ localStorage.setItem('soundclode_playlists', JSON.stringify(libraryPlaylists)); }catch(e){} }
+function savePlaylistLikes(){ try{ localStorage.setItem('soundclode_playlist_likes', JSON.stringify(playlistLikes)); }catch(e){} }
+function saveLikedItems(){ try{ localStorage.setItem('soundclode_liked_items', JSON.stringify(likedItems)); }catch(e){} }
 function saveLikes(){ try{ localStorage.setItem('soundclode_likes', JSON.stringify(likes)); }catch(e){} }
 function saveUser(){ try{ localStorage.setItem('soundclode_user', JSON.stringify(user)); }catch(e){} }
 
@@ -1479,7 +1513,7 @@ function drawWave(c, track, isCurrentPlaying) {
   }
 }
 
-// HTML GENERATOR FOR TRACK LIST
+// HTML GENERATOR FOR TRACK LIST (Supports tracks & playlists)
 function buildTrackListHtml(tracks, listType) {
   var lang = (cfg.lang === 'en') ? 'en' : 'ru';
   var t = (typeof I18N !== 'undefined' && I18N[lang]) ? I18N[lang] : null;
@@ -1489,7 +1523,41 @@ function buildTrackListHtml(tracks, listType) {
     return '<div class="empty"><b>' + title + '</b>' + desc + '</div>';
   }
 
-  return tracks.map(function(trackItem, idx) {
+  return tracks.map(function(rawItem, idx) {
+    var isPlaylist = (rawItem.item_type === 'playlist') || (rawItem.kind === 'playlist') || !!rawItem.playlist;
+    if (isPlaylist) {
+      var pl = rawItem.playlist || rawItem;
+      var art = pl.artwork_url ? pl.artwork_url.replace('-large.jpg', '-t500x500.jpg') : ((pl.user && pl.user.avatar_url) || '');
+      var plAuthor = (pl.user && pl.user.username) ? pl.user.username : 'SoundCloud';
+      var plCount = pl.track_count || (pl.tracks ? pl.tracks.length : 0);
+      var isPlLiked = (playlistLikes[pl.id] !== undefined) ? !!playlistLikes[pl.id] : true;
+      var plIconSvg = '<svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+      var imgHtml = art ? '<img src="' + art + '" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'" onload="this.style.display=\'block\';this.nextElementSibling.style.display=\'none\'">' : '';
+      var fallbackHtml = '<div class="art-fallback" style="' + (art ? 'display:none' : 'display:grid') + '">' + plIconSvg + '</div>';
+
+      return '<div class="trk trk-playlist-row" data-pid="' + pl.id + '" data-i="' + idx + '" data-list="' + listType + '">' +
+        '<div class="art-thumb" data-a="play-playlist" data-pid="' + pl.id + '" title="' + (lang === 'en' ? 'Play playlist' : 'Слушать плейлист') + '">' +
+          imgHtml +
+          fallbackHtml +
+          '<div class="pb-overlay"><svg viewBox="0 0 24 24">' + PLAY + '</svg></div>' +
+        '</div>' +
+        '<div class="trk-info" data-a="open-playlist" data-pid="' + pl.id + '" style="cursor:pointer">' +
+          '<div class="ti" style="display:flex;align-items:center;gap:8px;">' +
+            '<span>' + esc(pl.title || 'Playlist') + '</span>' +
+            '<span class="pl-badge">' + (lang === 'en' ? 'PLAYLIST' : 'ПЛЕЙЛИСТ') + '</span>' +
+          '</div>' +
+          '<div class="trk-artist">' + esc(plAuthor) + ' <span style="opacity:0.5">• ' + plCount + ' ' + (lang === 'en' ? 'tracks' : 'треков') + '</span></div>' +
+        '</div>' +
+        '<button class="lk' + (isPlLiked ? ' on' : '') + '" data-a="like-playlist" data-pid="' + pl.id + '" aria-label="' + (lang === 'en' ? 'Like' : 'Нравится') + '">' +
+          '<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' +
+        '</button>' +
+        '<div class="pl-chevron" data-a="open-playlist" data-pid="' + pl.id + '" style="display:flex;align-items:center;padding:0 8px;opacity:0.4;cursor:pointer;">' +
+          '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>' +
+        '</div>' +
+      '</div>';
+    }
+
+    var trackItem = rawItem.track || rawItem;
     var isThis = !!(currentTrack && trackItem && (String(currentTrack.id) === String(trackItem.id) || currentTrack.title === trackItem.title));
     var isPlaying = isThis && !au.paused;
     var art = trackItem.artwork_url ? trackItem.artwork_url.replace('-large.jpg', '-t500x500.jpg') : (trackItem.user && trackItem.user.avatar_url ? trackItem.user.avatar_url : '');
@@ -1522,11 +1590,14 @@ function buildTrackListHtml(tracks, listType) {
 
 function attachWaveformCanvases(containerEl, tracks, listType) {
   if (!containerEl) return;
-  containerEl.querySelectorAll('.trk[data-list="' + listType + '"]').forEach(function(el) {
+  containerEl.querySelectorAll('.trk[data-list="' + listType + '"][data-tid]').forEach(function(el) {
     var idx = +el.dataset.i;
-    if (tracks[idx]) {
-      var isCur = !!(currentTrack && String(currentTrack.id) === String(tracks[idx].id));
-      drawWave(el.querySelector('canvas'), tracks[idx], isCur);
+    var raw = tracks[idx];
+    var track = raw ? (raw.track || raw) : null;
+    if (track && track.id) {
+      var isCur = !!(currentTrack && String(currentTrack.id) === String(track.id));
+      var cv = el.querySelector('canvas');
+      if (cv) drawWave(cv, track, isCur);
     }
   });
 }
@@ -1575,16 +1646,142 @@ function renderFeed() {
 }
 
 // 2. RENDER LIBRARY
+function getVisibleLikedItems() {
+  if (likedItems && likedItems.length) {
+    return likedItems.filter(function(it) {
+      if (it.item_type === 'playlist') {
+        var pid = it.playlist && it.playlist.id;
+        return pid && (playlistLikes[pid] === undefined || playlistLikes[pid]);
+      } else {
+        var tid = it.track && it.track.id;
+        return tid && likes[tid];
+      }
+    });
+  }
+  // Fallback: build from libraryPlaylists and libraryTracks
+  var list = [];
+  (libraryPlaylists || []).forEach(function(p) {
+    if (p && p.id && (playlistLikes[p.id] === undefined || playlistLikes[p.id])) {
+      list.push({ item_type: 'playlist', playlist: p });
+    }
+  });
+  (libraryTracks || []).forEach(function(t) {
+    if (t && t.id && likes[t.id]) {
+      list.push({ item_type: 'track', track: t });
+    }
+  });
+  return list;
+}
+
+function getAllLibraryTracks() {
+  var map = {};
+  var result = [];
+  (libraryTracks || []).forEach(function(t) {
+    if (t && t.id && !map[t.id]) {
+      map[t.id] = 1;
+      result.push(t);
+    }
+  });
+  (libraryPlaylists || []).forEach(function(pl) {
+    if (pl && pl.tracks && Array.isArray(pl.tracks)) {
+      pl.tracks.forEach(function(t) {
+        if (t && t.id && !map[t.id] && t.title) {
+          map[t.id] = 1;
+          result.push(t);
+        }
+      });
+    }
+  });
+  return result;
+}
+
 function getVisibleLibraryTracks() {
-  if (libTab === 'liked') return libraryTracks.filter(function(t){ return likes[t.id]; });
-  return libraryTracks;
+  if (libTab === 'liked') return getVisibleLikedItems();
+  return getAllLibraryTracks();
+}
+
+async function playPlaylist(pl) {
+  var lang = (cfg.lang === 'en') ? 'en' : 'ru';
+  var tracks = (pl.tracks && pl.tracks.length && pl.tracks[0].title) ? pl.tracks : null;
+  if (!tracks) {
+    showToast(lang === 'en' ? 'Loading playlist tracks...' : 'Загрузка треков плейлиста...');
+    try {
+      var res = await fetch('https://api-v2.soundcloud.com/playlists/' + pl.id + '?client_id=' + clientId);
+      if (res.ok) {
+        var data = await res.json();
+        tracks = data.tracks || [];
+        pl.tracks = tracks;
+        savePlaylists();
+      }
+    } catch(e) {
+      showToast(lang === 'en' ? 'Could not load playlist' : 'Не удалось загрузить плейлист');
+      return;
+    }
+  }
+
+  var formattedTracks = (tracks || []).filter(function(t){ return t && (t.id || t.title); }).map(function(t) {
+    return {
+      id: t.id,
+      title: t.title || 'Track',
+      user: t.user || pl.user || {},
+      duration: t.duration,
+      artwork_url: t.artwork_url || pl.artwork_url || (pl.user && pl.user.avatar_url),
+      waveform_url: t.waveform_url,
+      media: t.media
+    };
+  });
+
+  if (!formattedTracks.length) {
+    showToast(lang === 'en' ? 'No playable tracks in this playlist' : 'В этом плейлисте нет доступных треков');
+    return;
+  }
+
+  playTrackInList(formattedTracks, 0);
+  showToast((lang === 'en' ? 'Playing: ' : 'Воспроизведение: ') + pl.title);
+}
+
+function togglePlaylistLike(pl, btnEl) {
+  var lang = (cfg.lang === 'en') ? 'en' : 'ru';
+  var isLiked = (playlistLikes[pl.id] !== undefined) ? !!playlistLikes[pl.id] : true;
+  var willLike = !isLiked;
+  if (willLike) {
+    playlistLikes[pl.id] = 1;
+    if (!libraryPlaylists.some(function(p){ return String(p.id) === String(pl.id); })) {
+      libraryPlaylists.unshift(pl);
+    }
+  } else {
+    delete playlistLikes[pl.id];
+  }
+  savePlaylists();
+  savePlaylistLikes();
+  saveLikedItems();
+
+  if (btnEl) btnEl.classList.toggle('on', willLike);
+  if (activeSection === 'library') renderLibrary();
+
+  var token = localStorage.getItem('soundclode_oauth_token');
+  if (window.chrome && window.chrome.webview && token && user && user.id) {
+    window.chrome.webview.postMessage(JSON.stringify({
+      type: 'LIKE_PLAYLIST',
+      playlistId: pl.id,
+      isLiked: willLike,
+      token: token,
+      userId: user.id
+    }));
+  }
+  showToast(willLike ? (lang === 'en' ? 'Added playlist to favorites' : 'Плейлист добавлен в любимые') : (lang === 'en' ? 'Removed playlist from favorites' : 'Плейлист удалён из любимых'));
 }
 
 function renderLibrary() {
   var lang = (cfg.lang === 'en') ? 'en' : 'ru';
   var isFollowing = (libTab === 'following');
-  $('#libraryList').hidden = isFollowing;
+  var isPlaylists = (libTab === 'playlists');
+  var isLiked = (libTab === 'liked');
+
+  $('#libraryList').hidden = (isFollowing || isPlaylists);
   $('#followingGrid').hidden = !isFollowing;
+  var pGrid = $('#playlistsGrid');
+  if (pGrid) pGrid.hidden = !isPlaylists;
 
   if (isFollowing) {
     var fGrid = $('#followingGrid');
@@ -1598,9 +1795,42 @@ function renderLibrary() {
       '</div>';
     }).join('');
     $('#cnt').textContent = followings.length + ' ' + (lang === 'en' ? 'following' : 'подписок');
+  } else if (isPlaylists) {
+    var pls = libraryPlaylists || [];
+    $('#cnt').textContent = pls.length + ' ' + (lang === 'en' ? 'playlists' : 'плейлистов');
+    if (!pls.length) {
+      pGrid.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>' + (lang === 'en' ? 'No playlists' : 'Нет плейлистов') + '</b>' + (lang === 'en' ? 'You have not created or liked any playlists yet.' : 'У вас пока нет сохранённых или понравившихся плейлистов.') + '</div>';
+    } else {
+      pGrid.innerHTML = pls.map(function(pl, idx) {
+        var art = pl.artwork_url ? pl.artwork_url.replace('-large.jpg', '-t500x500.jpg') : ((pl.user && pl.user.avatar_url) || '');
+        var count = pl.track_count || (pl.tracks ? pl.tracks.length : 0);
+        return '<div class="album-card" data-lib-playlist-idx="' + idx + '">' +
+          '<div class="album-art-wrap">' +
+            (art ? '<img src="' + art + '" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'" onload="this.style.display=\'block\';this.nextElementSibling.style.display=\'none\'">' : '') +
+            '<div class="art-fallback" style="' + (art ? 'display:none' : 'display:grid') + '"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>' +
+            '<button class="album-play-btn" data-a="play-lib-playlist" data-idx="' + idx + '" title="' + (lang === 'en' ? 'Play' : 'Воспроизвести') + '"><svg viewBox="0 0 24 24">' + PLAY + '</svg></button>' +
+          '</div>' +
+          '<div class="album-title" title="' + esc(pl.title) + '">' + esc(pl.title) + '</div>' +
+          '<div class="album-author">' + esc((pl.user && pl.user.username) || '') + ' • ' + count + ' ' + (lang === 'en' ? 'tracks' : 'треков') + '</div>' +
+        '</div>';
+      }).join('');
+    }
   } else {
-    var tracks = getVisibleLibraryTracks();
-    $('#cnt').textContent = tracks.length ? tracks.length + ' ' + (lang === 'en' ? 'tracks' : 'треков') : '';
+    var tracks = isLiked ? getVisibleLikedItems() : getAllLibraryTracks();
+    if (isLiked) {
+      var tCount = 0, pCount = 0;
+      tracks.forEach(function(it) {
+        if (it.item_type === 'playlist' || it.playlist) pCount++;
+        else tCount++;
+      });
+      if (pCount > 0) {
+        $('#cnt').textContent = tracks.length + ' ' + (lang === 'en' ? ('likes (' + tCount + ' tracks, ' + pCount + ' playlists)') : ('лайка (' + tCount + ' треков, ' + pCount + ' плейлиста)'));
+      } else {
+        $('#cnt').textContent = tracks.length ? (tracks.length + ' ' + (lang === 'en' ? 'tracks' : 'треков')) : '';
+      }
+    } else {
+      $('#cnt').textContent = tracks.length ? (tracks.length + ' ' + (lang === 'en' ? 'tracks' : 'треков')) : '';
+    }
     var container = $('#libraryList');
     container.innerHTML = buildTrackListHtml(tracks, 'library');
     attachWaveformCanvases(container, tracks, 'library');
@@ -1641,16 +1871,26 @@ async function loadArtistTab(tab) {
 
   // 1. LIKED TRACKS TAB
   if (tab === 'likes') {
-    if (isOwn && libraryTracks.length) {
-      profileTracks = libraryTracks;
-      listContainer.hidden = false;
-      albumsContainer.hidden = true;
-      $('#profTracksNum').textContent = profileTracks.length + ' ' + (lang === 'en' ? 'liked tracks' : 'понравившихся треков');
-      $('#btnProfPlayAll').hidden = !profileTracks.length;
-      $('#btnProfPlayAllText').textContent = (lang === 'en' ? 'Play all' : 'Слушать все') + ' (' + profileTracks.length + ')';
-      listContainer.innerHTML = buildTrackListHtml(profileTracks, 'profile');
-      attachWaveformCanvases(listContainer, profileTracks, 'profile');
-      return;
+    if (isOwn) {
+      var items = getVisibleLikedItems();
+      if (items.length) {
+        profileTracks = items;
+        listContainer.hidden = false;
+        albumsContainer.hidden = true;
+        var tCount = 0, pCount = 0;
+        items.forEach(function(it){ if (it.item_type === 'playlist' || it.playlist) pCount++; else tCount++; });
+        if (pCount > 0) {
+          $('#profTracksNum').textContent = items.length + ' ' + (lang === 'en' ? ('likes (' + tCount + ' tracks, ' + pCount + ' playlists)') : ('лайка (' + tCount + ' треков, ' + pCount + ' плейлиста)'));
+        } else {
+          $('#profTracksNum').textContent = items.length + ' ' + (lang === 'en' ? 'liked tracks' : 'понравившихся треков');
+        }
+        var playableCount = items.filter(function(x){ return !(x.item_type === 'playlist' || x.playlist); }).length;
+        $('#btnProfPlayAll').hidden = !playableCount;
+        $('#btnProfPlayAllText').textContent = (lang === 'en' ? 'Play all' : 'Слушать все') + ' (' + playableCount + ')';
+        listContainer.innerHTML = buildTrackListHtml(profileTracks, 'profile');
+        attachWaveformCanvases(listContainer, profileTracks, 'profile');
+        return;
+      }
     }
 
     if (!artistTabsCache.likes) {
@@ -1670,8 +1910,12 @@ async function loadArtistTab(tab) {
           var lData = await lRes.json();
           if (!lData || !lData.collection || !lData.collection.length) break;
           lData.collection.forEach(function(item) {
-            var t = item.track || (item.kind === 'track' ? item : null);
-            if (t && t.id) lTracks.push(t);
+            if (item.playlist) {
+              lTracks.push({ item_type: 'playlist', playlist: item.playlist });
+            } else {
+              var t = item.track || (item.kind === 'track' ? item : null);
+              if (t && t.id) lTracks.push({ item_type: 'track', track: t });
+            }
           });
           nextLUrl = lData.next_href || null;
         } catch(e) { break; }
@@ -1682,9 +1926,16 @@ async function loadArtistTab(tab) {
     profileTracks = artistTabsCache.likes || [];
     listContainer.hidden = false;
     albumsContainer.hidden = true;
-    $('#profTracksNum').textContent = profileTracks.length + ' ' + (lang === 'en' ? 'liked tracks' : 'понравившихся треков');
-    $('#btnProfPlayAll').hidden = !profileTracks.length;
-    $('#btnProfPlayAllText').textContent = (lang === 'en' ? 'Play all' : 'Слушать все') + ' (' + profileTracks.length + ')';
+    var extTCount = 0, extPCount = 0;
+    profileTracks.forEach(function(it){ if (it.item_type === 'playlist' || it.playlist) extPCount++; else extTCount++; });
+    if (extPCount > 0) {
+      $('#profTracksNum').textContent = profileTracks.length + ' ' + (lang === 'en' ? ('likes (' + extTCount + ' tracks, ' + extPCount + ' playlists)') : ('лайка (' + extTCount + ' треков, ' + extPCount + ' плейлиста)'));
+    } else {
+      $('#profTracksNum').textContent = profileTracks.length + ' ' + (lang === 'en' ? 'liked tracks' : 'понравившихся треков');
+    }
+    var extPlayable = profileTracks.filter(function(x){ return !(x.item_type === 'playlist' || x.playlist); }).length;
+    $('#btnProfPlayAll').hidden = !extPlayable;
+    $('#btnProfPlayAllText').textContent = (lang === 'en' ? 'Play all' : 'Слушать все') + ' (' + extPlayable + ')';
     listContainer.innerHTML = buildTrackListHtml(profileTracks, 'profile');
     attachWaveformCanvases(listContainer, profileTracks, 'profile');
     return;
@@ -1967,6 +2218,8 @@ async function openArtistProfile(artistId, artistUsername, artistPermalink) {
 
 // Open album or playlist
 async function openAlbumOrPlaylist(item, type) {
+  var fromSec = activeSection;
+  if (activeSection !== 'profile') switchSection('profile');
   var listContainer = $('#profList');
   var albumsContainer = $('#profAlbumsGrid');
   albumsContainer.hidden = true;
@@ -2013,7 +2266,7 @@ async function openAlbumOrPlaylist(item, type) {
   var backBtnHtml = '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">' +
     '<button class="back-btn" id="btnBackToCollection" style="margin-bottom:0">' +
       '<svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>' +
-      '<span>Назад к ' + (type === 'album' ? 'альбомам' : 'плейлистам') + '</span>' +
+      '<span>Назад' + (fromSec === 'library' ? ' в библиотеку' : ' к ' + (type === 'album' ? 'альбомам' : 'плейлистам')) + '</span>' +
     '</button>' +
     '<span style="font-weight:700;font-size:16px;color:var(--ink)">' + esc(item.title) + '</span>' +
   '</div>';
@@ -2024,7 +2277,11 @@ async function openAlbumOrPlaylist(item, type) {
   var backBtn = $('#btnBackToCollection');
   if (backBtn) {
     backBtn.onclick = function() {
-      loadArtistTab(type === 'album' ? 'albums' : 'playlists');
+      if (fromSec === 'library') {
+        switchSection('library');
+      } else {
+        loadArtistTab(type === 'album' ? 'albums' : 'playlists');
+      }
     };
   }
 
@@ -2505,6 +2762,54 @@ document.addEventListener('click', function(e) {
     return;
   }
 
+  // Click on playlist in liked list
+  var plRow = e.target.closest('.trk-playlist-row');
+  if (plRow) {
+    e.stopPropagation();
+    e.preventDefault();
+    var pid = +plRow.dataset.pid;
+    var pl = (libraryPlaylists || []).find(function(p){ return p.id == pid; });
+    if (!pl) {
+      var it = (likedItems || []).find(function(x){ return (x.item_type === 'playlist' || x.playlist) && (x.playlist || x).id == pid; });
+      if (it) pl = it.playlist || it;
+    }
+    if (!pl) return;
+
+    var likeBtn = e.target.closest('[data-a="like-playlist"], .lk');
+    if (likeBtn) {
+      togglePlaylistLike(pl, likeBtn);
+      return;
+    }
+
+    var playBtn = e.target.closest('[data-a="play-playlist"]');
+    if (playBtn) {
+      playPlaylist(pl);
+      return;
+    }
+
+    openAlbumOrPlaylist(pl, 'playlist');
+    return;
+  }
+
+  // Click on playlist card in library tab
+  var libPlCard = e.target.closest('[data-lib-playlist-idx]');
+  if (libPlCard) {
+    e.stopPropagation();
+    e.preventDefault();
+    var idx = +libPlCard.dataset.libPlaylistIdx;
+    var pl = (libraryPlaylists || [])[idx];
+    if (!pl) return;
+
+    var playBtn = e.target.closest('[data-a="play-lib-playlist"]');
+    if (playBtn) {
+      playPlaylist(pl);
+      return;
+    }
+
+    openAlbumOrPlaylist(pl, 'playlist');
+    return;
+  }
+
   // Click on album card
   var albCard = e.target.closest('[data-album-idx]');
   if (albCard) {
@@ -2538,13 +2843,18 @@ document.addEventListener('click', function(e) {
                (listType === 'profile') ? profileTracks :
                (listType === 'search') ? searchResults :
                getVisibleLibraryTracks();
-    var track = list[idx];
-    if (!track) return;
+    var rawItem = list[idx];
+    var track = rawItem ? (rawItem.track || rawItem) : null;
+    if (!track || !track.id) return;
+
+    var playableList = list.filter(function(x){ return !(x.item_type === 'playlist' || x.playlist); }).map(function(x){ return x.track || x; });
+    var pIdx = playableList.findIndex(function(t){ return String(t.id) === String(track.id); });
+    if (pIdx === -1) pIdx = 0;
 
     // Click on canvas to seek
     if (e.target.tagName === 'CANVAS') {
-      if (playingList !== list || cur !== idx) {
-        playTrackInList(list, idx);
+      if (playingList !== playableList || cur !== pIdx) {
+        playTrackInList(playableList, pIdx);
       }
       var r = e.target.getBoundingClientRect();
       var pct = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
@@ -2559,12 +2869,16 @@ document.addEventListener('click', function(e) {
       if (likes[track.id]) {
         delete likes[track.id];
         libraryTracks = libraryTracks.filter(function(t){ return String(t.id) !== String(track.id); });
+        likedItems = likedItems.filter(function(it){ return it.item_type !== 'track' || String((it.track || it).id) !== String(track.id); });
         saveTracks();
+        saveLikedItems();
       } else {
         likes[track.id] = 1;
         if (!libraryTracks.some(function(t){ return String(t.id) === String(track.id); })) {
           libraryTracks.unshift(track);
+          likedItems.unshift({ item_type: 'track', created_at: new Date().toISOString(), track: track });
           saveTracks();
+          saveLikedItems();
         }
       }
       saveLikes();
@@ -2576,10 +2890,10 @@ document.addEventListener('click', function(e) {
     }
 
     // Play/Pause
-    if (playingList === list && cur === idx) {
+    if (playingList === playableList && cur === pIdx) {
       togglePlay();
     } else {
-      playTrackInList(list, idx);
+      playTrackInList(playableList, pIdx);
     }
   }
 });
@@ -2627,12 +2941,16 @@ $('#barLike').onclick = function(e) {
   if (likes[tid]) {
     delete likes[tid];
     libraryTracks = libraryTracks.filter(function(t){ return String(t.id) !== String(tid); });
+    likedItems = likedItems.filter(function(it){ return it.item_type !== 'track' || String((it.track || it).id) !== String(tid); });
     saveTracks();
+    saveLikedItems();
   } else {
     likes[tid] = 1;
     if (!libraryTracks.some(function(t){ return String(t.id) === String(tid); })) {
       libraryTracks.unshift(currentTrack);
+      likedItems.unshift({ item_type: 'track', created_at: new Date().toISOString(), track: currentTrack });
       saveTracks();
+      saveLikedItems();
     }
   }
   saveLikes();
@@ -2925,9 +3243,12 @@ async function syncUserProfile(profileInput) {
     if (!user || !user.id) return;
     var uid = user.id;
 
-    // 2. Refresh ALL likes in real time with pagination
+    // 2. Refresh ALL likes (tracks AND playlists) in real time with pagination
     var allTracks = [];
     var allLikes = {};
+    var allPlaylists = [];
+    var allPlaylistLikes = {};
+    var allLikedItems = [];
     var nextUrl = 'https://api-v2.soundcloud.com/users/' + uid + '/likes?client_id=' + clientId + '&limit=50';
     var pageCount = 0;
     while (nextUrl && pageCount < 25) {
@@ -2941,21 +3262,75 @@ async function syncUserProfile(profileInput) {
         if (!likesData || !likesData.collection || !likesData.collection.length) break;
 
         likesData.collection.forEach(function(item) {
-          var t = item.track || (item.kind === 'track' ? item : null);
-          if (t && t.id) {
-            allTracks.push(t);
-            allLikes[t.id] = 1;
+          if (item.playlist) {
+            var pl = item.playlist;
+            allPlaylists.push(pl);
+            allPlaylistLikes[pl.id] = 1;
+            allLikedItems.push({
+              item_type: 'playlist',
+              created_at: item.created_at,
+              playlist: pl
+            });
+          } else {
+            var t = item.track || (item.kind === 'track' ? item : null);
+            if (t && t.id) {
+              allTracks.push(t);
+              allLikes[t.id] = 1;
+              allLikedItems.push({
+                item_type: 'track',
+                created_at: item.created_at,
+                track: t
+              });
+            }
           }
         });
         nextUrl = likesData.next_href || null;
       } catch(e) { break; }
     }
 
-    if (allTracks.length) {
+    // Also fetch owned & liked playlists
+    try {
+      var plRes = await fetch('https://api-v2.soundcloud.com/users/' + uid + '/playlists/liked_and_owned?client_id=' + clientId + '&limit=50', { headers: authHeaders });
+      if (plRes.ok) {
+        var plData = await plRes.json();
+        if (plData && plData.collection) {
+          plData.collection.forEach(function(entry) {
+            var p = entry.playlist || entry;
+            if (p && p.id && !allPlaylists.some(function(x){ return x.id == p.id; })) {
+              allPlaylists.push(p);
+            }
+          });
+        }
+      }
+    } catch(e) {}
+
+    // Preload tracks for playlists asynchronously for instant playback
+    for (var i = 0; i < allPlaylists.length; i++) {
+      var plItem = allPlaylists[i];
+      if (!plItem.tracks || !plItem.tracks.length || !plItem.tracks[0].title) {
+        try {
+          var pInfoRes = await fetch('https://api-v2.soundcloud.com/playlists/' + plItem.id + '?client_id=' + clientId, { headers: authHeaders });
+          if (pInfoRes.ok) {
+            var pInfoData = await pInfoRes.json();
+            if (pInfoData && pInfoData.tracks) {
+              plItem.tracks = pInfoData.tracks;
+            }
+          }
+        } catch(err) {}
+      }
+    }
+
+    if (allLikedItems.length || allTracks.length) {
       libraryTracks = allTracks;
       likes = allLikes;
+      libraryPlaylists = allPlaylists;
+      playlistLikes = allPlaylistLikes;
+      likedItems = allLikedItems;
       saveTracks();
       saveLikes();
+      savePlaylists();
+      savePlaylistLikes();
+      saveLikedItems();
       if (activeSection === 'library') renderLibrary();
       if (activeSection === 'profile' && currentProfile && (currentProfile.id == uid || currentProfile.permalink === user.permalink)) {
         loadArtistTab(artistTab || 'likes');
@@ -3195,9 +3570,10 @@ if (window.chrome && window.chrome.webview) {
     } else if (data.type === 'LIKE_RESULT') {
       var isEn = (cfg.lang === 'en');
       if (data.ok) {
+        var itemWord = data.isPlaylist ? (isEn ? 'Playlist' : 'Плейлист') : (isEn ? 'Track' : 'Трек');
         showToast(data.isLiked 
-          ? (isEn ? 'Added to SoundCloud likes!' : 'Добавлено в любимые на SoundCloud!') 
-          : (isEn ? 'Removed from SoundCloud likes' : 'Удалено из любимых на SoundCloud'));
+          ? (isEn ? (itemWord + ' added to SoundCloud likes!') : (itemWord + ' добавлен в любимые на SoundCloud!')) 
+          : (isEn ? (itemWord + ' removed from SoundCloud likes') : (itemWord + ' удален из любимых на SoundCloud')));
       } else {
         console.warn('[SoundClode] Remote like sync error:', data);
         showToast(isEn ? 'SoundCloud like sync error' : 'Ошибка синхронизации лайка с SoundCloud');
@@ -3293,6 +3669,7 @@ var I18N = {
 
     // Library tabs
     tab_liked: 'Мне нравится',
+    tab_playlists: 'Плейлисты',
     tab_following: 'Подписки',
     tab_all: 'Все треки',
     empty_title: 'Пока ничего нет',
@@ -3387,6 +3764,7 @@ var I18N = {
 
     // Library tabs
     tab_liked: 'Likes',
+    tab_playlists: 'Playlists',
     tab_following: 'Following',
     tab_all: 'All tracks',
     empty_title: 'Nothing here yet',
@@ -3540,6 +3918,8 @@ function applyLanguage() {
   // Library tabs
   var tabLiked = $('[data-t="liked"] span');
   if (tabLiked) tabLiked.textContent = t.tab_liked;
+  var tabPlaylists = $('[data-t="playlists"] span');
+  if (tabPlaylists) tabPlaylists.textContent = t.tab_playlists;
   var tabFollowing = $('[data-t="following"] span');
   if (tabFollowing) tabFollowing.textContent = t.tab_following;
   var tabAll = $('[data-t="all"] span');
@@ -3724,8 +4104,14 @@ $('#btnRelog').onclick = function() {
     localStorage.removeItem('soundclode_oauth_token');
     localStorage.removeItem('soundclode_tracks');
     localStorage.removeItem('soundclode_likes');
+    localStorage.removeItem('soundclode_playlists');
+    localStorage.removeItem('soundclode_playlist_likes');
+    localStorage.removeItem('soundclode_liked_items');
     libraryTracks = [];
+    libraryPlaylists = [];
+    likedItems = [];
     likes = {};
+    playlistLikes = {};
     if (window.chrome && window.chrome.webview) {
       window.chrome.webview.postMessage({ type: 'LOGOUT' });
     }
