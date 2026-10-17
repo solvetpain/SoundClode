@@ -13,10 +13,48 @@ namespace SoundCloudNative
 {
     public partial class MainWindow : Window
     {
-        private static readonly HttpClient _httpClient = new HttpClient();
+        private static readonly HttpClient _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+        private string _activeClientId = "tHVbSbDP4TaoMbPppngv6Tdry83vNbMQ";
         private DiscordRpcClient? _discordRpc;
         private CoreWebView2Environment? _env;
         private Window? _currentAuthWin;
+
+        private async Task<string> FetchFreshClientIdAsync()
+        {
+            try
+            {
+                using var req = new HttpRequestMessage(HttpMethod.Get, "https://soundcloud.com");
+                req.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36");
+                var resp = await _httpClient.SendAsync(req);
+                if (resp.IsSuccessStatusCode)
+                {
+                    var html = await resp.Content.ReadAsStringAsync();
+                    var matches = System.Text.RegularExpressions.Regex.Matches(html, @"https://a-v2\.sndcdn\.com/assets/[^""]+\.js");
+                    for (int i = matches.Count - 1; i >= Math.Max(0, matches.Count - 8); i--)
+                    {
+                        using var jsReq = new HttpRequestMessage(HttpMethod.Get, matches[i].Value);
+                        jsReq.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+                        var jsResp = await _httpClient.SendAsync(jsReq);
+                        if (jsResp.IsSuccessStatusCode)
+                        {
+                            var js = await jsResp.Content.ReadAsStringAsync();
+                            var m = System.Text.RegularExpressions.Regex.Match(js, @"client_id[:=][""']?([a-zA-Z0-9]{32})[""']?");
+                            if (m.Success)
+                            {
+                                _activeClientId = m.Groups[1].Value;
+                                Debug.WriteLine("[SoundClode] Scraped fresh client_id: " + _activeClientId);
+                                return _activeClientId;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("[SoundClode] Error fetching fresh client_id: " + ex.Message);
+            }
+            return _activeClientId;
+        }
 
         [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true, CharSet = System.Runtime.InteropServices.CharSet.Auto)]
         private static extern IntPtr LoadImage(IntPtr hinst, string lpszName, uint uType, int cxDesired, int cyDesired, uint fuLoad);
@@ -139,9 +177,11 @@ namespace SoundCloudNative
                 // Warm up DataDome session in background
                 _ = EnsureBgSyncReadyAsync();
 
-                // Proxy SoundCloud API and Waveform requests to bypass any CORS restrictions
+                // Proxy SoundCloud API, Waveform, and asset requests to bypass any CORS restrictions
                 webView.CoreWebView2.AddWebResourceRequestedFilter("https://api-v2.soundcloud.com/*", CoreWebView2WebResourceContext.All);
                 webView.CoreWebView2.AddWebResourceRequestedFilter("https://wave.sndcdn.com/*", CoreWebView2WebResourceContext.All);
+                webView.CoreWebView2.AddWebResourceRequestedFilter("https://soundcloud.com/*", CoreWebView2WebResourceContext.All);
+                webView.CoreWebView2.AddWebResourceRequestedFilter("https://a-v2.sndcdn.com/*", CoreWebView2WebResourceContext.All);
 
                 webView.CoreWebView2.WebResourceRequested += async (s, args) =>
                 {
@@ -176,11 +216,15 @@ namespace SoundCloudNative
 
                         var resp = await _httpClient.SendAsync(req);
                         var stream = await resp.Content.ReadAsStreamAsync();
-                        var headers = "Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: *\r\nAccess-Control-Allow-Methods: *\r\nContent-Type: application/json; charset=utf-8\r\n";
+                        var contentType = resp.Content.Headers.ContentType?.ToString() ?? (args.Request.Uri.EndsWith(".js", StringComparison.OrdinalIgnoreCase) ? "application/javascript; charset=utf-8" : "application/json; charset=utf-8");
+                        var headers = $"Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: *\r\nAccess-Control-Allow-Methods: *\r\nContent-Type: {contentType}\r\n";
                         args.Response = webView.CoreWebView2.Environment.CreateWebResourceResponse(stream, (int)resp.StatusCode, resp.ReasonPhrase, headers);
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        var errBytes = System.Text.Encoding.UTF8.GetBytes($"{{\"error\":\"{ex.Message}\"}}");
+                        var headers = "Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: *\r\nAccess-Control-Allow-Methods: *\r\nContent-Type: application/json; charset=utf-8\r\n";
+                        args.Response = webView.CoreWebView2.Environment.CreateWebResourceResponse(new MemoryStream(errBytes), 502, "Bad Gateway", headers);
                     }
                     finally
                     {
@@ -188,7 +232,7 @@ namespace SoundCloudNative
                     }
                 };
 
-                // Handle IPC messages from HTML client (Discord RPC, Auth, Likes, etc.)
+                // Handle IPC messages from HTML client (Discord RPC, Auth, Likes, Client ID, etc.)
                 webView.CoreWebView2.WebMessageReceived += (s, args) =>
                 {
                     try
@@ -199,7 +243,22 @@ namespace SoundCloudNative
                         if (root.TryGetProperty("type", out var typeProp))
                         {
                             var type = typeProp.GetString();
-                            if (type == "DISCORD_RPC")
+                            if (type == "GET_CLIENT_ID")
+                            {
+                                _ = Task.Run(async () =>
+                                {
+                                    var cid = await FetchFreshClientIdAsync();
+                                    Dispatcher.Invoke(() =>
+                                    {
+                                        try
+                                        {
+                                            webView.CoreWebView2.PostWebMessageAsJson($"{{\"type\":\"CLIENT_ID\",\"clientId\":\"{cid}\"}}");
+                                        }
+                                        catch { }
+                                    });
+                                });
+                            }
+                            else if (type == "DISCORD_RPC")
                             {
                                 if (root.TryGetProperty("action", out var actProp) && actProp.GetString() == "CLEAR")
                                 {
@@ -217,16 +276,17 @@ namespace SoundCloudNative
                                     _discordRpc?.UpdateActivity(title, artist, artwork, duration, current, playing);
                                 }
                             }
-                            else if (type == "LIKE_TRACK")
+                            else if (type == "LIKE_TRACK" || type == "LIKE_PLAYLIST")
                             {
-                                long trackId = root.TryGetProperty("trackId", out var tidProp) ? tidProp.GetInt64() : 0;
+                                long id = root.TryGetProperty("id", out var idProp) ? idProp.GetInt64() : (root.TryGetProperty("trackId", out var tidProp) ? tidProp.GetInt64() : (root.TryGetProperty("playlistId", out var pidProp) ? pidProp.GetInt64() : 0));
                                 bool isLiked = root.TryGetProperty("isLiked", out var likProp) && likProp.GetBoolean();
                                 string? token = root.TryGetProperty("token", out var tokProp) ? tokProp.GetString() : null;
                                 long userId = root.TryGetProperty("userId", out var uidProp) ? uidProp.GetInt64() : 0;
+                                bool isPlaylist = (type == "LIKE_PLAYLIST") || (root.TryGetProperty("isPlaylist", out var plProp) && plProp.GetBoolean());
 
-                                if (trackId > 0 && userId > 0 && !string.IsNullOrEmpty(token))
+                                if (id > 0 && userId > 0 && !string.IsNullOrEmpty(token))
                                 {
-                                    _ = ExecuteTrackLikeAsync(trackId, isLiked, token, userId);
+                                    _ = ExecuteLikeAsync(id, isLiked, isPlaylist, token, userId);
                                 }
                             }
                             else if (type == "SET_OAUTH_TOKEN")
@@ -262,6 +322,21 @@ namespace SoundCloudNative
                 var appDir = AppDomain.CurrentDomain.BaseDirectory;
                 webView.CoreWebView2.SetVirtualHostNameToFolderMapping("soundclode.local", appDir, CoreWebView2HostResourceAccessKind.Allow);
                 webView.Source = new Uri("https://soundclode.local/index.html");
+
+                // Broadcast fresh scraped client ID on launch
+                _ = Task.Run(async () =>
+                {
+                    var cid = await FetchFreshClientIdAsync();
+                    await Task.Delay(1500);
+                    Dispatcher.Invoke(() =>
+                    {
+                        try
+                        {
+                            webView.CoreWebView2.PostWebMessageAsJson($"{{\"type\":\"CLIENT_ID\",\"clientId\":\"{cid}\"}}");
+                        }
+                        catch { }
+                    });
+                });
             }
             catch (Exception ex)
             {
@@ -307,18 +382,20 @@ namespace SoundCloudNative
             }
         }
 
-        private async Task ExecuteTrackLikeAsync(long trackId, bool isLiked, string token, long userId)
+        private async Task ExecuteLikeAsync(long id, bool isLiked, bool isPlaylist, string token, long userId)
         {
             try
             {
                 await EnsureBgSyncReadyAsync(token);
 
+                string endpoint = isPlaylist ? $"playlist_likes/{id}" : $"track_likes/{id}";
                 string method = isLiked ? "PUT" : "DELETE";
                 string isLikedStr = isLiked ? "true" : "false";
+                string isPlaylistStr = isPlaylist ? "true" : "false";
                 string script = $@"
                     (async () => {{
                         try {{
-                            const r = await fetch('https://api-v2.soundcloud.com/users/{userId}/track_likes/{trackId}?client_id=tHVbSbDP4TaoMbPppngv6Tdry83vNbMQ', {{
+                            const r = await fetch('https://api-v2.soundcloud.com/users/{userId}/{endpoint}?client_id=tHVbSbDP4TaoMbPppngv6Tdry83vNbMQ', {{
                                 method: '{method}',
                                 headers: {{
                                     'Authorization': 'OAuth {token}',
@@ -328,7 +405,9 @@ namespace SoundCloudNative
                             const body = await r.text();
                             window.chrome.webview.postMessage(JSON.stringify({{
                                 type: 'LIKE_RESULT',
-                                trackId: {trackId},
+                                id: {id},
+                                trackId: {id},
+                                isPlaylist: {isPlaylistStr},
                                 isLiked: {isLikedStr},
                                 status: r.status,
                                 ok: r.ok,
@@ -337,7 +416,9 @@ namespace SoundCloudNative
                         }} catch(e) {{
                             window.chrome.webview.postMessage(JSON.stringify({{
                                 type: 'LIKE_RESULT',
-                                trackId: {trackId},
+                                id: {id},
+                                trackId: {id},
+                                isPlaylist: {isPlaylistStr},
                                 isLiked: {isLikedStr},
                                 ok: false,
                                 error: (e || '').toString()

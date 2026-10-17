@@ -1282,16 +1282,25 @@ function view() {
 
 // Soundcloud API helpers
 async function getFreshClientId() {
+  if (window.chrome && window.chrome.webview) {
+    try {
+      window.chrome.webview.postMessage({ type: 'GET_CLIENT_ID' });
+    } catch(e) {}
+  }
   try {
     var res = await fetch('https://soundcloud.com');
-    var html = await res.text();
-    var scripts = html.match(/https:\/\/a-v2\.sndcdn\.com\/assets\/[^"]+\.js/g) || [];
-    for (var i = scripts.length - 1; i >= Math.max(0, scripts.length - 6); i--) {
-      var js = await (await fetch(scripts[i])).text();
-      var m = js.match(/client_id[:=]["']?([a-zA-Z0-9]{32})["']?/);
-      if (m && m[1]) {
-        clientId = m[1];
-        return clientId;
+    if (res.ok) {
+      var html = await res.text();
+      var scripts = html.match(/https:\/\/a-v2\.sndcdn\.com\/assets\/[^"]+\.js/g) || [];
+      for (var i = scripts.length - 1; i >= Math.max(0, scripts.length - 8); i--) {
+        try {
+          var js = await (await fetch(scripts[i])).text();
+          var m = js.match(/client_id[:=]["']?([a-zA-Z0-9]{32})["']?/);
+          if (m && m[1]) {
+            clientId = m[1];
+            return clientId;
+          }
+        } catch(err) {}
       }
     }
   } catch(e) {}
@@ -1305,8 +1314,15 @@ async function findPlayableAlternative(track) {
     var query = (artistName ? artistName + ' ' : '') + (track.title || '');
     if (!query.trim()) return null;
     
+    var token = localStorage.getItem('soundclode_oauth_token');
+    var authHeaders = token ? { 'Authorization': 'OAuth ' + token } : {};
+
     var searchUrl = 'https://api-v2.soundcloud.com/search/tracks?q=' + encodeURIComponent(query.trim()) + '&client_id=' + clientId + '&limit=15';
-    var res = await fetch(searchUrl);
+    var res = await fetch(searchUrl, { headers: authHeaders });
+    if (!res.ok && (res.status === 401 || res.status === 403)) {
+      await getFreshClientId();
+      res = await fetch(searchUrl, { headers: authHeaders });
+    }
     if (!res.ok) return null;
     var data = await res.json();
     if (!data.collection || !data.collection.length) return null;
@@ -1332,21 +1348,26 @@ async function findPlayableAlternative(track) {
     candidates.sort(function(a, b) { return a.score - b.score; });
     if (!candidates.length) return null;
 
-    for (var j = 0; j < Math.min(3, candidates.length); j++) {
+    for (var j = 0; j < Math.min(4, candidates.length); j++) {
       var item = candidates[j];
-      var tc = item.unenc.find(function(t){ return t.format.protocol === 'progressive'; })
-            || item.unenc.find(function(t){ return t.format.protocol === 'hls'; })
-            || item.unenc[0];
       var authParam = item.cand.track_authorization ? '&track_authorization=' + encodeURIComponent(item.cand.track_authorization) : '';
-      var sRes = await fetch(tc.url + '?client_id=' + clientId + authParam);
-      if (sRes.ok) {
-        var sData = await sRes.json();
-        if (sData.url) {
-          track.stream_url = sData.url;
-          track._streamUrlTime = Date.now();
-          track.is_hls = (tc.format && tc.format.protocol === 'hls');
-          return sData.url;
-        }
+      
+      // Try transcodings in candidate
+      for (var k = 0; k < item.unenc.length; k++) {
+        var tc = item.unenc[k];
+        if (!tc || !tc.url) continue;
+        try {
+          var sRes = await fetch(tc.url + '?client_id=' + clientId + authParam, { headers: authHeaders });
+          if (sRes.ok) {
+            var sData = await sRes.json();
+            if (sData && sData.url) {
+              track.stream_url = sData.url;
+              track._streamUrlTime = Date.now();
+              track.is_hls = (tc.format && tc.format.protocol === 'hls');
+              return sData.url;
+            }
+          }
+        } catch(e) {}
       }
     }
   } catch(e) {
@@ -1355,17 +1376,26 @@ async function findPlayableAlternative(track) {
   return null;
 }
 
-// Resolve stream URL
-async function resolveStreamUrl(track) {
-  // If track has a cached stream_url that is less than 10 minutes old, reuse it
-  if (track.stream_url && track._streamUrlTime && (Date.now() - track._streamUrlTime < 600000)) {
+// Resolve stream URL with multi-transcoding fallback and short cache lifetime
+async function resolveStreamUrl(track, forceFresh) {
+  // If track has a cached stream_url that is less than 2 minutes old, reuse it (unless forceFresh)
+  if (!forceFresh && track.stream_url && track._streamUrlTime && (Date.now() - track._streamUrlTime < 120000)) {
     return track.stream_url;
   }
+  delete track.stream_url;
+  delete track._streamUrlTime;
+
+  var token = localStorage.getItem('soundclode_oauth_token');
+  var authHeaders = token ? { 'Authorization': 'OAuth ' + token } : {};
 
   if (!track.media || !track.media.transcodings) {
     if (track.id) {
       try {
-        var r = await fetch('https://api-v2.soundcloud.com/tracks/' + track.id + '?client_id=' + clientId);
+        var r = await fetch('https://api-v2.soundcloud.com/tracks/' + track.id + '?client_id=' + clientId, { headers: authHeaders });
+        if (!r.ok && (r.status === 401 || r.status === 403)) {
+          await getFreshClientId();
+          r = await fetch('https://api-v2.soundcloud.com/tracks/' + track.id + '?client_id=' + clientId, { headers: authHeaders });
+        }
         if (r.ok) {
           var td = await r.json();
           track.media = td.media;
@@ -1386,31 +1416,42 @@ async function resolveStreamUrl(track) {
       return proto === 'progressive' || proto === 'hls';
     });
 
-    if (validTranscodings.length) {
-      var tc = validTranscodings.find(function(t){ return t.format.protocol === 'progressive'; })
-            || validTranscodings.find(function(t){ return t.format.protocol === 'hls'; })
-            || validTranscodings[0];
+    // Sort: progressive first, then mp4a HLS, then other HLS
+    validTranscodings.sort(function(a, b) {
+      var protoA = (a.format && a.format.protocol) || '';
+      var protoB = (b.format && b.format.protocol) || '';
+      if (protoA === 'progressive' && protoB !== 'progressive') return -1;
+      if (protoB === 'progressive' && protoA !== 'progressive') return 1;
+      var mimeA = (a.format && a.format.mime_type) || '';
+      var mimeB = (b.format && b.format.mime_type) || '';
+      if (mimeA.includes('mp4') && !mimeB.includes('mp4')) return -1;
+      if (mimeB.includes('mp4') && !mimeA.includes('mp4')) return 1;
+      return 0;
+    });
 
-      if (tc && tc.url) {
-        try {
-          var authParam = track.track_authorization ? '&track_authorization=' + encodeURIComponent(track.track_authorization) : '';
-          var res = await fetch(tc.url + '?client_id=' + clientId + authParam);
-          if (!res.ok && (res.status === 401 || res.status === 403)) {
-            await getFreshClientId();
-            res = await fetch(tc.url + '?client_id=' + clientId + authParam);
-          }
-          if (res.ok) {
-            var data = await res.json();
-            if (data.url) {
-              track.stream_url = data.url;
-              track._streamUrlTime = Date.now();
-              track.is_hls = (tc.format && tc.format.protocol === 'hls');
-              return data.url;
-            }
-          }
-        } catch(e) {
-          console.error('Direct stream resolve error:', e);
+    for (var i = 0; i < validTranscodings.length; i++) {
+      var tc = validTranscodings[i];
+      if (!tc || !tc.url) continue;
+      try {
+        var authParam = track.track_authorization ? '&track_authorization=' + encodeURIComponent(track.track_authorization) : '';
+        var res = await fetch(tc.url + '?client_id=' + clientId + authParam, { headers: authHeaders });
+        if (!res.ok && (res.status === 401 || res.status === 403)) {
+          await getFreshClientId();
+          res = await fetch(tc.url + '?client_id=' + clientId + authParam, { headers: authHeaders });
         }
+        if (res.ok) {
+          var data = await res.json();
+          if (data && data.url) {
+            track.stream_url = data.url;
+            track._streamUrlTime = Date.now();
+            track.is_hls = (tc.format && tc.format.protocol === 'hls');
+            return data.url;
+          }
+        } else {
+          console.warn('Transcoding #' + i + ' returned HTTP ' + res.status + ', trying next...');
+        }
+      } catch(e) {
+        console.warn('Direct stream resolve error on transcoding #' + i + ':', e);
       }
     }
   }
@@ -2573,15 +2614,49 @@ function showToast(msg) {
 
 // PLAYBACK ENGINE WITH AUTO-RECOVERY & AUTO-SKIP
 var consecutivePlaybackErrors = 0;
+var _playbackWatchdog = null;
+
+function clearPlaybackWatchdog() {
+  if (_playbackWatchdog) {
+    clearInterval(_playbackWatchdog);
+    _playbackWatchdog = null;
+  }
+}
+
+function startPlaybackWatchdog(track) {
+  clearPlaybackWatchdog();
+  var zeroTimeCount = 0;
+  _playbackWatchdog = setInterval(function() {
+    if (!au || au.paused || cur < 0 || currentTrack !== track) {
+      clearPlaybackWatchdog();
+      return;
+    }
+    // If audio is supposedly playing but stuck at 0:00
+    if (au.currentTime === 0) {
+      zeroTimeCount++;
+      if (zeroTimeCount >= 7) { // 7 seconds of 0:00 without moving
+        clearPlaybackWatchdog();
+        console.warn('Playback stalled at 0:00 for 7s on:', track.title);
+        delete track.stream_url;
+        delete track._streamUrlTime;
+        handleTrackPlaybackError('Трек завис. Пробуем следующий...');
+      }
+    } else {
+      // Audio is advancing normally
+      clearPlaybackWatchdog();
+    }
+  }, 1000);
+}
 
 function handleTrackPlaybackError(msg) {
+  clearPlaybackWatchdog();
   consecutivePlaybackErrors++;
   showToast(msg || 'Трек недоступен. Переключаем на следующий...');
   
   if (consecutivePlaybackErrors > 8) {
     console.error('Too many consecutive playback errors. Pausing playback.');
     consecutivePlaybackErrors = 0;
-    au.pause();
+    try { au.pause(); } catch(e){}
     syncPlayer();
     showToast('Несколько треков подряд недоступны в SoundCloud.');
     return;
@@ -2627,6 +2702,22 @@ async function playTrackInList(list, idx) {
   var expectedDur = track.duration ? Math.round(track.duration / 1000) : 0;
   $('#tm').textContent = '0:00 / ' + (expectedDur ? fmt(expectedDur) : '0:00');
 
+  // Complete teardown of previous audio / HLS session to prevent buffer leaks
+  clearPlaybackWatchdog();
+  if (hls) {
+    try {
+      hls.stopLoad();
+      hls.detachMedia();
+      hls.destroy();
+    } catch(e) {}
+    hls = null;
+  }
+  try {
+    au.pause();
+    au.removeAttribute('src');
+    au.load();
+  } catch(e) {}
+
   // Update visual cur states
   syncPlayer();
 
@@ -2637,38 +2728,59 @@ async function playTrackInList(list, idx) {
     return;
   }
 
-  consecutivePlaybackErrors = 0;
-
   // Handle HLS vs MP3
   try {
     if (track.is_hls || streamUrl.includes('.m3u8')) {
       if (Hls.isSupported()) {
-        if (hls) { hls.destroy(); hls = null; }
         hls = new Hls({
           enableWorker: true,
           lowLatencyMode: false,
-          backBufferLength: 90
+          backBufferLength: 60,
+          maxBufferLength: 30,
+          fragLoadingMaxRetry: 3,
+          fragLoadingRetryDelay: 1000
         });
         hls.loadSource(streamUrl);
         hls.attachMedia(au);
         hls.on(Hls.Events.MANIFEST_PARSED, function() {
           au.volume = cfg.vol !== undefined ? cfg.vol : 0.85;
+          startPlaybackWatchdog(track);
           au.play().catch(function(err){
             console.warn('HLS play() was blocked or interrupted:', err);
           });
         });
+        var hlsRetryCount = 0;
         hls.on(Hls.Events.ERROR, function(event, data) {
           if (data && data.fatal) {
             console.warn('Fatal HLS error:', data.type, data.details);
             switch(data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
-                hls.startLoad();
+                hlsRetryCount++;
+                if (hlsRetryCount <= 2) {
+                  console.log('Retrying HLS network load (' + hlsRetryCount + '/2)...');
+                  hls.startLoad();
+                } else {
+                  clearPlaybackWatchdog();
+                  if (hls) {
+                    try { hls.stopLoad(); hls.detachMedia(); hls.destroy(); } catch(e){}
+                    hls = null;
+                  }
+                  delete track.stream_url;
+                  delete track._streamUrlTime;
+                  handleTrackPlaybackError('Ошибка потока. Переключаем...');
+                }
                 break;
               case Hls.ErrorTypes.MEDIA_ERROR:
                 hls.recoverMediaError();
                 break;
               default:
-                if (hls) { hls.destroy(); hls = null; }
+                clearPlaybackWatchdog();
+                if (hls) {
+                  try { hls.stopLoad(); hls.detachMedia(); hls.destroy(); } catch(e){}
+                  hls = null;
+                }
+                delete track.stream_url;
+                delete track._streamUrlTime;
                 handleTrackPlaybackError('Ошибка потока. Переключаем...');
                 break;
             }
@@ -2682,9 +2794,9 @@ async function playTrackInList(list, idx) {
           }, 350);
         });
       } else if (au.canPlayType('application/vnd.apple.mpegurl')) {
-        if (hls) { hls.destroy(); hls = null; }
         au.src = streamUrl;
         au.volume = cfg.vol !== undefined ? cfg.vol : 0.85;
+        startPlaybackWatchdog(track);
         au.play().catch(function(err){
           console.warn('Native HLS play error:', err);
         });
@@ -2692,9 +2804,9 @@ async function playTrackInList(list, idx) {
         handleTrackPlaybackError('HLS не поддерживается.');
       }
     } else {
-      if (hls) { hls.destroy(); hls = null; }
       au.src = streamUrl;
       au.volume = cfg.vol !== undefined ? cfg.vol : 0.85;
+      startPlaybackWatchdog(track);
       au.play().catch(function(err){
         console.warn('Direct MP3 play error:', err);
       });
@@ -3059,9 +3171,18 @@ au.onplay = function() {
   syncPlayer();
   au.volume = cfg.vol !== undefined ? cfg.vol : 0.85;
 };
-au.onpause = function() { syncPlayer(); };
+au.onplaying = function() {
+  clearPlaybackWatchdog();
+  consecutivePlaybackErrors = 0;
+  syncPlayer();
+};
+au.onpause = function() {
+  clearPlaybackWatchdog();
+  syncPlayer();
+};
 
 function handleTrackEnded() {
+  clearPlaybackWatchdog();
   if (repeatMode === 'one') {
     au.currentTime = 0;
     au.play().catch(function(){});
@@ -3078,6 +3199,7 @@ au.onended = handleTrackEnded;
 
 au.onerror = function(e) {
   console.warn('HTMLAudioElement error event:', e);
+  clearPlaybackWatchdog();
   if (currentTrack) {
     delete currentTrack.stream_url;
     delete currentTrack._streamUrlTime;
@@ -3567,6 +3689,9 @@ if (window.chrome && window.chrome.webview) {
       showToast(isEn ? 'Logged in as ' + (user.username || user.name) : 'Вход выполнен: ' + (user.username || user.name));
       syncUserProfile();
       switchSection('library');
+    } else if (data.type === 'CLIENT_ID' && data.clientId) {
+      clientId = data.clientId;
+      console.log('[SoundClode] Received fresh client_id from host:', clientId);
     } else if (data.type === 'LIKE_RESULT') {
       var isEn = (cfg.lang === 'en');
       if (data.ok) {
