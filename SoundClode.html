@@ -805,7 +805,18 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
       </button>
     </div>
 
-    <p class="note" id="heroNote">Вход через аккаунт Google, Apple или SoundCloud с моментальной синхронизацией треков и лайков в реальном времени.</p>
+    <div style="display:flex;align-items:center;gap:12px;margin:24px 0 16px;max-width:520px">
+      <div style="flex:1;height:1px;background:var(--line)"></div>
+      <span style="font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:1px;font-weight:700" id="lblOrQuick">Или вход по нику без пароля</span>
+      <div style="flex:1;height:1px;background:var(--line)"></div>
+    </div>
+
+    <div class="quick-login-box" style="display:flex;gap:10px;max-width:520px;align-items:center">
+      <input id="inputQuickNick" placeholder="Никнейм или ссылка (например: solvetpain)" style="flex:1;padding:14px 18px;border-radius:var(--rp,999px);border:2px solid var(--line);background:var(--card);color:var(--ink);font-size:14px;outline:none" autocomplete="off">
+      <button class="btn" id="btnQuickGo" style="padding:14px 24px;border-radius:var(--rp,999px);font-weight:700;background:var(--ink);color:var(--bg);cursor:pointer;white-space:nowrap;border:none">Войти</button>
+    </div>
+
+    <p class="note" id="heroNote">Мгновенный вход и автосинхронизация всех лайков и подписок в реальном времени.</p>
   </div>
 </section>
 
@@ -2820,6 +2831,26 @@ if ($('#btnAuthGoogle')) $('#btnAuthGoogle').onclick = function() { startSocialA
 if ($('#btnAuthApple')) $('#btnAuthApple').onclick = function() { startSocialAuth('apple'); };
 if ($('#btnAuthSoundCloud')) $('#btnAuthSoundCloud').onclick = function() { startSocialAuth('soundcloud'); };
 
+if ($('#btnQuickGo')) {
+  $('#btnQuickGo').onclick = async function() {
+    var val = ($('#inputQuickNick').value || '').trim();
+    if (!val) {
+      showToast(cfg.lang === 'en' ? 'Please enter a username or profile link' : 'Введите никнейм или ссылку на профиль');
+      return;
+    }
+    $('#btnQuickGo').textContent = cfg.lang === 'en' ? 'Loading...' : 'Загрузка...';
+    await syncUserProfile(val);
+    $('#btnQuickGo').textContent = cfg.lang === 'en' ? 'Log in' : 'Войти';
+    view();
+    switchSection('library');
+  };
+}
+if ($('#inputQuickNick')) {
+  $('#inputQuickNick').onkeydown = function(e) {
+    if (e.key === 'Enter') $('#btnQuickGo').click();
+  };
+}
+
 // Native WebView2 message receiver for Discord RPC & Auth Success
 if (window.chrome && window.chrome.webview) {
   window.chrome.webview.addEventListener('message', function(event) {
@@ -3131,6 +3162,12 @@ function applyLanguage() {
   if (btnAuthApple) btnAuthApple.textContent = (lang === 'en') ? 'Continue with Apple' : 'Войти через Apple';
   var btnAuthSoundCloud = $('#btnAuthSoundCloud span');
   if (btnAuthSoundCloud) btnAuthSoundCloud.textContent = (lang === 'en') ? 'Continue with SoundCloud' : 'Войти через SoundCloud';
+  var lblOrQuick = $('#lblOrQuick');
+  if (lblOrQuick) lblOrQuick.textContent = (lang === 'en') ? 'Or quick sign-in without password' : 'Или вход по нику без пароля';
+  var inputQuickNick = $('#inputQuickNick');
+  if (inputQuickNick) inputQuickNick.placeholder = (lang === 'en') ? 'Username or profile link (e.g. solvetpain)' : 'Никнейм или ссылка (например: solvetpain)';
+  var btnQuickGo = $('#btnQuickGo');
+  if (btnQuickGo) btnQuickGo.textContent = (lang === 'en') ? 'Log in' : 'Войти';
 
   // Feed section titles
   var feedTitles = $$('#viewFeed .feed-section-title span');

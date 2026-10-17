@@ -87,7 +87,7 @@ namespace SoundCloudNative
             try
             {
                 var userDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SoundClode", "WebViewProfile");
-                var options = new CoreWebView2EnvironmentOptions("--disable-web-security --allow-running-insecure-content");
+                var options = new CoreWebView2EnvironmentOptions();
                 _env = await CoreWebView2Environment.CreateAsync(null, userDataDir, options);
                 await webView.EnsureCoreWebView2Async(_env);
 
@@ -103,13 +103,23 @@ namespace SoundCloudNative
                     var deferral = args.GetDeferral();
                     try
                     {
-                        using var req = new HttpRequestMessage(HttpMethod.Get, args.Request.Uri);
+                        var method = new HttpMethod(args.Request.Method);
+                        using var req = new HttpRequestMessage(method, args.Request.Uri);
                         req.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36");
 
                         // Forward Authorization header if present
                         if (args.Request.Headers.Contains("Authorization"))
                         {
                             req.Headers.Add("Authorization", args.Request.Headers.GetHeader("Authorization"));
+                        }
+
+                        if (args.Request.Content != null && (method == HttpMethod.Post || method == HttpMethod.Put))
+                        {
+                            req.Content = new StreamContent(args.Request.Content);
+                            if (args.Request.Headers.Contains("Content-Type"))
+                            {
+                                req.Content.Headers.TryAddWithoutValidation("Content-Type", args.Request.Headers.GetHeader("Content-Type"));
+                            }
                         }
 
                         var resp = await _httpClient.SendAsync(req);
@@ -198,7 +208,7 @@ namespace SoundCloudNative
                     if (_env == null)
                     {
                         var userDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SoundClode", "WebViewProfile");
-                        var options = new CoreWebView2EnvironmentOptions("--disable-web-security --allow-running-insecure-content");
+                        var options = new CoreWebView2EnvironmentOptions();
                         _env = await CoreWebView2Environment.CreateAsync(null, userDataDir, options);
                     }
 
