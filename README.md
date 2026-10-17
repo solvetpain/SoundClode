@@ -57,17 +57,16 @@
 
 ### Вариант 2. Нативное Windows-приложение (.exe)
 
+> [!IMPORTANT]
+> Если вы скачали репозиторий через зелёную кнопку **Code -> Download ZIP**, обязательно сначала **распакуйте архив** (правый клик -> «Извлечь все»). Запуск `build.bat` прямо из окна архива без извлечения приведет к ошибке, так как остальные файлы проекта останутся внутри архива.
+
 **Требования:**
 - Windows 10/11
 - [.NET 6.0 SDK](https://dotnet.microsoft.com/download/dotnet/6.0)
-- Microsoft Edge WebView2 Runtime (встроен в Windows 10/11)
 
 **Сборка:**
-1. Запустите скрипт `build.bat` или выполните команду в консоли:
-```bash
-dotnet publish SoundCloudNative/SoundCloudNative.csproj -c Release -o publish
-```
-2. Готовый исполняемый файл находится в папке `publish\SoundCloudNative.exe`.
+1. Запустите скрипт `build.bat` (двойным кликом или через консоль).
+2. Скрипт сам скомпилирует приложение и сразу запустит плеер! Готовый файл будет лежать в папке `publish\SoundCloudNative.exe`.
 
 ---
 
