@@ -52,23 +52,28 @@
 
 ## Быстрый запуск
 
-### Вариант 1. Веб-версия (любой браузер)
+### Вариант 1. Скачать готовый релиз (Windows .exe)
+Самый простой способ — скачать файл из официального раздела **[Releases](https://github.com/solvetpain/SoundClode/releases/latest)**:
+- 🚀 **[SoundClode.exe](https://github.com/solvetpain/SoundClode/releases/download/v1.0.0/SoundClode.exe)** (Прямой запуск .exe без распаковки архива, портативный)
+- 📦 **[SoundClode-v1.0.0-Windows-x64.zip](https://github.com/solvetpain/SoundClode/releases/download/v1.0.0/SoundClode-v1.0.0-Windows-x64.zip)** (Полный портативный ZIP-пакет со всеми библиотеками)
+- ⚡ **[SoundClode-SingleFile-v1.0.0.zip](https://github.com/solvetpain/SoundClode/releases/download/v1.0.0/SoundClode-SingleFile-v1.0.0.zip)** (Компактный портативный архив)
+
+Скачайте **`SoundClode.exe`** и запустите! Никаких зависимостей или установки .NET не требуется.
+
+### Вариант 2. Веб-версия (любой браузер)
 Просто откройте файл `index.html` (или `SoundClode.html`) в любом современном браузере:
 - Не требует установки серверов или зависимостей.
 - Работает полностью автономно на клиентской стороне.
 
-### Вариант 2. Нативное Windows-приложение (.exe)
-
-> [!IMPORTANT]
-> Если вы скачали репозиторий через зелёную кнопку **Code -> Download ZIP**, обязательно сначала **распакуйте архив** (правый клик -> «Извлечь все»). Запуск `build.bat` прямо из окна архива без извлечения приведет к ошибке, так как остальные файлы проекта останутся внутри архива.
+### Вариант 3. Сборка из исходников
 
 **Требования:**
 - Windows 10/11
 - [.NET 6.0 SDK](https://dotnet.microsoft.com/download/dotnet/6.0)
 
 **Сборка:**
-1. Запустите скрипт `build.bat` (двойным кликом или через консоль).
-2. Скрипт сам скомпилирует приложение и сразу запустит плеер! Готовый файл будет лежать в папке `publish\SoundCloudNative.exe`.
+1. Запустите скрипт `build.bat`.
+2. Готовый исполняемый файл будет скомпилирован в папке `publish\SoundClode.exe`.
 
 ---
 
