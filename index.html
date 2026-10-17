@@ -805,7 +805,7 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
       </button>
     </div>
 
-    <div style="display:flex;align-items:center;gap:12px;margin:24px 0 16px;max-width:520px">
+    <div style="display:flex;align-items:center;gap:12px;margin:20px 0 14px;max-width:520px">
       <div style="flex:1;height:1px;background:var(--line)"></div>
       <span style="font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:1px;font-weight:700" id="lblOrQuick">Или вход по нику без пароля</span>
       <div style="flex:1;height:1px;background:var(--line)"></div>
@@ -814,6 +814,21 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
     <div class="quick-login-box" style="display:flex;gap:10px;max-width:520px;align-items:center">
       <input id="inputQuickNick" placeholder="Никнейм или ссылка (например: solvetpain)" style="flex:1;padding:14px 18px;border-radius:var(--rp,999px);border:2px solid var(--line);background:var(--card);color:var(--ink);font-size:14px;outline:none" autocomplete="off">
       <button class="btn" id="btnQuickGo" style="padding:14px 24px;border-radius:var(--rp,999px);font-weight:700;background:var(--ink);color:var(--bg);cursor:pointer;white-space:nowrap;border:none">Войти</button>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;margin:18px 0 12px;max-width:520px">
+      <div style="flex:1;height:1px;background:var(--line)"></div>
+      <span style="font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:1px;font-weight:700" id="lblOrToken">Или вход по OAuth токену (для Google / Apple)</span>
+      <div style="flex:1;height:1px;background:var(--line)"></div>
+    </div>
+
+    <div class="quick-login-box" style="display:flex;gap:10px;max-width:520px;align-items:center">
+      <input id="inputQuickToken" type="password" placeholder="Вставьте oauth_token (для полной синхронизации лайков)" style="flex:1;padding:14px 18px;border-radius:var(--rp,999px);border:2px solid var(--line);background:var(--card);color:var(--ink);font-size:14px;outline:none" autocomplete="off">
+      <button class="btn" id="btnTokenGo" style="padding:14px 24px;border-radius:var(--rp,999px);font-weight:700;background:var(--ink);color:var(--bg);cursor:pointer;white-space:nowrap;border:none">Войти</button>
+    </div>
+    <div style="margin-top:8px;max-width:520px;display:flex;justify-content:space-between;align-items:center">
+      <button class="altbtn" id="btnPasteQuickToken" type="button" style="padding:5px 12px;font-size:12px">Вставить из буфера</button>
+      <a href="#" id="linkTokenHelpQuick" style="font-size:12px;color:var(--acc);text-decoration:none">Как получить токен за 5 секунд?</a>
     </div>
 
     <p class="note" id="heroNote">Мгновенный вход и автосинхронизация всех лайков и подписок в реальном времени.</p>
@@ -920,6 +935,7 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
           <div class="prof-stats">
             <span><b id="profFollowers">0</b> <span id="profFollowersLabel">подписчиков</span></span>
             <span><b id="profTracksCount">0</b> <span id="profTracksLabel">треков</span></span>
+            <span id="profLikesWrap" style="cursor:pointer" title="Показать понравившиеся треки"><b id="profLikesCount">0</b> <span id="profLikesLabel">лайков</span></span>
           </div>
           <div class="prof-actions">
             <button class="btn-play-all" id="btnProfPlayAll" hidden>
@@ -934,8 +950,9 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
       <!-- Navigation tabs like SoundCloud (Image 2) -->
       <div class="prof-nav-bar">
         <div class="prof-nav-tabs">
+          <button class="prof-nav-tab active" data-ptab="likes">Liked tracks</button>
           <button class="prof-nav-tab" data-ptab="all">All</button>
-          <button class="prof-nav-tab active" data-ptab="popular">Popular tracks</button>
+          <button class="prof-nav-tab" data-ptab="popular">Popular tracks</button>
           <button class="prof-nav-tab" data-ptab="tracks">Tracks</button>
           <button class="prof-nav-tab" data-ptab="albums">Albums</button>
           <button class="prof-nav-tab" data-ptab="playlists">Playlists</button>
@@ -1005,7 +1022,20 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
     <label class="fld"><span id="lblAuto">Авто-переход к следующему</span><input type="checkbox" data-k="auto"></label>
     <label class="fld"><span id="lblKeys">Горячие клавиши (Пробел, ←, →, N, P, L)</span><input type="checkbox" data-k="keys"></label>
     
-    <div class="fld" style="margin-top:24px">
+    <div class="fld" style="margin-top:16px;border-top:1px solid var(--line);padding-top:16px">
+      <span style="font-weight:700" id="lblSyncTitle">Синхронизация SoundCloud</span>
+      <div id="tokenStatusText" style="font-size:12px;color:var(--mut);margin:4px 0 8px">Проверка статуса...</div>
+      <div style="display:flex;gap:8px">
+        <input id="inputOAuthToken" type="password" placeholder="Вставьте oauth_token..." style="flex:1;padding:8px 12px;border:1px solid var(--line);border-radius:var(--rp,12px);background:var(--card);color:var(--ink);font-size:13px;outline:none">
+        <button id="btnSaveToken" class="btn" style="padding:8px 14px;font-size:12px;white-space:nowrap;font-weight:700">Сохранить</button>
+      </div>
+      <div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center">
+        <button id="btnPasteToken" class="altbtn" type="button" style="padding:4px 10px;font-size:11px">Вставить из буфера</button>
+        <a href="#" id="linkTokenHelpSet" style="font-size:11px;color:var(--acc);text-decoration:none">Как получить токен?</a>
+      </div>
+    </div>
+
+    <div class="fld" style="margin-top:20px">
       <button class="btn ghost" id="btnRelog">Сменить аккаунт</button>
       <button class="btn ghost" id="rs">Сбросить всё</button>
     </div>
@@ -1205,6 +1235,7 @@ function view() {
   if (user) {
     syncUserAvatarUI();
     $('#av').title = 'Профиль ' + (user.username || user.name);
+    if (typeof updateTokenSettingsUI === 'function') updateTokenSettingsUI();
   }
 }
 
@@ -1575,18 +1606,73 @@ async function loadArtistTab(tab) {
   var listContainer = $('#profList');
   var albumsContainer = $('#profAlbumsGrid');
 
-  // Check if own profile with likes
-  var isOwn = (user && (u.id == user.id || u.permalink === 'vetcs' || u.username === user.username));
-  if (isOwn && libraryTracks.length && (tab === 'all' || tab === 'popular' || tab === 'tracks')) {
-    profileTracks = libraryTracks;
+  // Check if own profile
+  var isOwn = (user && (u.id == user.id || u.permalink === user.permalink || u.permalink === 'vetcs' || u.username === user.username));
+
+  // 1. LIKED TRACKS TAB
+  if (tab === 'likes') {
+    if (isOwn && libraryTracks.length) {
+      profileTracks = libraryTracks;
+      listContainer.hidden = false;
+      albumsContainer.hidden = true;
+      $('#profTracksNum').textContent = profileTracks.length + ' ' + (lang === 'en' ? 'liked tracks' : 'понравившихся треков');
+      $('#btnProfPlayAll').hidden = !profileTracks.length;
+      $('#btnProfPlayAllText').textContent = (lang === 'en' ? 'Play all' : 'Слушать все') + ' (' + profileTracks.length + ')';
+      listContainer.innerHTML = buildTrackListHtml(profileTracks, 'profile');
+      attachWaveformCanvases(listContainer, profileTracks, 'profile');
+      return;
+    }
+
+    if (!artistTabsCache.likes) {
+      listContainer.hidden = false;
+      albumsContainer.hidden = true;
+      listContainer.innerHTML = '<div class="empty"><b>' + (lang === 'en' ? 'Loading likes...' : 'Загрузка понравившихся треков...') + '</b></div>';
+      var lTracks = [];
+      var nextLUrl = 'https://api-v2.soundcloud.com/users/' + u.id + '/likes?client_id=' + clientId + '&limit=50';
+      var pLCount = 0;
+      while (nextLUrl && pLCount < 10) {
+        pLCount++;
+        var sep = nextLUrl.indexOf('?') !== -1 ? '&' : '?';
+        var fUrl = nextLUrl.indexOf('client_id=') !== -1 ? nextLUrl : (nextLUrl + sep + 'client_id=' + clientId);
+        try {
+          var lRes = await fetch(fUrl);
+          if (!lRes.ok) break;
+          var lData = await lRes.json();
+          if (!lData || !lData.collection || !lData.collection.length) break;
+          lData.collection.forEach(function(item) {
+            var t = item.track || (item.kind === 'track' ? item : null);
+            if (t && t.id) lTracks.push(t);
+          });
+          nextLUrl = lData.next_href || null;
+        } catch(e) { break; }
+      }
+      artistTabsCache.likes = lTracks;
+    }
+
+    profileTracks = artistTabsCache.likes || [];
     listContainer.hidden = false;
     albumsContainer.hidden = true;
     $('#profTracksNum').textContent = profileTracks.length + ' ' + (lang === 'en' ? 'liked tracks' : 'понравившихся треков');
-    $('#btnProfPlayAll').hidden = false;
+    $('#btnProfPlayAll').hidden = !profileTracks.length;
     $('#btnProfPlayAllText').textContent = (lang === 'en' ? 'Play all' : 'Слушать все') + ' (' + profileTracks.length + ')';
     listContainer.innerHTML = buildTrackListHtml(profileTracks, 'profile');
     attachWaveformCanvases(listContainer, profileTracks, 'profile');
     return;
+  }
+
+  // If user has 0 uploaded tracks and clicks 'all' or 'popular', show their liked tracks instead of an empty page
+  if ((!u.track_count || u.track_count === 0) && (tab === 'all' || tab === 'popular' || tab === 'tracks')) {
+    if (isOwn && libraryTracks.length) {
+      profileTracks = libraryTracks;
+      listContainer.hidden = false;
+      albumsContainer.hidden = true;
+      $('#profTracksNum').textContent = profileTracks.length + ' ' + (lang === 'en' ? 'liked tracks' : 'понравившихся треков');
+      $('#btnProfPlayAll').hidden = false;
+      $('#btnProfPlayAllText').textContent = (lang === 'en' ? 'Play all' : 'Слушать все') + ' (' + profileTracks.length + ')';
+      listContainer.innerHTML = buildTrackListHtml(profileTracks, 'profile');
+      attachWaveformCanvases(listContainer, profileTracks, 'profile');
+      return;
+    }
   }
 
   // Set containers visibility & loading state
@@ -1824,10 +1910,16 @@ async function openArtistProfile(artistId, artistUsername, artistPermalink) {
       if (u.avatar_url) $('#profAvatar').style.backgroundImage = 'url(' + u.avatar_url.replace('-large.jpg', '-t500x500.jpg') + ')';
       $('#profFollowers').textContent = formatNumber(u.followers_count || 0);
       $('#profTracksCount').textContent = formatNumber(u.track_count || 0);
+      if ($('#profLikesCount')) $('#profLikesCount').textContent = formatNumber(u.likes_count || u.public_favorites_count || libraryTracks.length || 0);
       if (u.description) $('#profBio').textContent = u.description;
       $('#btnProfExternal').href = u.permalink_url || ('https://soundcloud.com/' + u.permalink);
 
-      loadArtistTab('popular');
+      var isOwn = (user && (u.id == user.id || u.permalink === user.permalink || u.permalink === 'vetcs' || u.username === user.username));
+      if (isOwn || (!u.track_count && (u.likes_count || libraryTracks.length))) {
+        loadArtistTab('likes');
+      } else {
+        loadArtistTab('popular');
+      }
     }
   } catch(e) {
     console.error('Error loading profile:', e);
@@ -1926,6 +2018,12 @@ $('#btnProfPlayAll').onclick = function() {
     playTrackInList(profileTracks, 0);
   }
 };
+
+if ($('#profLikesWrap')) {
+  $('#profLikesWrap').onclick = function() {
+    loadArtistTab('likes');
+  };
+}
 
 // USER PROFILE / LOGOUT
 $('#av').onclick = function() {
@@ -2430,9 +2528,11 @@ document.addEventListener('click', function(e) {
       var willLike = !likes[track.id];
       if (likes[track.id]) {
         delete likes[track.id];
+        libraryTracks = libraryTracks.filter(function(t){ return String(t.id) !== String(track.id); });
+        saveTracks();
       } else {
         likes[track.id] = 1;
-        if (!libraryTracks.some(function(t){ return t.id === track.id; })) {
+        if (!libraryTracks.some(function(t){ return String(t.id) === String(track.id); })) {
           libraryTracks.unshift(track);
           saveTracks();
         }
@@ -2457,13 +2557,24 @@ document.addEventListener('click', function(e) {
 // REMOTE REAL-TIME LIKE SYNC
 function toggleLikeRemote(trackId, isLiked) {
   var token = localStorage.getItem('soundclode_oauth_token');
+  var isEn = (cfg.lang === 'en');
   if (token && user && user.id) {
     fetch('https://api-v2.soundcloud.com/users/' + user.id + '/track_likes/' + trackId + '?client_id=' + clientId, {
       method: isLiked ? 'PUT' : 'DELETE',
       headers: { 'Authorization': 'OAuth ' + token }
     }).then(function(r) {
-      if (r.ok) console.log('[SoundClode] Real-time like synced:', trackId, isLiked);
+      if (r.ok) {
+        showToast(isLiked 
+          ? (isEn ? 'Added to SoundCloud likes!' : 'Добавлено в любимые на SoundCloud!') 
+          : (isEn ? 'Removed from SoundCloud likes' : 'Удалено из любимых на SoundCloud'));
+      } else if (r.status === 401) {
+        showToast(isEn ? 'SoundCloud session expired. Please update token in Settings.' : 'Сессия SoundCloud истекла. Обновите токен в Настройках.');
+      }
     }).catch(function(err){ console.warn('[SoundClode] Remote like sync error:', err); });
+  } else {
+    showToast(isEn 
+      ? 'Liked locally! To sync with soundcloud.com, connect your OAuth token in Settings.' 
+      : 'Сохранено локально! Чтобы лайк появился на soundcloud.com, укажите OAuth токен в Настройках.');
   }
 }
 
@@ -2475,9 +2586,11 @@ $('#barLike').onclick = function(e) {
   var willLike = !likes[tid];
   if (likes[tid]) {
     delete likes[tid];
+    libraryTracks = libraryTracks.filter(function(t){ return String(t.id) !== String(tid); });
+    saveTracks();
   } else {
     likes[tid] = 1;
-    if (!libraryTracks.some(function(t){ return t.id === tid; })) {
+    if (!libraryTracks.some(function(t){ return String(t.id) === String(tid); })) {
       libraryTracks.unshift(currentTrack);
       saveTracks();
     }
@@ -2770,24 +2883,41 @@ async function syncUserProfile(profileInput) {
     if (!user || !user.id) return;
     var uid = user.id;
 
-    // 2. Refresh likes in real time
-    var likesRes = await fetch('https://api-v2.soundcloud.com/users/' + uid + '/likes?client_id=' + clientId + '&limit=100', { headers: authHeaders });
-    if (likesRes.ok) {
-      var likesData = await likesRes.json();
-      libraryTracks = [];
-      likes = {};
-      if (likesData.collection) {
+    // 2. Refresh ALL likes in real time with pagination
+    var allTracks = [];
+    var allLikes = {};
+    var nextUrl = 'https://api-v2.soundcloud.com/users/' + uid + '/likes?client_id=' + clientId + '&limit=50';
+    var pageCount = 0;
+    while (nextUrl && pageCount < 25) {
+      pageCount++;
+      var sep = nextUrl.indexOf('?') !== -1 ? '&' : '?';
+      var fetchUrl = nextUrl.indexOf('client_id=') !== -1 ? nextUrl : (nextUrl + sep + 'client_id=' + clientId);
+      try {
+        var likesRes = await fetch(fetchUrl, { headers: authHeaders });
+        if (!likesRes.ok) break;
+        var likesData = await likesRes.json();
+        if (!likesData || !likesData.collection || !likesData.collection.length) break;
+
         likesData.collection.forEach(function(item) {
-          var t = item.track || item;
+          var t = item.track || (item.kind === 'track' ? item : null);
           if (t && t.id) {
-            libraryTracks.push(t);
-            likes[t.id] = 1;
+            allTracks.push(t);
+            allLikes[t.id] = 1;
           }
         });
-      }
+        nextUrl = likesData.next_href || null;
+      } catch(e) { break; }
+    }
+
+    if (allTracks.length) {
+      libraryTracks = allTracks;
+      likes = allLikes;
       saveTracks();
       saveLikes();
       if (activeSection === 'library') renderLibrary();
+      if (activeSection === 'profile' && currentProfile && (currentProfile.id == uid || currentProfile.permalink === user.permalink)) {
+        loadArtistTab(artistTab || 'likes');
+      }
     }
 
     // 3. Refresh followings in real time
@@ -2848,6 +2978,135 @@ if ($('#btnQuickGo')) {
 if ($('#inputQuickNick')) {
   $('#inputQuickNick').onkeydown = function(e) {
     if (e.key === 'Enter') $('#btnQuickGo').click();
+  };
+}
+
+// OAuth Token authentication functions & UI
+async function loginWithOAuthToken(token) {
+  token = (token || '').trim();
+  if (!token) {
+    showToast(cfg.lang === 'en' ? 'Please enter or paste an oauth_token' : 'Введите или вставьте oauth_token');
+    return false;
+  }
+  var isEn = (cfg.lang === 'en');
+  showToast(isEn ? 'Verifying SoundCloud token...' : 'Проверяем токен SoundCloud...');
+  try {
+    var res = await fetch('https://api-v2.soundcloud.com/me?client_id=' + clientId, {
+      headers: { 'Authorization': 'OAuth ' + token }
+    });
+    if (res.ok) {
+      var meData = await res.json();
+      if (meData && (meData.id || meData.username)) {
+        localStorage.setItem('soundclode_oauth_token', token);
+        user = meData;
+        saveUser();
+        view();
+        showToast(isEn ? 'Connected: ' + (user.username || user.name) : 'Успешный вход: ' + (user.username || user.name));
+        updateTokenSettingsUI();
+        await syncUserProfile();
+        switchSection('library');
+        return true;
+      }
+    } else {
+      showToast(isEn ? 'Invalid token (status ' + res.status + ')' : 'Неверный токен (ошибка ' + res.status + ')');
+    }
+  } catch(e) {
+    showToast(isEn ? 'Network error verifying token' : 'Ошибка сети при проверке токена');
+  }
+  return false;
+}
+
+function updateTokenSettingsUI() {
+  var token = localStorage.getItem('soundclode_oauth_token');
+  var isEn = (cfg.lang === 'en');
+  var statusEl = $('#tokenStatusText');
+  var inputEl = $('#inputOAuthToken');
+  if (inputEl) inputEl.value = token || '';
+  if (statusEl) {
+    if (token && user) {
+      statusEl.innerHTML = '<span style="color:#22c55e;font-weight:700">● ' + (isEn ? 'Active sync' : 'Синхронизация активна') + '</span> (' + (user.username || user.name || 'SoundCloud') + ')';
+    } else {
+      statusEl.innerHTML = '<span style="color:var(--mut)">○ ' + (isEn ? 'Read-only mode (Enter token to sync likes)' : 'Только чтение (укажите токен для синхронизации лайков)') + '</span>';
+    }
+  }
+}
+
+function showTokenHelpModal() {
+  var isEn = (cfg.lang === 'en');
+  var helpText = isEn
+    ? "How to get your OAuth Token in 5 seconds:\n\n1. Open soundcloud.com in Chrome or Edge (where you are logged in via Google).\n2. Press F12 to open Developer Console.\n3. Paste this command and hit Enter:\n   copy(document.cookie.match(/oauth_token=([^;]+)/)[1])\n4. Return to SoundClode and click 'Paste from clipboard'!"
+    : "Как получить OAuth токен за 5 секунд:\n\n1. Откройте soundcloud.com в вашем обычном браузере (Chrome / Edge / Opera), где вы уже вошли через Google.\n2. Нажмите клавишу F12 на клавиатуре и откройте вкладку «Консоль» (Console).\n3. Вставьте команду и нажмите Enter:\n   copy(document.cookie.match(/oauth_token=([^;]+)/)[1])\n4. Токен автоматически скопируется в буфер обмена! Вернитесь в SoundClode и нажмите «Вставить из буфера».";
+  alert(helpText);
+}
+
+if ($('#btnTokenGo')) {
+  $('#btnTokenGo').onclick = async function() {
+    var val = ($('#inputQuickToken').value || '').trim();
+    if (!val) {
+      showToast(cfg.lang === 'en' ? 'Please paste your oauth_token' : 'Вставьте ваш oauth_token');
+      return;
+    }
+    $('#btnTokenGo').textContent = cfg.lang === 'en' ? 'Verifying...' : 'Проверка...';
+    await loginWithOAuthToken(val);
+    $('#btnTokenGo').textContent = cfg.lang === 'en' ? 'Log in' : 'Войти';
+  };
+}
+if ($('#inputQuickToken')) {
+  $('#inputQuickToken').onkeydown = function(e) {
+    if (e.key === 'Enter') $('#btnTokenGo').click();
+  };
+}
+if ($('#btnPasteQuickToken')) {
+  $('#btnPasteQuickToken').onclick = async function() {
+    try {
+      var text = await navigator.clipboard.readText();
+      if (text && $('#inputQuickToken')) {
+        $('#inputQuickToken').value = text.trim();
+        showToast(cfg.lang === 'en' ? 'Pasted from clipboard' : 'Вставлено из буфера');
+      }
+    } catch(err) {
+      var manual = prompt(cfg.lang === 'en' ? 'Paste oauth_token:' : 'Вставьте oauth_token:');
+      if (manual && $('#inputQuickToken')) $('#inputQuickToken').value = manual.trim();
+    }
+  };
+}
+if ($('#linkTokenHelpQuick')) {
+  $('#linkTokenHelpQuick').onclick = function(e) {
+    e.preventDefault();
+    showTokenHelpModal();
+  };
+}
+
+if ($('#btnSaveToken')) {
+  $('#btnSaveToken').onclick = async function() {
+    var val = ($('#inputOAuthToken').value || '').trim();
+    if (!val) {
+      showToast(cfg.lang === 'en' ? 'Please enter a token' : 'Введите токен');
+      return;
+    }
+    $('#btnSaveToken').textContent = cfg.lang === 'en' ? 'Saving...' : 'Сохраняем...';
+    await loginWithOAuthToken(val);
+    $('#btnSaveToken').textContent = cfg.lang === 'en' ? 'Save' : 'Сохранить';
+  };
+}
+if ($('#btnPasteToken')) {
+  $('#btnPasteToken').onclick = async function() {
+    try {
+      var text = await navigator.clipboard.readText();
+      if (text && $('#inputOAuthToken')) {
+        $('#inputOAuthToken').value = text.trim();
+        showToast(cfg.lang === 'en' ? 'Pasted from clipboard' : 'Вставлено из буфера');
+      }
+    } catch(err) {
+      var manual = prompt(cfg.lang === 'en' ? 'Paste oauth_token:' : 'Вставьте oauth_token:');
+      if (manual && $('#inputOAuthToken')) $('#inputOAuthToken').value = manual.trim();
+    }
+  };
+}
+if ($('#linkTokenHelpSet')) {
+  $('#linkTokenHelpSet').onclick = function(e) {
+    e.preventDefault();
+    showTokenHelpModal();
   };
 }
 
@@ -2972,8 +3231,10 @@ var I18N = {
     back: 'Назад',
     followers: 'подписчиков',
     tracks: 'треков',
+    likes_stat: 'лайков',
     play_all: 'Слушать все',
     on_soundcloud: 'В SoundCloud ↗',
+    ptab_likes: 'Понравившиеся',
     ptab_all: 'All',
     ptab_popular: 'Popular tracks',
     ptab_tracks: 'Tracks',
@@ -3064,8 +3325,10 @@ var I18N = {
     back: 'Back',
     followers: 'followers',
     tracks: 'tracks',
+    likes_stat: 'likes',
     play_all: 'Play all',
     on_soundcloud: 'On SoundCloud ↗',
+    ptab_likes: 'Liked tracks',
     ptab_all: 'All',
     ptab_popular: 'Popular tracks',
     ptab_tracks: 'Tracks',
@@ -3168,6 +3431,27 @@ function applyLanguage() {
   if (inputQuickNick) inputQuickNick.placeholder = (lang === 'en') ? 'Username or profile link (e.g. solvetpain)' : 'Никнейм или ссылка (например: solvetpain)';
   var btnQuickGo = $('#btnQuickGo');
   if (btnQuickGo) btnQuickGo.textContent = (lang === 'en') ? 'Log in' : 'Войти';
+  var lblOrToken = $('#lblOrToken');
+  if (lblOrToken) lblOrToken.textContent = (lang === 'en') ? 'Or sign-in via OAuth Token (for Google / Apple)' : 'Или вход по OAuth токену (для Google / Apple)';
+  var inputQuickToken = $('#inputQuickToken');
+  if (inputQuickToken) inputQuickToken.placeholder = (lang === 'en') ? 'Paste oauth_token (for full likes sync)' : 'Вставьте oauth_token (для полной синхронизации лайков)';
+  var btnTokenGo = $('#btnTokenGo');
+  if (btnTokenGo) btnTokenGo.textContent = (lang === 'en') ? 'Log in' : 'Войти';
+  var btnPasteQuickToken = $('#btnPasteQuickToken');
+  if (btnPasteQuickToken) btnPasteQuickToken.textContent = (lang === 'en') ? 'Paste from clipboard' : 'Вставить из буфера';
+  var linkTokenHelpQuick = $('#linkTokenHelpQuick');
+  if (linkTokenHelpQuick) linkTokenHelpQuick.textContent = (lang === 'en') ? 'How to get token in 5 seconds?' : 'Как получить токен за 5 секунд?';
+
+  var lblSyncTitle = $('#lblSyncTitle');
+  if (lblSyncTitle) lblSyncTitle.textContent = (lang === 'en') ? 'SoundCloud Synchronization' : 'Синхронизация SoundCloud';
+  var inputOAuthToken = $('#inputOAuthToken');
+  if (inputOAuthToken) inputOAuthToken.placeholder = (lang === 'en') ? 'Paste oauth_token...' : 'Вставьте oauth_token...';
+  var btnSaveToken = $('#btnSaveToken');
+  if (btnSaveToken) btnSaveToken.textContent = (lang === 'en') ? 'Save' : 'Сохранить';
+  var btnPasteToken = $('#btnPasteToken');
+  if (btnPasteToken) btnPasteToken.textContent = (lang === 'en') ? 'Paste from clipboard' : 'Вставить из буфера';
+  var linkTokenHelpSet = $('#linkTokenHelpSet');
+  if (linkTokenHelpSet) linkTokenHelpSet.textContent = (lang === 'en') ? 'How to get token?' : 'Как получить токен?';
 
   // Feed section titles
   var feedTitles = $$('#viewFeed .feed-section-title span');
@@ -3199,11 +3483,14 @@ function applyLanguage() {
   if (fLbl) fLbl.textContent = t.followers;
   var trkLbl = $('#profTracksLabel');
   if (trkLbl) trkLbl.textContent = t.tracks;
+  var likesLbl = $('#profLikesLabel');
+  if (likesLbl) likesLbl.textContent = t.likes_stat;
 
   $$('.prof-nav-tab').forEach(function(btn) {
     var key = 'ptab_' + btn.dataset.ptab;
     if (t[key]) btn.textContent = t[key];
   });
+  updateTokenSettingsUI();
 
   // Settings aside
   var setH2 = $('#lblSettingsTitle');
@@ -3332,7 +3619,10 @@ $$('#set [data-k]').forEach(function(el) {
   };
 });
 
-$('#gs').onclick = function() { $('#set').classList.toggle('open'); };
+$('#gs').onclick = function() {
+  updateTokenSettingsUI();
+  $('#set').classList.toggle('open');
+};
 $('#sx').onclick = function() { $('#set').classList.remove('open'); };
 $('#th').onclick = function() {
   cfg.theme = (document.documentElement.getAttribute('data-theme') === 'dark') ? 'light' : 'dark';
