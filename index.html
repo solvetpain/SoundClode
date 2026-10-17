@@ -111,18 +111,27 @@ h1,h2,.logo{font-family:var(--fd, Unbounded, system-ui, sans-serif);letter-spaci
 .gbtn{
   display:inline-flex;align-items:center;gap:12px;
   background:#fff;color:#1f1f1f;font-weight:700;font-size:15px;
-  padding:14px 24px;border-radius:var(--rp,999px);border:2px solid var(--ink);
-  transition:transform .15s, opacity .15s;
+  padding:14px 24px;border-radius:var(--rp,999px);border:2px solid #fff;
+  cursor:pointer;transition:transform .15s, opacity .15s;
 }
-.gbtn:hover{transform:translateY(-1px);opacity:.95}
+.gbtn:hover{transform:translateY(-1px);opacity:.92}
 .gbtn svg{width:20px;height:20px}
-.altbtn{
-  display:inline-flex;align-items:center;gap:10px;
-  background:var(--card);color:var(--ink);font-weight:600;font-size:15px;
-  padding:14px 22px;border-radius:var(--rp,999px);border:2px solid var(--line);
-  transition:border-color .15s, background .15s;
+.applebtn{
+  display:inline-flex;align-items:center;gap:12px;
+  background:#fff;color:#000;font-weight:700;font-size:15px;
+  padding:14px 24px;border-radius:var(--rp,999px);border:2px solid #fff;
+  cursor:pointer;transition:transform .15s, opacity .15s;
 }
-.altbtn:hover{border-color:var(--ink);background:var(--card-hover)}
+.applebtn:hover{transform:translateY(-1px);opacity:.92}
+.applebtn svg{width:20px;height:20px}
+.scbtn{
+  display:inline-flex;align-items:center;gap:12px;
+  background:var(--card);color:var(--ink);font-weight:700;font-size:15px;
+  padding:14px 24px;border-radius:var(--rp,999px);border:2px solid var(--line);
+  cursor:pointer;transition:transform .15s, border-color .15s, background .15s;
+}
+.scbtn:hover{transform:translateY(-1px);border-color:var(--ink);background:var(--card-hover)}
+.scbtn svg{width:20px;height:20px}
 .note{font-size:13px;color:var(--mut);margin-top:18px}
 
 /* MODAL */
@@ -768,44 +777,37 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
   <div class="hero">
     <div class="bars" id="bars" aria-hidden="true"></div>
     <h1 class="logo">SoundClode</h1>
-    <p>Все твои треки SoundCloud, чистый звук без рекламы и лёгкий тёмный дизайн. Войди через Google или синхронизируй профиль, чтобы начать.</p>
+    <p id="heroDesc">Все твои треки SoundCloud, чистый звук без рекламы и лёгкий тёмный дизайн. Войди через соцсети для синхронизации в реальном времени.</p>
     
     <div class="auth-btns">
-      <button class="gbtn" id="gin">
+      <button class="gbtn" id="btnAuthGoogle">
         <svg viewBox="0 0 48 48">
           <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/>
           <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.5-4.1 7-10.2 7-17.6z"/>
           <path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/>
           <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/>
         </svg>
-        Войти через Google
+        <span>Войти через Google</span>
       </button>
 
-      <button class="altbtn" id="btnByLink">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-        Войти по нику или ссылке
+      <button class="applebtn" id="btnAuthApple">
+        <svg viewBox="0 0 170 170" fill="currentColor">
+          <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.74 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.66-7.8-11.91-14.28-5.86-9.01-10.42-19.43-13.68-31.25-3.26-11.83-4.89-23.08-4.89-33.77 0-14.12 3.52-25.79 10.56-35.01 7.04-9.21 16.03-13.88 26.97-14.01 4.58 0 9.82 1.25 15.72 3.75 5.9 2.5 9.79 3.81 11.68 3.93 2.44-.24 6.54-1.63 12.31-4.18 5.76-2.55 10.9-3.7 15.42-3.46 11.75.83 20.89 5.34 27.42 13.53-9.88 5.97-14.73 14.35-14.55 25.14.19 8.27 3.36 15.24 9.52 20.91 6.16 5.67 13.43 8.94 21.81 9.81-2.02 6.19-4.5 12.44-7.44 18.75zM119.22 33.71c0-6.19 2.23-12.18 6.7-17.97 4.47-5.78 10.04-9.84 16.71-12.18.36 1.34.54 2.62.54 3.84 0 6.12-2.3 12.14-6.9 18.06-4.6 5.91-10.22 9.99-16.86 12.24-.07-.72-.19-2.05-.19-3.99z"/>
+        </svg>
+        <span>Войти через Apple</span>
+      </button>
+
+      <button class="scbtn" id="btnAuthSoundCloud">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+        </svg>
+        <span>Войти через SoundCloud</span>
       </button>
     </div>
 
-    <p class="note">Поддерживает автоматический вход через Google OAuth, а также прямую загрузку всех лайков из профиля SoundCloud.</p>
+    <p class="note" id="heroNote">Вход через аккаунт Google, Apple или SoundCloud с моментальной синхронизацией треков и лайков в реальном времени.</p>
   </div>
 </section>
-
-<!-- 2. LOGIN MODAL -->
-<div id="modal" hidden>
-  <div class="box" role="dialog" aria-modal="true">
-    <h2 id="modalTitle">Синхронизация SoundCloud</h2>
-    <p id="modalDesc">Ссылка на ваш профиль SoundCloud или никнейм:</p>
-    
-    <input id="inputProfile" value="" placeholder="например: nick или https://soundcloud.com/ваш_ник" autocomplete="off">
-    <div id="authStatus" style="font-size:12px;color:var(--mut);margin-bottom:10px" hidden></div>
-    
-    <div class="row">
-      <button class="btn accent" id="btnSyncGo">Загрузить треки</button>
-      <button class="btn ghost" id="btnModalCancel">Отмена</button>
-    </div>
-  </div>
-</div>
 
 <!-- 3. MAIN APP INTERFACE -->
 <div id="app" hidden>
@@ -2345,6 +2347,7 @@ function syncPlayer() {
     var overlay = el.querySelector('.pb-overlay svg');
     if (overlay) overlay.innerHTML = (isThis && !au.paused) ? PAUSE : PLAY;
   });
+  if (typeof updateDiscordPresence === 'function') updateDiscordPresence(true);
 }
 
 // GLOBAL EVENT DELEGATION FOR CLICKS (Tracks, Artists, Waveforms)
@@ -2411,6 +2414,7 @@ document.addEventListener('click', function(e) {
     // Click on like button
     var likeBtn = e.target.closest('.lk');
     if (likeBtn) {
+      var willLike = !likes[track.id];
       if (likes[track.id]) {
         delete likes[track.id];
       } else {
@@ -2424,6 +2428,7 @@ document.addEventListener('click', function(e) {
       likeBtn.classList.toggle('on', !!likes[track.id]);
       syncBarLike();
       if (activeSection === 'library') renderLibrary();
+      toggleLikeRemote(track.id, willLike);
       return;
     }
 
@@ -2436,11 +2441,25 @@ document.addEventListener('click', function(e) {
   }
 });
 
+// REMOTE REAL-TIME LIKE SYNC
+function toggleLikeRemote(trackId, isLiked) {
+  var token = localStorage.getItem('soundclode_oauth_token');
+  if (token && user && user.id) {
+    fetch('https://api-v2.soundcloud.com/users/' + user.id + '/track_likes/' + trackId + '?client_id=' + clientId, {
+      method: isLiked ? 'PUT' : 'DELETE',
+      headers: { 'Authorization': 'OAuth ' + token }
+    }).then(function(r) {
+      if (r.ok) console.log('[SoundClode] Real-time like synced:', trackId, isLiked);
+    }).catch(function(err){ console.warn('[SoundClode] Remote like sync error:', err); });
+  }
+}
+
 // BOTTOM BAR LIKE BUTTON
 $('#barLike').onclick = function(e) {
   e.stopPropagation();
   if (!currentTrack) return;
   var tid = currentTrack.id;
+  var willLike = !likes[tid];
   if (likes[tid]) {
     delete likes[tid];
   } else {
@@ -2460,6 +2479,7 @@ $('#barLike').onclick = function(e) {
   if (activeSection === 'library' && libTab === 'liked') {
     renderLibrary();
   }
+  toggleLikeRemote(tid, willLike);
 };
 
 // BOTTOM CONTROLS & PLAYBACK ENGINE
@@ -2595,6 +2615,8 @@ au.ontimeupdate = function() {
   var c = document.querySelector('.trk.cur canvas');
   if (c && currentTrack) drawWave(c, currentTrack, true);
 
+  if (typeof updateDiscordPresence === 'function') updateDiscordPresence(false);
+
   // EOF fallback: handles cases where browser/HLS reaches end but does not fire onended
   if (d > 0 && au.currentTime >= (d - 0.35) && !au.paused) {
     if (!_eosCheckTimer) {
@@ -2666,29 +2688,77 @@ $('.vol-wrap').onwheel = function(e) {
   setVolume(au.volume + delta);
 };
 
-// SYNC PROFILE & LOAD TRACKS
+// DISCORD RICH PRESENCE INTEGRATION
+var _lastDiscordPresence = 0;
+function updateDiscordPresence(force) {
+  if (!window.chrome || !window.chrome.webview) return;
+  var now = Date.now();
+  if (!force && (now - _lastDiscordPresence < 3500)) return;
+  _lastDiscordPresence = now;
+
+  if (!currentTrack) {
+    try {
+      window.chrome.webview.postMessage({ type: 'DISCORD_RPC', action: 'CLEAR' });
+    } catch(e) {}
+    return;
+  }
+
+  var art = currentTrack.artwork_url ? currentTrack.artwork_url.replace('-large.jpg', '-t500x500.jpg') : ((currentTrack.user && currentTrack.user.avatar_url) ? currentTrack.user.avatar_url : '');
+  var artist = (currentTrack.user && (currentTrack.user.username || currentTrack.user.name)) ? (currentTrack.user.username || currentTrack.user.name) : 'SoundCloud';
+
+  try {
+    window.chrome.webview.postMessage({
+      type: 'DISCORD_RPC',
+      title: currentTrack.title || 'SoundClode',
+      artist: artist,
+      artwork: art,
+      duration: au.duration || (currentTrack.duration ? currentTrack.duration / 1000 : 0),
+      currentTime: au.currentTime || 0,
+      playing: !au.paused
+    });
+  } catch(e) {}
+}
+
+// SYNC PROFILE & LOAD TRACKS IN REAL TIME
 async function syncUserProfile(profileInput) {
   var clean = (profileInput || '').trim().replace(/^https?:\/\/(www\.)?soundcloud\.com\//, '').replace(/\/$/, '').replace(/^@/, '');
   if (!clean) clean = (user && (user.permalink || user.username));
-  if (!clean) return;
+  if (!clean && (!user || !user.id)) return;
+
+  var token = localStorage.getItem('soundclode_oauth_token');
+  var authHeaders = token ? { 'Authorization': 'OAuth ' + token } : {};
 
   try {
-    // 1. Resolve user profile info to keep avatar, username, followers up to date
-    var uRes = await fetch('https://api-v2.soundcloud.com/resolve?url=' + encodeURIComponent('https://soundcloud.com/' + clean) + '&client_id=' + clientId);
-    if (uRes.ok) {
-      var uData = await uRes.json();
-      if (uData && (uData.id || uData.username)) {
-        user = uData;
-        saveUser();
-        syncUserAvatarUI();
-        if ($('#profAvatar')) $('#profAvatar').style.backgroundImage = 'url("' + (user.avatar_url || '').replace('-large.jpg', '-t500x500.jpg') + '")';
-        if ($('#profName')) $('#profName').textContent = user.username || user.name || 'User';
+    // 1. Refresh profile info
+    if (token) {
+      try {
+        var meRes = await fetch('https://api-v2.soundcloud.com/me?client_id=' + clientId, { headers: authHeaders });
+        if (meRes.ok) {
+          var meData = await meRes.json();
+          if (meData && (meData.id || meData.username)) {
+            user = meData;
+            saveUser();
+            syncUserAvatarUI();
+          }
+        }
+      } catch (err) {}
+    } else if (clean) {
+      var uRes = await fetch('https://api-v2.soundcloud.com/resolve?url=' + encodeURIComponent('https://soundcloud.com/' + clean) + '&client_id=' + clientId);
+      if (uRes.ok) {
+        var uData = await uRes.json();
+        if (uData && (uData.id || uData.username)) {
+          user = uData;
+          saveUser();
+          syncUserAvatarUI();
+        }
       }
     }
 
     if (!user || !user.id) return;
     var uid = user.id;
-    var likesRes = await fetch('https://api-v2.soundcloud.com/users/' + uid + '/likes?client_id=' + clientId + '&limit=100');
+
+    // 2. Refresh likes in real time
+    var likesRes = await fetch('https://api-v2.soundcloud.com/users/' + uid + '/likes?client_id=' + clientId + '&limit=100', { headers: authHeaders });
     if (likesRes.ok) {
       var likesData = await likesRes.json();
       libraryTracks = [];
@@ -2704,7 +2774,18 @@ async function syncUserProfile(profileInput) {
       }
       saveTracks();
       saveLikes();
-      renderLibrary();
+      if (activeSection === 'library') renderLibrary();
+    }
+
+    // 3. Refresh followings in real time
+    var folRes = await fetch('https://api-v2.soundcloud.com/users/' + uid + '/followings?client_id=' + clientId + '&limit=50', { headers: authHeaders });
+    if (folRes.ok) {
+      var folData = await folRes.json();
+      if (folData && folData.collection) {
+        followings = folData.collection;
+        localStorage.setItem('soundclode_followings', JSON.stringify(followings));
+        if (activeSection === 'feed') renderFeed();
+      }
     }
   } catch(e) {
     console.warn('syncUserProfile error:', e);
@@ -2718,45 +2799,61 @@ $('#btnSync').onclick = function() {
     icon.style.transition = 'transform 0.6s ease';
     setTimeout(function(){ icon.style.transform = 'none'; icon.style.transition = 'none'; }, 600);
   }
-  if (user && user.permalink) syncUserProfile(user.permalink);
+  syncUserProfile();
 };
 
-$('#gin').onclick = function() {
-  window.open('https://soundcloud.com/signin', '_blank', 'width=600,height=700');
+// SOCIAL AUTHENTICATION (Google, Apple, SoundCloud)
+function startSocialAuth(provider) {
   var isEn = (cfg.lang === 'en');
-  $('#modalTitle').textContent = isEn ? 'Sign in via Google' : 'Вход через Google';
-  $('#modalDesc').textContent = isEn ? 'After signing in to SoundCloud via Google, click "Load tracks":' : 'После входа в SoundCloud через Google, введите ваш никнейм:';
-  $('#inputProfile').value = (user && user.permalink) ? 'https://soundcloud.com/' + user.permalink : '';
-  $('#btnSyncGo').textContent = isEn ? 'Load tracks' : 'Загрузить треки';
-  $('#btnModalCancel').textContent = isEn ? 'Cancel' : 'Отмена';
-  $('#modal').hidden = false;
-  $('#inputProfile').focus();
-};
-$('#btnByLink').onclick = function() {
-  var isEn = (cfg.lang === 'en');
-  $('#modalTitle').textContent = isEn ? 'Sign in to SoundCloud' : 'Вход в SoundCloud';
-  $('#modalDesc').textContent = isEn ? 'Enter your SoundCloud profile link or username:' : 'Введите никнейм или ссылку на ваш профиль:';
-  $('#inputProfile').value = '';
-  $('#inputProfile').placeholder = isEn ? 'e.g. username or https://soundcloud.com/...' : 'например: nick или https://soundcloud.com/...';
-  $('#btnSyncGo').textContent = isEn ? 'Log in' : 'Войти';
-  $('#btnModalCancel').textContent = isEn ? 'Cancel' : 'Отмена';
-  $('#modal').hidden = false;
-  $('#inputProfile').focus();
-};
-$('#btnModalCancel').onclick = function() { $('#modal').hidden = true; };
-$('#btnSyncGo').onclick = async function() {
-  var val = ($('#inputProfile').value || '').trim();
-  if (!val) {
-    alert(cfg.lang === 'en' ? 'Please enter a username or profile link' : 'Пожалуйста, введите никнейм или ссылку на профиль');
-    return;
+  if (window.chrome && window.chrome.webview) {
+    showToast(isEn ? 'Opening login window...' : 'Открываем окно авторизации...');
+    window.chrome.webview.postMessage({ type: 'OPEN_AUTH', provider: provider });
+  } else {
+    window.open('https://soundcloud.com/signin', '_blank', 'width=560,height=720');
+    showToast(isEn ? 'Please complete sign-in in the popup window' : 'Пожалуйста, выполните вход в открывшемся окне');
   }
-  $('#btnSyncGo').textContent = cfg.lang === 'en' ? 'Loading...' : 'Загрузка...';
-  await syncUserProfile(val);
-  $('#btnSyncGo').textContent = cfg.lang === 'en' ? 'Log in' : 'Войти';
-  $('#modal').hidden = true;
-  view();
-  switchSection('library');
-};
+}
+
+if ($('#btnAuthGoogle')) $('#btnAuthGoogle').onclick = function() { startSocialAuth('google'); };
+if ($('#btnAuthApple')) $('#btnAuthApple').onclick = function() { startSocialAuth('apple'); };
+if ($('#btnAuthSoundCloud')) $('#btnAuthSoundCloud').onclick = function() { startSocialAuth('soundcloud'); };
+
+// Native WebView2 message receiver for Discord RPC & Auth Success
+if (window.chrome && window.chrome.webview) {
+  window.chrome.webview.addEventListener('message', function(event) {
+    var data = event.data;
+    if (!data) return;
+    if (typeof data === 'string') {
+      try { data = JSON.parse(data); } catch(e) { return; }
+    }
+    if (data.type === 'AUTH_SUCCESS') {
+      if (data.token) {
+        localStorage.setItem('soundclode_oauth_token', data.token);
+      }
+      if (data.user) {
+        user = data.user;
+        saveUser();
+      }
+      view();
+      var isEn = (cfg.lang === 'en');
+      showToast(isEn ? 'Logged in as ' + (user.username || user.name) : 'Вход выполнен: ' + (user.username || user.name));
+      syncUserProfile();
+      switchSection('library');
+    }
+  });
+}
+
+// Real-time synchronization hooks
+window.addEventListener('focus', function() {
+  if (user && (user.id || user.permalink)) {
+    syncUserProfile();
+  }
+});
+setInterval(function() {
+  if (user && (user.id || user.permalink)) {
+    syncUserProfile();
+  }
+}, 60000);
 
 // HOTKEYS
 document.addEventListener('keydown', function(e) {
@@ -2789,7 +2886,7 @@ document.addEventListener('keydown', function(e) {
     }
   }
   if (e.key === 'Escape') {
-    $('#modal').hidden = true;
+    if ($('#modal')) $('#modal').hidden = true;
     $('#set').classList.remove('open');
   }
 });
@@ -3021,6 +3118,18 @@ function applyLanguage() {
     th.setAttribute('aria-label', t.theme_btn);
   }
 
+  // Login Hero Screen
+  var heroDesc = $('#heroDesc');
+  if (heroDesc) heroDesc.textContent = (lang === 'en') ? 'All your SoundCloud tracks, crystal clear ad-free sound and a sleek dark aesthetic. Sign in via social accounts to sync in real time.' : 'Все твои треки SoundCloud, чистый звук без рекламы и лёгкий тёмный дизайн. Войди через соцсети для синхронизации в реальном времени.';
+  var heroNote = $('#heroNote');
+  if (heroNote) heroNote.textContent = (lang === 'en') ? 'Direct sign-in via Google, Apple or SoundCloud account with real-time library synchronization.' : 'Вход через аккаунт Google, Apple или SoundCloud с моментальной синхронизацией треков и лайков в реальном времени.';
+  var btnAuthGoogle = $('#btnAuthGoogle span');
+  if (btnAuthGoogle) btnAuthGoogle.textContent = (lang === 'en') ? 'Continue with Google' : 'Войти через Google';
+  var btnAuthApple = $('#btnAuthApple span');
+  if (btnAuthApple) btnAuthApple.textContent = (lang === 'en') ? 'Continue with Apple' : 'Войти через Apple';
+  var btnAuthSoundCloud = $('#btnAuthSoundCloud span');
+  if (btnAuthSoundCloud) btnAuthSoundCloud.textContent = (lang === 'en') ? 'Continue with SoundCloud' : 'Войти через SoundCloud';
+
   // Feed section titles
   var feedTitles = $$('#viewFeed .feed-section-title span');
   if (feedTitles.length >= 2) {
@@ -3205,7 +3314,16 @@ $('#btnRelog').onclick = function() {
     au.pause();
     user = null;
     localStorage.removeItem('soundclode_user');
+    localStorage.removeItem('soundclode_oauth_token');
+    localStorage.removeItem('soundclode_tracks');
+    localStorage.removeItem('soundclode_likes');
+    libraryTracks = [];
+    likes = {};
+    if (window.chrome && window.chrome.webview) {
+      window.chrome.webview.postMessage({ type: 'LOGOUT' });
+    }
     view();
+    $('#set').classList.remove('open');
   }
 };
 
