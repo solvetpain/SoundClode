@@ -255,8 +255,6 @@ namespace SoundCloudNative
                             var popupWv = new Microsoft.Web.WebView2.Wpf.WebView2();
                             popupWin.Content = popupWv;
 
-                            popupWin.Show();
-
                             await popupWv.EnsureCoreWebView2Async(_env);
 
                             popupWv.CoreWebView2.Settings.IsStatusBarEnabled = false;
@@ -271,8 +269,20 @@ namespace SoundCloudNative
                                 });
                             };
 
+                            popupWv.CoreWebView2.NewWindowRequested += (s2, e2) =>
+                            {
+                                e2.Handled = true;
+                                if (!string.IsNullOrEmpty(e2.Uri)) popupWv.CoreWebView2.Navigate(e2.Uri);
+                            };
+
                             args.NewWindow = popupWv.CoreWebView2;
-                            args.Handled = true;
+
+                            popupWin.Show();
+
+                            if (!string.IsNullOrEmpty(args.Uri))
+                            {
+                                popupWv.CoreWebView2.Navigate(args.Uri);
+                            }
                         }
                         catch (Exception ex)
                         {
