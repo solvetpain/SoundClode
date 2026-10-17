@@ -202,11 +202,14 @@ namespace SoundCloudNative
                         _env = await CoreWebView2Environment.CreateAsync(null, userDataDir, options);
                     }
 
+                    // Window sized comfortably to fit SoundCloud's 800px modal without scrollbars
                     var authWin = new Window
                     {
                         Title = "SoundClode — Вход в SoundCloud",
-                        Width = 560,
-                        Height = 720,
+                        Width = 860,
+                        Height = 740,
+                        MinWidth = 760,
+                        MinHeight = 600,
                         WindowStartupLocation = WindowStartupLocation.CenterOwner,
                         Owner = this,
                         Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(18, 19, 24)),
@@ -217,8 +220,13 @@ namespace SoundCloudNative
                     var authWebView = new Microsoft.Web.WebView2.Wpf.WebView2();
                     authWin.Content = authWebView;
 
-                    authWin.Closed += (s, e) => { _currentAuthWin = null; };
-                    authWin.Show(); // non-blocking!
+                    Window? currentPopup = null;
+                    authWin.Closed += (s, e) =>
+                    {
+                        try { currentPopup?.Close(); } catch { }
+                        _currentAuthWin = null;
+                    };
+                    authWin.Show();
 
                     await authWebView.EnsureCoreWebView2Async(_env);
 
@@ -226,12 +234,54 @@ namespace SoundCloudNative
                     authWebView.CoreWebView2.Settings.AreDevToolsEnabled = false;
                     authWebView.CoreWebView2.Settings.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 
-                    authWebView.CoreWebView2.NewWindowRequested += (sender, args) =>
+                    // Handle OAuth popups (Google, Apple, Facebook) into a proper separate popup window
+                    authWebView.CoreWebView2.NewWindowRequested += async (sender, args) =>
                     {
                         var deferral = args.GetDeferral();
-                        args.Handled = true;
-                        authWebView.CoreWebView2.Navigate(args.Uri);
-                        deferral.Complete();
+                        try
+                        {
+                            var popupWin = new Window
+                            {
+                                Title = "SoundClode — Google / Apple Авторизация",
+                                Width = 520,
+                                Height = 680,
+                                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                                Owner = authWin,
+                                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.White),
+                                ResizeMode = ResizeMode.CanResize
+                            };
+                            currentPopup = popupWin;
+
+                            var popupWv = new Microsoft.Web.WebView2.Wpf.WebView2();
+                            popupWin.Content = popupWv;
+
+                            popupWin.Show();
+
+                            await popupWv.EnsureCoreWebView2Async(_env);
+
+                            popupWv.CoreWebView2.Settings.IsStatusBarEnabled = false;
+                            popupWv.CoreWebView2.Settings.AreDevToolsEnabled = false;
+                            popupWv.CoreWebView2.Settings.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+
+                            popupWv.CoreWebView2.WindowCloseRequested += (s, e) =>
+                            {
+                                Dispatcher.Invoke(() =>
+                                {
+                                    try { popupWin.Close(); } catch { }
+                                });
+                            };
+
+                            args.NewWindow = popupWv.CoreWebView2;
+                            args.Handled = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine("[SoundClode] Popup error: " + ex.Message);
+                        }
+                        finally
+                        {
+                            deferral.Complete();
+                        }
                     };
 
                     var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(750) };
@@ -240,6 +290,11 @@ namespace SoundCloudNative
                         try
                         {
                             var cookies = await authWebView.CoreWebView2.CookieManager.GetCookiesAsync("https://soundcloud.com");
+                            if (cookies == null || cookies.Count == 0)
+                            {
+                                cookies = await authWebView.CoreWebView2.CookieManager.GetCookiesAsync("https://secure.soundcloud.com");
+                            }
+
                             string? oauthToken = null;
                             foreach (var c in cookies)
                             {
@@ -262,11 +317,12 @@ namespace SoundCloudNative
                                 {
                                     var userJson = await resp.Content.ReadAsStringAsync();
                                     webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new
-                                    {
-                                        type = "AUTH_SUCCESS",
-                                        token = oauthToken,
-                                        user = JsonSerializer.Deserialize<JsonElement>(userJson)
-                                    }));
+                                      {
+                                          type = "AUTH_SUCCESS",
+                                          token = oauthToken,
+                                          user = JsonSerializer.Deserialize<JsonElement>(userJson)
+                                      }));
+                                    try { currentPopup?.Close(); } catch { }
                                     authWin.Close();
                                 }
                             }
