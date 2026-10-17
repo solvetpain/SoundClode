@@ -1004,22 +1004,6 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
         <option value="en">English</option>
       </select>
     </label>
-    <label class="fld"><span id="lblAppName">Название приложения</span><input type="text" data-k="name" maxlength="16"></label>
-    <label class="fld"><span id="lblAccent">Цветовой акцент</span>
-      <select data-k="accent" id="selAccent">
-        <option value="orange">SoundCloud Оранжевый</option>
-        <option value="mono">Монохромный (Белый)</option>
-        <option value="purple">Фиолетовый неон</option>
-        <option value="green">Зелёный киберпанк</option>
-      </select>
-    </label>
-    <label class="fld"><span id="lblTheme">Тема</span>
-      <select data-k="theme" id="selTheme">
-        <option value="dark">Чёрная</option>
-        <option value="light">Белая</option>
-        <option value="auto">Как в системе</option>
-      </select>
-    </label>
     <label class="fld"><span id="lblFd">Шрифт заголовков</span>
       <select data-k="fd" id="selFd">
         <option value="unb">Unbounded</option>
@@ -1042,7 +1026,6 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
         <option value="base">От нижней линии</option>
       </select>
     </label>
-    <label class="fld"><span id="lblDense">Компактный список</span><input type="checkbox" data-k="dense"></label>
     <label class="fld"><span id="lblHide">Скрыть волну</span><input type="checkbox" data-k="hide"></label>
     <label class="fld"><span id="lblAuto">Авто-переход к следующему</span><input type="checkbox" data-k="auto"></label>
     <label class="fld"><span id="lblKeys">Горячие клавиши (Пробел, ←, →, N, P, L)</span><input type="checkbox" data-k="keys"></label>
@@ -4079,25 +4062,6 @@ function applyLanguage() {
   if (setH2) setH2.textContent = t.settings;
   var lblLang = $('#lblLang');
   if (lblLang) lblLang.textContent = t.lbl_lang;
-  var lblAppName = $('#lblAppName');
-  if (lblAppName) lblAppName.textContent = t.lbl_name;
-  var lblAccent = $('#lblAccent');
-  if (lblAccent) lblAccent.textContent = t.lbl_accent;
-  var selAccent = $('#selAccent');
-  if (selAccent && selAccent.options) {
-    if (selAccent.options[0]) selAccent.options[0].textContent = t.opt_accent_orange;
-    if (selAccent.options[1]) selAccent.options[1].textContent = t.opt_accent_mono;
-    if (selAccent.options[2]) selAccent.options[2].textContent = t.opt_accent_purple;
-    if (selAccent.options[3]) selAccent.options[3].textContent = t.opt_accent_green;
-  }
-  var lblTheme = $('#lblTheme');
-  if (lblTheme) lblTheme.textContent = t.lbl_theme;
-  var selTheme = $('#selTheme');
-  if (selTheme && selTheme.options) {
-    if (selTheme.options[0]) selTheme.options[0].textContent = t.opt_theme_dark;
-    if (selTheme.options[1]) selTheme.options[1].textContent = t.opt_theme_light;
-    if (selTheme.options[2]) selTheme.options[2].textContent = t.opt_theme_auto;
-  }
   var lblFd = $('#lblFd');
   if (lblFd) lblFd.textContent = t.lbl_font;
   var lblRad = $('#lblRad');
@@ -4115,9 +4079,6 @@ function applyLanguage() {
     if (selWave.options[0]) selWave.options[0].textContent = t.opt_wave_bars;
     if (selWave.options[1]) selWave.options[1].textContent = t.opt_wave_thin;
     if (selWave.options[2]) selWave.options[2].textContent = t.opt_wave_base;
-  }
-  var lblDense = $('#lblDense');
-  if (lblDense) lblDense.textContent = t.lbl_dense;
   var lblHide = $('#lblHide');
   if (lblHide) lblHide.textContent = t.lbl_hide;
   var lblAuto = $('#lblAuto');
