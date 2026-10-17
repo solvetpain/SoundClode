@@ -2,11 +2,13 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using Forms = System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 
 namespace SoundCloudNative
@@ -18,6 +20,11 @@ namespace SoundCloudNative
         private DiscordRpcClient? _discordRpc;
         private CoreWebView2Environment? _env;
         private Window? _currentAuthWin;
+
+        private Forms.NotifyIcon? _notifyIcon;
+        private Forms.ToolStripMenuItem? _trayTrackItem;
+        private bool _isQuitting = false;
+        private bool _minimizeToTray = true;
 
         private async Task<string> FetchFreshClientIdAsync()
         {
@@ -56,11 +63,30 @@ namespace SoundCloudNative
             return _activeClientId;
         }
 
-        [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true, CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         private static extern IntPtr LoadImage(IntPtr hinst, string lpszName, uint uType, int cxDesired, int cyDesired, uint fuLoad);
 
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        [DllImport("user32.dll")]
         private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmExtendFrameIntoClientArea(IntPtr hWnd, ref MARGINS pMarInset);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MARGINS
+        {
+            public int cxLeftWidth;
+            public int cxRightWidth;
+            public int cyTopHeight;
+            public int cyBottomHeight;
+        }
+
+        private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+        private const int DWMWA_MICA_EFFECT = 1029;
+        private const int DWMWA_SYSTEMBACKDROP_TYPE = 38;
 
         private const uint IMAGE_ICON = 1;
         private const uint LR_LOADFROMFILE = 0x00000010;
@@ -119,12 +145,31 @@ namespace SoundCloudNative
             {
                 try
                 {
-                    var icoPath = GetOrExtractAssetPath("soundcloud.ico");
-                    if (File.Exists(icoPath))
+                    var helper = new System.Windows.Interop.WindowInteropHelper(this);
+                    IntPtr hWnd = helper.Handle;
+                    if (hWnd != IntPtr.Zero)
                     {
-                        var helper = new System.Windows.Interop.WindowInteropHelper(this);
-                        IntPtr hWnd = helper.Handle;
-                        if (hWnd != IntPtr.Zero)
+                        // 1. Windows 11 Immersive Dark Mode for frames
+                        int darkMode = 1;
+                        DwmSetWindowAttribute(hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkMode, sizeof(int));
+
+                        // 2. Windows 11 Mica Backdrop (2 = Mica, 4 = Mica Tabbed / Alt, 3 = Acrylic)
+                        int backdrop = 2;
+                        int hr = DwmSetWindowAttribute(hWnd, DWMWA_SYSTEMBACKDROP_TYPE, ref backdrop, sizeof(int));
+                        if (hr != 0)
+                        {
+                            // Fallback for Windows 11 21H2 Mica
+                            int mica = 1;
+                            DwmSetWindowAttribute(hWnd, DWMWA_MICA_EFFECT, ref mica, sizeof(int));
+                        }
+
+                        // 3. Extend Frame Into Client Area for full glass effect
+                        var margins = new MARGINS { cxLeftWidth = -1, cxRightWidth = -1, cyTopHeight = -1, cyBottomHeight = -1 };
+                        DwmExtendFrameIntoClientArea(hWnd, ref margins);
+
+                        // 4. Set Application Icons
+                        var icoPath = GetOrExtractAssetPath("soundcloud.ico");
+                        if (File.Exists(icoPath))
                         {
                             IntPtr hSmall = LoadImage(IntPtr.Zero, icoPath, IMAGE_ICON, 24, 24, LR_LOADFROMFILE);
                             if (hSmall != IntPtr.Zero) SendMessage(hWnd, WM_SETICON, (IntPtr)ICON_SMALL, hSmall);
@@ -145,6 +190,12 @@ namespace SoundCloudNative
         {
             try
             {
+                if (_notifyIcon != null)
+                {
+                    _notifyIcon.Visible = false;
+                    _notifyIcon.Dispose();
+                    _notifyIcon = null;
+                }
                 _discordRpc?.ClearActivity();
                 _discordRpc?.Dispose();
             }
@@ -155,6 +206,8 @@ namespace SoundCloudNative
         {
             try
             {
+                InitializeNotifyIcon();
+
                 var userDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SoundClode", "WebViewProfile");
                 var options = new CoreWebView2EnvironmentOptions
                 {
@@ -171,7 +224,7 @@ namespace SoundCloudNative
 
                 webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
                 webView.CoreWebView2.Settings.AreDevToolsEnabled = false;
-                webView.DefaultBackgroundColor = System.Drawing.Color.FromArgb(18, 19, 24);
+                webView.DefaultBackgroundColor = System.Drawing.Color.FromArgb(0, 0, 0, 0);
 
                 // Auto-recover if GPU or Renderer crashes (e.g. when DirectX games take exclusive focus)
                 webView.CoreWebView2.ProcessFailed += (s, args) =>
@@ -225,6 +278,19 @@ namespace SoundCloudNative
                             var localPath = localUri.AbsolutePath.TrimStart('/');
                             if (string.IsNullOrEmpty(localPath) || localPath.Equals("index.html", StringComparison.OrdinalIgnoreCase))
                             {
+                                var localDiskPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "index.html");
+                                if (!File.Exists(localDiskPath))
+                                {
+                                    localDiskPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SoundClode", "Assets", "index.html");
+                                }
+                                if (File.Exists(localDiskPath))
+                                {
+                                    var localBytes = File.ReadAllBytes(localDiskPath);
+                                    var localHeaders = "Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: *\r\nAccess-Control-Allow-Methods: *\r\nContent-Type: text/html; charset=utf-8\r\n";
+                                    args.Response = webView.CoreWebView2.Environment.CreateWebResourceResponse(new MemoryStream(localBytes), 200, "OK", localHeaders);
+                                    return;
+                                }
+
                                 var asm = System.Reflection.Assembly.GetExecutingAssembly();
                                 var htmlRes = System.Linq.Enumerable.FirstOrDefault(asm.GetManifestResourceNames(), n => n.EndsWith("index.html", StringComparison.OrdinalIgnoreCase));
                                 if (htmlRes != null)
@@ -315,6 +381,8 @@ namespace SoundCloudNative
                                 if (root.TryGetProperty("action", out var actProp) && actProp.GetString() == "CLEAR")
                                 {
                                     _discordRpc?.ClearActivity();
+                                    if (_trayTrackItem != null) _trayTrackItem.Text = "SoundClode — Ничего не играет";
+                                    if (_notifyIcon != null) _notifyIcon.Text = "SoundClode";
                                 }
                                 else
                                 {
@@ -326,6 +394,25 @@ namespace SoundCloudNative
                                     bool playing = root.TryGetProperty("playing", out var pProp) && pProp.GetBoolean();
 
                                     _discordRpc?.UpdateActivity(title, artist, artwork, duration, current, playing);
+
+                                    if (!string.IsNullOrEmpty(title))
+                                    {
+                                        string displayStr = $"{title} — {artist}";
+                                        if (_trayTrackItem != null) _trayTrackItem.Text = displayStr.Length > 45 ? displayStr.Substring(0, 42) + "..." : displayStr;
+                                        if (_notifyIcon != null)
+                                        {
+                                            _notifyIcon.Text = displayStr.Substring(0, Math.Min(63, displayStr.Length));
+                                        }
+                                    }
+                                }
+                            }
+                            else if (type == "TRACK_NOTIFICATION")
+                            {
+                                string title = root.TryGetProperty("title", out var tP) ? tP.GetString() ?? "" : "";
+                                string artist = root.TryGetProperty("artist", out var aP) ? aP.GetString() ?? "" : "";
+                                if (_notifyIcon != null && !IsVisible && !string.IsNullOrEmpty(title))
+                                {
+                                    _notifyIcon.ShowBalloonTip(2500, "Сейчас играет", $"{title}\n{artist}", Forms.ToolTipIcon.None);
                                 }
                             }
                             else if (type == "LIKE_TRACK" || type == "LIKE_PLAYLIST")
@@ -708,6 +795,90 @@ namespace SoundCloudNative
             });
         }
 
+        private void InitializeNotifyIcon()
+        {
+            try
+            {
+                var icoPath = GetOrExtractAssetPath("soundcloud.ico");
+                var icon = File.Exists(icoPath) ? new System.Drawing.Icon(icoPath) : System.Drawing.SystemIcons.Application;
+
+                _notifyIcon = new Forms.NotifyIcon
+                {
+                    Icon = icon,
+                    Text = "SoundClode",
+                    Visible = true
+                };
+
+                var menu = new Forms.ContextMenuStrip();
+
+                _trayTrackItem = new Forms.ToolStripMenuItem("SoundClode — Ничего не играет") { Enabled = false };
+                menu.Items.Add(_trayTrackItem);
+                menu.Items.Add(new Forms.ToolStripSeparator());
+
+                var itemPlay = new Forms.ToolStripMenuItem("Воспроизведение / Пауза", null, (s, e) => SendFrontendCommand("TOGGLE_PLAY"));
+                var itemNext = new Forms.ToolStripMenuItem("Следующий трек", null, (s, e) => SendFrontendCommand("PLAY_NEXT"));
+                var itemPrev = new Forms.ToolStripMenuItem("Предыдущий трек", null, (s, e) => SendFrontendCommand("PLAY_PREV"));
+                menu.Items.Add(itemPlay);
+                menu.Items.Add(itemNext);
+                menu.Items.Add(itemPrev);
+                menu.Items.Add(new Forms.ToolStripSeparator());
+
+                var itemShow = new Forms.ToolStripMenuItem("Открыть плеер", null, (s, e) => RestoreWindow());
+                var itemExit = new Forms.ToolStripMenuItem("Выход", null, (s, e) =>
+                {
+                    _isQuitting = true;
+                    Close();
+                });
+                menu.Items.Add(itemShow);
+                menu.Items.Add(itemExit);
+
+                _notifyIcon.ContextMenuStrip = menu;
+                _notifyIcon.DoubleClick += (s, e) => RestoreWindow();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("[SoundClode] NotifyIcon init error: " + ex.Message);
+            }
+        }
+
+        private void SendFrontendCommand(string command)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                try
+                {
+                    webView?.CoreWebView2?.PostWebMessageAsJson($"{{\"type\":\"COMMAND\",\"command\":\"{command}\"}}");
+                }
+                catch { }
+            });
+        }
+
+        private void RestoreWindow()
+        {
+            Dispatcher.Invoke(() =>
+            {
+                Show();
+                WindowState = WindowState.Normal;
+                Activate();
+                Focus();
+            });
+        }
+
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            if (!_isQuitting && _minimizeToTray)
+            {
+                e.Cancel = true;
+                Hide();
+                if (_notifyIcon != null)
+                {
+                    _notifyIcon.ShowBalloonTip(1500, "SoundClode", "Приложение продолжает играть в трее", Forms.ToolTipIcon.Info);
+                }
+                return;
+            }
+            base.OnClosing(e);
+        }
+
         private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left)
@@ -723,11 +894,41 @@ namespace SoundCloudNative
             }
         }
 
-        private void BtnMinimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+        private void BtnMinimize_Click(object sender, RoutedEventArgs e)
+        {
+            if (_minimizeToTray)
+            {
+                Hide();
+                if (_notifyIcon != null)
+                {
+                    _notifyIcon.ShowBalloonTip(1500, "SoundClode", "Приложение свернуто в трей", Forms.ToolTipIcon.Info);
+                }
+            }
+            else
+            {
+                WindowState = WindowState.Minimized;
+            }
+        }
+
         private void BtnMaximize_Click(object sender, RoutedEventArgs e)
         {
             WindowState = (WindowState == WindowState.Maximized) ? WindowState.Normal : WindowState.Maximized;
         }
-        private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
+
+        private void BtnClose_Click(object sender, RoutedEventArgs e)
+        {
+            if (_minimizeToTray && !_isQuitting)
+            {
+                Hide();
+                if (_notifyIcon != null)
+                {
+                    _notifyIcon.ShowBalloonTip(1500, "SoundClode", "Приложение свернуто в трей", Forms.ToolTipIcon.Info);
+                }
+            }
+            else
+            {
+                Close();
+            }
+        }
     }
 }

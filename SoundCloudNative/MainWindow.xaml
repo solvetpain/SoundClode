@@ -7,16 +7,16 @@
         MinHeight="480" MinWidth="700"
         WindowStyle="None"
         AllowsTransparency="False"
-        Background="#000000"
+        Background="Transparent"
         ResizeMode="CanResizeWithGrip"
         WindowStartupLocation="CenterScreen">
 
     <WindowChrome.WindowChrome>
-        <WindowChrome CaptionHeight="28" ResizeBorderThickness="8" GlassFrameThickness="0" CornerRadius="0"/>
+        <WindowChrome CaptionHeight="28" ResizeBorderThickness="8" GlassFrameThickness="-1" CornerRadius="0"/>
     </WindowChrome.WindowChrome>
 
-    <!-- Seamless dark border -->
-    <Border Background="#000000" BorderBrush="#1C1E26" BorderThickness="1" ClipToBounds="True">
+    <!-- Seamless dark border with Mica glass translucency -->
+    <Border Background="#C007080A" BorderBrush="#20222B" BorderThickness="1" ClipToBounds="True">
 
         <Grid>
             <Grid.RowDefinitions>
@@ -25,7 +25,7 @@
             </Grid.RowDefinitions>
 
             <!-- Minimalist integrated drag bar -->
-            <Grid Grid.Row="0" Background="#000000" MouseDown="TitleBar_MouseDown">
+            <Grid Grid.Row="0" Background="#9007080A" MouseDown="TitleBar_MouseDown">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>

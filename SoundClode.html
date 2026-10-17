@@ -82,13 +82,19 @@
   scrollbar-width: thin;
   scrollbar-color: #272832 transparent;
 }
-html,body{margin:0;padding:0}
+html{
+  margin:0;padding:0;
+  background:transparent!important;
+  overflow-x:hidden;
+}
 body{
-  background:var(--bg);
+  margin:0;padding:0;
+  background:rgba(7,8,10,0.82)!important;
   color:var(--ink);
   font:400 15px/1.5 var(--fb, "Instrument Sans", system-ui, sans-serif);
   min-height:100vh;
   -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
 }
 [hidden]{display:none!important}
 button,input{font:inherit;color:inherit;border:0;background:none}
@@ -418,7 +424,48 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
 .prof-name{
   font-family:var(--fd, Unbounded, sans-serif);
   font-size:clamp(22px,4vw,32px);margin:0 0 4px;font-weight:800;
-  display:flex;align-items:center;gap:10px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+
+/* OWNER BADGE */
+.owner-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-family:var(--fb, "Instrument Sans", system-ui, sans-serif);
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:0.03em;
+  text-transform:lowercase;
+  padding:2px 8px;
+  border-radius:var(--rp, 999px);
+  background:rgba(255, 255, 255, 0.08);
+  border:1px solid rgba(255, 255, 255, 0.16);
+  color:var(--ink);
+  vertical-align:middle;
+  user-select:none;
+  cursor:default;
+  line-height:1.35;
+  transition:all 0.15s ease;
+}
+:root[data-theme="light"] .owner-badge{
+  background:rgba(0, 0, 0, 0.06);
+  border-color:rgba(0, 0, 0, 0.14);
+  color:var(--ink);
+}
+.owner-badge:hover{
+  background:rgba(255, 255, 255, 0.14);
+  border-color:rgba(255, 255, 255, 0.28);
+}
+:root[data-theme="light"] .owner-badge:hover{
+  background:rgba(0, 0, 0, 0.1);
+  border-color:rgba(0, 0, 0, 0.25);
+}
+.owner-badge.mini{
+  font-size:10px;
+  padding:1px 6px;
+  margin-left:6px;
+  font-weight:600;
 }
 .prof-handle{font-size:14px;color:var(--mut);margin-bottom:8px}
 .prof-bio{font-size:13px;color:var(--ink);opacity:.85;margin:0 0 12px;max-width:65ch;line-height:1.4}
@@ -512,7 +559,7 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
 
 /* TRACK ITEM */
 .trk{
-  display:grid;grid-template-columns:52px 1fr 44px;gap:8px 16px;align-items:center;
+  display:grid;grid-template-columns:52px 1fr auto;gap:8px 16px;align-items:center;
   background:var(--card);border-radius:var(--r,20px);padding:14px 18px;margin-bottom:10px;
   border:1px solid var(--line);
   transition:all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
@@ -578,14 +625,20 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
   transition:color .15s;display:inline-block;max-width:max-content;
 }
 .trk-artist:hover{color:var(--ink);text-decoration:underline}
-.lk{
-  width:40px;height:40px;color:var(--mut);display:grid;place-items:center;border-radius:50%;grid-row:span 2;
-  transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+.trk-right-wrap{
+  grid-column:3;grid-row:span 2;
+  display:flex;align-items:center;gap:8px;justify-content:flex-end;
 }
-.lk:hover{color:var(--ink);background:var(--card-hover);transform:scale(1.12)}
-.lk:active{transform:scale(0.88)}
+.lk{
+  width:38px;height:38px;color:var(--mut);display:grid;place-items:center;border-radius:50%;
+  background:rgba(255, 255, 255, 0.04);border:1px solid rgba(255, 255, 255, 0.08);
+  transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);flex-shrink:0;cursor:pointer;
+}
+.lk:hover{color:var(--ink);background:rgba(255, 255, 255, 0.14);border-color:rgba(255, 255, 255, 0.25);transform:scale(1.12)}
+.lk:active{transform:scale(0.92)}
 .lk svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;transition:transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)}
-.lk.on{color:var(--ink) !important}.lk.on svg{fill:var(--ink) !important;stroke:var(--ink) !important}
+.lk.on{color:var(--ink) !important;background:rgba(255, 255, 255, 0.12) !important;border-color:rgba(255, 255, 255, 0.22) !important}
+.lk.on svg{fill:var(--ink) !important;stroke:var(--ink) !important}
 .trk canvas{grid-column:2;width:100%;height:44px;cursor:pointer;display:block}
 
 .empty{color:var(--mut);text-align:center;padding:50px 20px;font-size:15px}
@@ -594,12 +647,16 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
 /* STICKY BOTTOM PLAYER BAR - Dynamic Theme */
 #bar{
   position:fixed;left:0;right:0;bottom:0;
-  background:var(--card);color:var(--ink);
-  border-top:none;
-  padding:12px clamp(16px,4vw,40px) 16px;
-  display:grid;grid-template-columns:minmax(0,1.2fr) auto minmax(0,1fr);
-  gap:8px 20px;align-items:center;z-index:50;
-  box-shadow:0 -12px 36px rgba(0,0,0,.35);
+  background:rgba(14, 15, 20, 0.92);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  color:var(--ink);
+  border-top:1px solid rgba(255,255,255,0.08);
+  padding:12px clamp(14px,3vw,36px) 14px;
+  display:flex;justify-content:space-between;align-items:center;
+  gap:16px;z-index:65;
+  box-shadow:0 -12px 36px rgba(0,0,0,.4);
+  box-sizing:border-box;
 }
 #sk{
   -webkit-appearance:none;appearance:none;
@@ -632,11 +689,11 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
 #sk:active::-webkit-slider-thumb{
   opacity:1;transform:scale(1);
 }
-.bar-track{display:flex;align-items:center;gap:12px;min-width:0}
+.bar-track{display:flex;align-items:center;gap:12px;flex:1 1 0;min-width:0;max-width:380px}
 .bar-art{width:46px;height:46px;border-radius:10px;background:var(--card-hover);overflow:hidden;flex-shrink:0;position:relative}
 .bar-art img{width:100%;height:100%;object-fit:cover;display:block}
-#bar .ti{font-size:14px;color:var(--ink);font-weight:700}
-#bar .trk-artist{font-size:12px;color:var(--mut);opacity:1}
+#bar .ti{font-size:14px;color:var(--ink);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bar .trk-artist{font-size:12px;color:var(--mut);opacity:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #bar .trk-artist:hover{color:var(--ink)}
 .bar-like{
   width:36px;height:36px;display:grid;place-items:center;
@@ -661,7 +718,7 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
 .bar-like:active svg{
   transform:scale(0.85);
 }
-.cg{display:flex;gap:6px;align-items:center}
+.cg{display:flex;gap:6px;align-items:center;flex:0 0 auto}
 .ctl{
   width:38px;height:38px;display:grid;place-items:center;
   color:var(--mut);border-radius:50%;position:relative;
@@ -710,9 +767,14 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
   color:var(--ink);line-height:1;pointer-events:none;
 }
 
-.right{display:flex;gap:12px;align-items:center;justify-content:flex-end}
+.right{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex:1 1 0;min-width:0}
 .tm{font-size:12px;font-variant-numeric:tabular-nums;color:var(--mut)}
-.vol-wrap{display:flex;align-items:center;gap:6px}
+.vol-wrap{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 .vol-btn{
   width:32px;height:32px;display:grid;place-items:center;
   color:var(--ink);border-radius:50%;cursor:pointer;
@@ -722,35 +784,122 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
 .vol-btn svg{width:18px;height:18px;display:block}
 .vol-btn svg polygon{fill:currentColor;stroke:currentColor;stroke-width:1}
 .vol-btn svg path, .vol-btn svg line{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-#vol{
-  -webkit-appearance:none;appearance:none;
-  width:86px;height:12px;background:transparent;
-  cursor:pointer;border:none;outline:none;margin:0;padding:0;
-}
-#vol:focus{outline:none;border:none}
-#vol::-webkit-slider-runnable-track{
-  width:100%;height:3px;
-  background:linear-gradient(to right, var(--ink) 0%, var(--ink) var(--vol-pct, 85%), var(--slider-bg) var(--vol-pct, 85%), var(--slider-bg) 100%);
-  border:none;outline:none;border-radius:999px;
-  transition:height .15s ease;
-}
-#vol:hover::-webkit-slider-runnable-track{height:4px}
-#vol::-webkit-slider-thumb{
-  -webkit-appearance:none;appearance:none;
-  width:10px;height:10px;border-radius:50%;
-  background:var(--ink);border:none;outline:none;
-  margin-top:-3.5px;
-  box-shadow:0 1px 3px rgba(0,0,0,.4);
-  transition:transform .15s ease;
-}
-#vol:hover::-webkit-slider-thumb{transform:scale(1.2)}
 
-@media (max-width:760px){
-  #vol,.vol-val,.bar-art{display:none}
+/* SOUNDCLOUD VERTICAL VOLUME POPOVER */
+.vol-popover{
+  position:absolute;
+  bottom:calc(100% + 14px);
+  left:50%;
+  transform:translateX(-50%) translateY(8px) scale(0.95);
+  background:#141519;
+  border:1px solid rgba(255,255,255,0.13);
+  border-radius:8px;
+  padding:14px 10px;
+  box-shadow:0 12px 32px rgba(0,0,0,0.65), 0 0 0 1px rgba(0,0,0,0.3);
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .2s cubic-bezier(0.16, 1, 0.3, 1),
+             transform .2s cubic-bezier(0.16, 1, 0.3, 1),
+             visibility .2s;
+  z-index:100;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  user-select:none;
+}
+/* Invisible hover bridge between button and popup */
+.vol-popover::before{
+  content:'';
+  position:absolute;
+  top:100%;
+  left:-20px;
+  right:-20px;
+  height:24px;
+  background:transparent;
+}
+.vol-wrap:hover .vol-popover,
+.vol-wrap.dragging .vol-popover,
+.vol-wrap:focus-within .vol-popover{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateX(-50%) translateY(0) scale(1);
+}
+/* Downward arrow notch */
+.vol-arrow{
+  position:absolute;
+  bottom:-5.5px;
+  left:50%;
+  transform:translateX(-50%) rotate(45deg);
+  width:9px;
+  height:9px;
+  background:#141519;
+  border-right:1px solid rgba(255,255,255,0.13);
+  border-bottom:1px solid rgba(255,255,255,0.13);
+  pointer-events:none;
+}
+/* Vertical track */
+.vol-slider-track{
+  position:relative;
+  width:22px;
+  height:108px;
+  cursor:pointer;
+  touch-action:none;
+}
+.vol-slider-rail{
+  position:absolute;
+  top:6px;
+  bottom:6px;
+  left:50%;
+  transform:translateX(-50%);
+  width:3px;
+  background:#363840;
+  border-radius:999px;
+  pointer-events:none;
+}
+.vol-slider-fill{
+  position:absolute;
+  bottom:6px;
+  left:50%;
+  transform:translateX(-50%);
+  width:3px;
+  height:81.6px;
+  background:#ffffff;
+  border-radius:999px;
+  pointer-events:none;
+  transition:height .04s ease;
+}
+.vol-slider-thumb{
+  position:absolute;
+  left:50%;
+  bottom:87.6px;
+  transform:translate(-50%, 50%);
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  background:#141519;
+  border:2.5px solid #ffffff;
+  box-shadow:0 1px 4px rgba(0,0,0,0.5);
+  pointer-events:none;
+  box-sizing:border-box;
+  transition:transform .12s ease, box-shadow .12s ease, bottom .04s ease;
+}
+.vol-slider-track:hover .vol-slider-thumb,
+.vol-wrap.dragging .vol-slider-thumb{
+  transform:translate(-50%, 50%) scale(1.18);
+  box-shadow:0 2px 8px rgba(0,0,0,0.7), 0 0 10px rgba(255,255,255,0.4);
+}
+
+@media (max-width:1020px){
+  #visCanvas{display:none !important}
+}
+@media (max-width:680px){
+  .bar-art{display:none !important}
+  .tm{display:none !important}
 }
 @media (max-width:540px){
-  #bar{grid-template-columns:minmax(0,1fr) auto}
-  .right{display:none}
+  .right{display:none !important}
 }
 
 /* TOAST NOTIFICATION */
@@ -788,6 +937,114 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
 #av{border-radius:var(--rb,50%)}
 .cmp .trk{padding:10px 14px;margin-bottom:6px}.cmp .trk canvas{height:30px}
 .nowave .trk canvas{display:none}
+
+/* SIDE DRAWERS (Queue & Lyrics) */
+.side-drawer{
+  position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);
+  background:rgba(16, 17, 21, 0.94);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  border-left:1px solid var(--line);z-index:75;
+  padding:24px;overflow-y:auto;transform:translateX(100%);
+  transition:transform .25s cubic-bezier(0.16, 1, 0.3, 1), visibility .25s;
+  visibility:hidden;
+  box-shadow:-12px 0 36px rgba(0,0,0,0.4);
+}
+.side-drawer.open{transform:none;visibility:visible}
+.lyrics-scroll{
+  display:flex;flex-direction:column;gap:14px;
+  padding:16px 0 80px;text-align:left;
+  user-select:none;
+}
+.lyric-line{
+  font-size:17px;font-weight:600;color:var(--mut);
+  line-height:1.45;margin:0;cursor:pointer;
+  transition:color .2s, transform .2s, opacity .2s;
+  opacity:0.45;padding:4px 6px;border-radius:8px;
+}
+.lyric-line:hover{
+  opacity:0.85;color:var(--ink);background:rgba(255,255,255,0.03);
+}
+.lyric-line.active{
+  color:var(--ink);opacity:1;transform:scale(1.03);
+  font-weight:800;background:rgba(255,255,255,0.06);
+}
+.queue-section-title{
+  font-size:12px;text-transform:uppercase;letter-spacing:0.06em;
+  color:var(--mut);font-weight:700;margin:18px 0 8px;
+}
+.queue-item{
+  display:flex;align-items:center;gap:10px;padding:8px 10px;
+  border-radius:12px;background:var(--card);margin-bottom:6px;
+  border:1px solid transparent;transition:all .15s;cursor:pointer;
+}
+.queue-item:hover{
+  background:var(--card-hover);border-color:var(--line);
+}
+.queue-item img{
+  width:42px;height:42px;border-radius:8px;object-fit:cover;flex-shrink:0;
+}
+.queue-item .q-info{min-width:0;flex:1}
+.queue-item .q-title{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+.queue-item .q-artist{font-size:11px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.queue-item .q-remove{
+  color:var(--mut);padding:6px;cursor:pointer;border-radius:50%;
+  display:grid;place-items:center;transition:all .15s;background:transparent;border:0;
+}
+.trk-actions{
+  display:flex;align-items:center;gap:8px;opacity:0;
+  transform:translateX(6px);
+  transition:opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.trk:hover .trk-actions{opacity:1;transform:translateX(0)}
+.trk-action-btn{
+  width:38px;height:38px;color:var(--mut);display:grid;place-items:center;
+  border-radius:50%;cursor:pointer;
+  transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  background:rgba(255, 255, 255, 0.05);border:1px solid rgba(255, 255, 255, 0.09);
+  flex-shrink:0;
+}
+.trk-action-btn:hover{
+  color:var(--ink);background:rgba(255, 255, 255, 0.16);
+  border-color:rgba(255, 255, 255, 0.28);transform:scale(1.12);
+  box-shadow:0 4px 14px rgba(0, 0, 0, 0.35);
+}
+.trk-action-btn:active{transform:scale(0.92)}
+.trk-action-btn svg{width:20px;height:20px;display:block}
+
+/* Live Visualizer Canvas in Bottom Bar */
+#visCanvas{
+  width:96px;height:28px;background:rgba(255,255,255,0.02);
+  border:1px solid rgba(255,255,255,0.08);border-radius:6px;
+  cursor:pointer;transition:all .15s;flex-shrink:0;
+}
+#visCanvas:hover{
+  border-color:rgba(255,255,255,0.25);transform:scale(1.04);
+}
+
+/* History view stats cards */
+.stats-grid{
+  display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+  gap:12px;margin-bottom:24px;
+}
+.stat-card{
+  background:var(--card);border:1px solid var(--line);
+  padding:16px 20px;border-radius:16px;
+}
+.stat-val{font-size:26px;font-weight:800;font-family:var(--fd, sans-serif);color:var(--ink)}
+.stat-label{font-size:12px;color:var(--mut);margin-top:4px}
+.history-row{
+  display:flex;align-items:center;gap:12px;padding:10px 14px;
+  border-radius:12px;background:var(--card);margin-bottom:8px;
+  border:1px solid transparent;transition:all .15s;cursor:pointer;
+}
+.history-row:hover{
+  background:var(--card-hover);border-color:var(--line);
+}
+.history-row img{
+  width:44px;height:44px;border-radius:10px;object-fit:cover;flex-shrink:0;
+}
+.history-time{font-size:11px;color:var(--mut);white-space:nowrap}
 </style>
 </head>
 <body>
@@ -923,6 +1180,10 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
         <button class="tab" data-t="all" aria-pressed="false">
           <span id="tabAllLabel">Все треки</span>
         </button>
+        <button class="tab" data-t="history" aria-pressed="false">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span id="tabHistoryLabel">История и статистика</span>
+        </button>
         <span class="sp"></span>
         <span class="cnt-tag" id="cnt"></span>
       </div>
@@ -930,6 +1191,7 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
       <div id="libraryList"></div>
       <div id="followingGrid" class="following-grid" hidden></div>
       <div id="playlistsGrid" class="albums-grid" hidden></div>
+      <div id="historyView" hidden></div>
     </div>
 
 
@@ -954,8 +1216,13 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
       <div class="prof-hero">
         <div class="prof-avatar" id="profAvatar"></div>
         <div class="prof-info">
-          <h1 class="prof-name" id="profName">Artist</h1>
-          <div class="prof-handle" id="profHandle">@artist</div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px">
+            <h1 class="prof-name" id="profName" style="margin:0">Artist</h1>
+            <span class="owner-badge" id="profOwnerBadge" style="display:none" title="SoundClode Owner">owner</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div class="prof-handle" id="profHandle" style="margin:0">@artist</div>
+          </div>
           <p class="prof-bio" id="profBio"></p>
           <div class="prof-stats">
             <span><b id="profFollowers">0</b> <span id="profFollowersLabel">подписчиков</span></span>
@@ -1004,22 +1271,6 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
         <option value="en">English</option>
       </select>
     </label>
-    <label class="fld"><span id="lblAppName">Название приложения</span><input type="text" data-k="name" maxlength="16"></label>
-    <label class="fld"><span id="lblAccent">Цветовой акцент</span>
-      <select data-k="accent" id="selAccent">
-        <option value="orange">SoundCloud Оранжевый</option>
-        <option value="mono">Монохромный (Белый)</option>
-        <option value="purple">Фиолетовый неон</option>
-        <option value="green">Зелёный киберпанк</option>
-      </select>
-    </label>
-    <label class="fld"><span id="lblTheme">Тема</span>
-      <select data-k="theme" id="selTheme">
-        <option value="dark">Чёрная</option>
-        <option value="light">Белая</option>
-        <option value="auto">Как в системе</option>
-      </select>
-    </label>
     <label class="fld"><span id="lblFd">Шрифт заголовков</span>
       <select data-k="fd" id="selFd">
         <option value="unb">Unbounded</option>
@@ -1042,9 +1293,27 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
         <option value="base">От нижней линии</option>
       </select>
     </label>
-    <label class="fld"><span id="lblDense">Компактный список</span><input type="checkbox" data-k="dense"></label>
     <label class="fld"><span id="lblHide">Скрыть волну</span><input type="checkbox" data-k="hide"></label>
     <label class="fld"><span id="lblAuto">Авто-переход к следующему</span><input type="checkbox" data-k="auto"></label>
+    <label class="fld"><span id="lblNormalize">Нормализация громкости</span><input type="checkbox" data-k="normalize" checked></label>
+    <label class="fld"><span id="lblCrossfade">Плавный кроссфейд</span>
+      <select data-k="crossfade" id="selCrossfade">
+        <option value="0">Выкл</option>
+        <option value="1">1 сек</option>
+        <option value="2" selected>2 сек</option>
+        <option value="3">3 сек</option>
+        <option value="4">4 сек</option>
+      </select>
+    </label>
+    <label class="fld"><span id="lblVisMode">Живой спектроанализатор</span>
+      <select data-k="visMode" id="selVisMode">
+        <option value="bars">Столбики</option>
+        <option value="spectrum">Спектральная волна</option>
+        <option value="oscilloscope">Осциллограф</option>
+        <option value="off">Выключен</option>
+      </select>
+    </label>
+    <label class="fld"><span id="lblTray">Сворачивать в системный трей</span><input type="checkbox" data-k="tray" checked></label>
     <label class="fld"><span id="lblKeys">Горячие клавиши (Пробел, ←, →, N, P, L)</span><input type="checkbox" data-k="keys"></label>
     
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px;border-top:1px solid var(--line);padding-top:16px">
@@ -1071,6 +1340,36 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
       <button class="btn ghost" id="btnRelog">Сменить аккаунт</button>
       <button class="btn ghost" id="rs">Сбросить всё</button>
     </div>
+
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--line);text-align:center;font-size:12px;color:var(--mut);display:flex;align-items:center;justify-content:center;gap:8px">
+      <span>Создатель: <b style="color:var(--ink)">solvetpain</b></span>
+      <span class="owner-badge mini" title="SoundClode Owner">owner</span>
+    </div>
+  </aside>
+
+  <!-- QUEUE DRAWER -->
+  <aside id="queueDrawer" class="side-drawer" aria-label="Очередь воспроизведения">
+    <div class="fld" style="margin-top:0">
+      <h2 style="margin:0;font-size:20px" id="lblQueueTitle">Очередь воспроизведения</h2>
+      <button class="tab" id="closeQueue" aria-label="Закрыть">✕</button>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <span style="font-size:13px;color:var(--mut)" id="queueCount">0 треков в очереди</span>
+      <button class="altbtn" id="btnClearQueue" style="font-size:12px;padding:4px 10px">Очистить</button>
+    </div>
+    <div id="queueContent"></div>
+  </aside>
+
+  <!-- LYRICS DRAWER -->
+  <aside id="lyricsDrawer" class="side-drawer" aria-label="Текст песни">
+    <div class="fld" style="margin-top:0">
+      <div>
+        <h2 style="margin:0;font-size:20px" id="lblLyricsTitle">Текст песни</h2>
+        <div id="lyricsTrackInfo" style="font-size:12px;color:var(--mut);margin-top:2px">Ничего не играет</div>
+      </div>
+      <button class="tab" id="closeLyrics" aria-label="Закрыть">✕</button>
+    </div>
+    <div id="lyricsContainer" class="lyrics-scroll"></div>
   </aside>
 
   <!-- STICKY BOTTOM PLAYER BAR -->
@@ -1113,13 +1412,32 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
     </div>
 
     <div class="right">
+      <canvas id="visCanvas" width="96" height="28" title="Визуализатор (Клик для смены режима)"></canvas>
+      <button class="ctl outline" id="btnLyrics" title="Текст песни (Lyrics)" aria-label="Текст песни">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+      </button>
+      <button class="ctl outline" id="btnRadio" title="Радио по этому треку (Track Radio)" aria-label="Радио">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
+      </button>
+      <button class="ctl outline" id="btnQueue" title="Очередь воспроизведения (Queue)" aria-label="Очередь">
+        <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        <span id="queueBadge" class="rep-one-badge" style="display:none">0</span>
+      </button>
       <span class="tm" id="tm">0:00 / 0:00</span>
       <div class="vol-wrap">
-        <button class="vol-btn" id="btnMute" title="Громкость / Без звука (M)">
+        <div class="vol-popover" id="volPopover" title="85%">
+          <div class="vol-slider-track" id="volTrack" aria-label="Громкость">
+            <div class="vol-slider-rail"></div>
+            <div class="vol-slider-fill" id="volFill"></div>
+            <div class="vol-slider-thumb" id="volThumb"></div>
+          </div>
+          <div class="vol-arrow"></div>
+        </div>
+        <button class="vol-btn" id="btnMute" title="Громкость / Без звука (M)" aria-label="Громкость">
           <svg id="volIcon" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
         </button>
-        <input type="range" id="vol" min="0" max="1" step="0.01" value="0.85" aria-label="Громкость">
-        <span class="vol-val" id="volVal">85%</span>
+        <input type="range" id="vol" min="0" max="1" step="0.01" value="0.85" aria-label="Громкость" style="display:none">
+        <span class="vol-val" id="volVal" style="display:none">85%</span>
       </div>
     </div>
   </div>
@@ -1154,6 +1472,48 @@ var currentTrack = null;
 var likes = {};
 var clientId = 'tHVbSbDP4TaoMbPppngv6Tdry83vNbMQ';
 var hls = null;
+
+// OWNER / CREATOR CHECK & BADGE
+function isOwnerUser(u) {
+  if (!u) return false;
+  var uname = '';
+  var perm = '';
+  var id = '';
+  if (typeof u === 'string') {
+    uname = u.toLowerCase().trim();
+  } else {
+    uname = (u.username || u.name || '').toLowerCase().trim();
+    perm = (u.permalink || '').toLowerCase().trim();
+    id = u.id ? String(u.id) : '';
+  }
+
+  // Exact known creator handles
+  if (uname === 'solvetpain' || perm === 'solvetpain') return true;
+  if (uname === 'vetcs' || perm === 'vetcs') return true;
+
+  // If current logged-in user is solvetpain / vetcs
+  if (user) {
+    var curUname = (user.username || user.name || '').toLowerCase().trim();
+    var curPerm = (user.permalink || '').toLowerCase().trim();
+    if (curUname === 'solvetpain' || curPerm === 'solvetpain' || curUname === 'vetcs' || curPerm === 'vetcs') {
+      if (id && user.id && id === String(user.id)) return true;
+      if (uname && (uname === curUname || uname === curPerm)) return true;
+      if (perm && (perm === curUname || perm === curPerm)) return true;
+    }
+  }
+
+  // Config override if specified
+  if (typeof cfg !== 'undefined' && cfg && cfg.ownerNick) {
+    var oNick = cfg.ownerNick.toLowerCase().trim();
+    if (uname === oNick || perm === oNick) return true;
+  }
+  return false;
+}
+
+function getOwnerBadgeHtml(mini) {
+  var cls = mini ? 'owner-badge mini' : 'owner-badge';
+  return '<span class="' + cls + '" title="SoundClode Owner">owner</span>';
+}
 
 // Initial seed
 try {
@@ -1191,7 +1551,11 @@ var DEF_CFG = {
   shuffle: false,
   repeat: 'all',
   auto: true,
-  keys: true
+  keys: true,
+  normalize: true,
+  crossfade: 2,
+  visMode: 'bars',
+  tray: true
 };
 var cfg = Object.assign({}, DEF_CFG);
 try {
@@ -1200,6 +1564,9 @@ try {
   if (cfg.accent === 'orange' || !cfg.accent) cfg.accent = 'mono';
   if (!cfg.lang || (cfg.lang !== 'ru' && cfg.lang !== 'en')) cfg.lang = 'ru';
   if (!cfg.fd || cfg.fd === 'unb' || cfg.fd === 'fancy') cfg.fd = 'pts';
+  if (cfg.crossfade === undefined) cfg.crossfade = 2;
+  if (cfg.normalize === undefined) cfg.normalize = true;
+  if (!cfg.visMode) cfg.visMode = 'bars';
   localStorage.setItem('soundclode_cfg', JSON.stringify(cfg));
 } catch(e) {}
 
@@ -1211,8 +1578,129 @@ function saveLikedItems(){ try{ localStorage.setItem('soundclode_liked_items', J
 function saveLikes(){ try{ localStorage.setItem('soundclode_likes', JSON.stringify(likes)); }catch(e){} }
 function saveUser(){ try{ localStorage.setItem('soundclode_user', JSON.stringify(user)); }catch(e){} }
 
+// SMART QUEUE STATE
+var userQueue = [];
+try { userQueue = JSON.parse(localStorage.getItem('soundclode_queue') || '[]'); } catch(e){}
+function saveQueue() {
+  try { localStorage.setItem('soundclode_queue', JSON.stringify(userQueue)); } catch(e){}
+  updateQueueBadge();
+}
+function updateQueueBadge() {
+  var b = $('#queueBadge');
+  if (b) {
+    if (userQueue.length > 0) {
+      b.textContent = userQueue.length;
+      b.style.display = 'block';
+    } else {
+      b.style.display = 'none';
+    }
+  }
+  var countEl = $('#queueCount');
+  if (countEl) {
+    var isEn = (cfg.lang === 'en');
+    countEl.textContent = userQueue.length + (isEn ? ' tracks in queue' : ' треков в очереди');
+  }
+}
+
+// LISTENING HISTORY & STATS STATE
+var listeningHistory = [];
+try { listeningHistory = JSON.parse(localStorage.getItem('soundclode_history') || '[]'); } catch(e){}
+
+// AUDIO & WEB AUDIO ENGINE
 var au = new Audio();
 au.volume = cfg.vol;
+
+var audioCtx = null;
+var audioSourceNode = null;
+var compressorNode = null;
+var crossfadeGainNode = null;
+var analyserNode = null;
+var webAudioInitialized = false;
+
+function initWebAudio() {
+  if (webAudioInitialized) return;
+  try {
+    var AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    audioCtx = new AudioContext();
+
+    compressorNode = audioCtx.createDynamicsCompressor();
+    compressorNode.threshold.setValueAtTime(-24, audioCtx.currentTime);
+    compressorNode.knee.setValueAtTime(30, audioCtx.currentTime);
+    compressorNode.ratio.setValueAtTime(12, audioCtx.currentTime);
+    compressorNode.attack.setValueAtTime(0.003, audioCtx.currentTime);
+    compressorNode.release.setValueAtTime(0.25, audioCtx.currentTime);
+
+    crossfadeGainNode = audioCtx.createGain();
+    crossfadeGainNode.gain.setValueAtTime(1.0, audioCtx.currentTime);
+
+    analyserNode = audioCtx.createAnalyser();
+    analyserNode.fftSize = 128;
+    analyserNode.smoothingTimeConstant = 0.8;
+
+    au.crossOrigin = 'anonymous';
+    try {
+      audioSourceNode = audioCtx.createMediaElementSource(au);
+      connectAudioGraph();
+      webAudioInitialized = true;
+    } catch(err) {
+      console.warn('[WebAudio] createMediaElementSource warning:', err);
+    }
+  } catch(e) {
+    console.warn('[WebAudio] Init error:', e);
+  }
+}
+
+function connectAudioGraph() {
+  if (!audioCtx || !audioSourceNode) return;
+  try {
+    audioSourceNode.disconnect();
+    if (compressorNode) compressorNode.disconnect();
+    if (crossfadeGainNode) crossfadeGainNode.disconnect();
+    if (analyserNode) analyserNode.disconnect();
+
+    var isNorm = (cfg.normalize !== false);
+    if (isNorm && compressorNode) {
+      audioSourceNode.connect(compressorNode);
+      compressorNode.connect(crossfadeGainNode);
+    } else {
+      audioSourceNode.connect(crossfadeGainNode);
+    }
+
+    crossfadeGainNode.connect(analyserNode);
+    analyserNode.connect(audioCtx.destination);
+  } catch(e) {
+    console.warn('[WebAudio] connectAudioGraph error:', e);
+  }
+}
+
+function doCrossfadeTransition(action) {
+  var dur = parseFloat(cfg.crossfade);
+  if (isNaN(dur)) dur = 2.0;
+  if (!audioCtx || !crossfadeGainNode || dur <= 0.1 || au.paused) {
+    action();
+    return;
+  }
+  try {
+    var now = audioCtx.currentTime;
+    var half = Math.min(1.2, dur * 0.5);
+    crossfadeGainNode.gain.cancelScheduledValues(now);
+    crossfadeGainNode.gain.setValueAtTime(crossfadeGainNode.gain.value, now);
+    crossfadeGainNode.gain.linearRampToValueAtTime(0.01, now + half);
+
+    setTimeout(function() {
+      action();
+      if (audioCtx && crossfadeGainNode) {
+        var now2 = audioCtx.currentTime;
+        crossfadeGainNode.gain.cancelScheduledValues(now2);
+        crossfadeGainNode.gain.setValueAtTime(0.01, now2);
+        crossfadeGainNode.gain.linearRampToValueAtTime(1.0, now2 + half);
+      }
+    }, half * 1000);
+  } catch(e) {
+    action();
+  }
+}
 
 var PLAY = '<polygon points="6 4 20 12 6 20 6 4"/>';
 var PAUSE = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
@@ -1245,6 +1733,9 @@ if (barsEl) {
 function syncUserAvatarUI() {
   var av = $('#av');
   if (!av) return;
+  var isOwn = isOwnerUser(user);
+  av.classList.toggle('is-owner', isOwn);
+
   if (user && user.avatar_url) {
     var rawUrl = user.avatar_url;
     if (rawUrl.includes('avatars-ENkpB1PZhpwWbu03')) {
@@ -1275,23 +1766,33 @@ function view() {
   $('#app').hidden = !user;
   if (user) {
     syncUserAvatarUI();
-    $('#av').title = 'Профиль ' + (user.username || user.name);
+    var isOwn = isOwnerUser(user);
+    $('#av').title = (user.username || user.name) + (isOwn ? ' (SoundClode Owner)' : '');
     if (typeof updateTokenSettingsUI === 'function') updateTokenSettingsUI();
   }
 }
 
 // Soundcloud API helpers
 async function getFreshClientId() {
+  if (window.chrome && window.chrome.webview) {
+    try {
+      window.chrome.webview.postMessage({ type: 'GET_CLIENT_ID' });
+    } catch(e) {}
+  }
   try {
     var res = await fetch('https://soundcloud.com');
-    var html = await res.text();
-    var scripts = html.match(/https:\/\/a-v2\.sndcdn\.com\/assets\/[^"]+\.js/g) || [];
-    for (var i = scripts.length - 1; i >= Math.max(0, scripts.length - 6); i--) {
-      var js = await (await fetch(scripts[i])).text();
-      var m = js.match(/client_id[:=]["']?([a-zA-Z0-9]{32})["']?/);
-      if (m && m[1]) {
-        clientId = m[1];
-        return clientId;
+    if (res.ok) {
+      var html = await res.text();
+      var scripts = html.match(/https:\/\/a-v2\.sndcdn\.com\/assets\/[^"]+\.js/g) || [];
+      for (var i = scripts.length - 1; i >= Math.max(0, scripts.length - 8); i--) {
+        try {
+          var js = await (await fetch(scripts[i])).text();
+          var m = js.match(/client_id[:=]["']?([a-zA-Z0-9]{32})["']?/);
+          if (m && m[1]) {
+            clientId = m[1];
+            return clientId;
+          }
+        } catch(err) {}
       }
     }
   } catch(e) {}
@@ -1305,8 +1806,15 @@ async function findPlayableAlternative(track) {
     var query = (artistName ? artistName + ' ' : '') + (track.title || '');
     if (!query.trim()) return null;
     
+    var token = localStorage.getItem('soundclode_oauth_token');
+    var authHeaders = token ? { 'Authorization': 'OAuth ' + token } : {};
+
     var searchUrl = 'https://api-v2.soundcloud.com/search/tracks?q=' + encodeURIComponent(query.trim()) + '&client_id=' + clientId + '&limit=15';
-    var res = await fetch(searchUrl);
+    var res = await fetch(searchUrl, { headers: authHeaders });
+    if (!res.ok && (res.status === 401 || res.status === 403)) {
+      await getFreshClientId();
+      res = await fetch(searchUrl, { headers: authHeaders });
+    }
     if (!res.ok) return null;
     var data = await res.json();
     if (!data.collection || !data.collection.length) return null;
@@ -1332,21 +1840,26 @@ async function findPlayableAlternative(track) {
     candidates.sort(function(a, b) { return a.score - b.score; });
     if (!candidates.length) return null;
 
-    for (var j = 0; j < Math.min(3, candidates.length); j++) {
+    for (var j = 0; j < Math.min(4, candidates.length); j++) {
       var item = candidates[j];
-      var tc = item.unenc.find(function(t){ return t.format.protocol === 'progressive'; })
-            || item.unenc.find(function(t){ return t.format.protocol === 'hls'; })
-            || item.unenc[0];
       var authParam = item.cand.track_authorization ? '&track_authorization=' + encodeURIComponent(item.cand.track_authorization) : '';
-      var sRes = await fetch(tc.url + '?client_id=' + clientId + authParam);
-      if (sRes.ok) {
-        var sData = await sRes.json();
-        if (sData.url) {
-          track.stream_url = sData.url;
-          track._streamUrlTime = Date.now();
-          track.is_hls = (tc.format && tc.format.protocol === 'hls');
-          return sData.url;
-        }
+      
+      // Try transcodings in candidate
+      for (var k = 0; k < item.unenc.length; k++) {
+        var tc = item.unenc[k];
+        if (!tc || !tc.url) continue;
+        try {
+          var sRes = await fetch(tc.url + '?client_id=' + clientId + authParam, { headers: authHeaders });
+          if (sRes.ok) {
+            var sData = await sRes.json();
+            if (sData && sData.url) {
+              track.stream_url = sData.url;
+              track._streamUrlTime = Date.now();
+              track.is_hls = (tc.format && tc.format.protocol === 'hls');
+              return sData.url;
+            }
+          }
+        } catch(e) {}
       }
     }
   } catch(e) {
@@ -1355,17 +1868,26 @@ async function findPlayableAlternative(track) {
   return null;
 }
 
-// Resolve stream URL
-async function resolveStreamUrl(track) {
-  // If track has a cached stream_url that is less than 10 minutes old, reuse it
-  if (track.stream_url && track._streamUrlTime && (Date.now() - track._streamUrlTime < 600000)) {
+// Resolve stream URL with multi-transcoding fallback and short cache lifetime
+async function resolveStreamUrl(track, forceFresh) {
+  // If track has a cached stream_url that is less than 2 minutes old, reuse it (unless forceFresh)
+  if (!forceFresh && track.stream_url && track._streamUrlTime && (Date.now() - track._streamUrlTime < 120000)) {
     return track.stream_url;
   }
+  delete track.stream_url;
+  delete track._streamUrlTime;
+
+  var token = localStorage.getItem('soundclode_oauth_token');
+  var authHeaders = token ? { 'Authorization': 'OAuth ' + token } : {};
 
   if (!track.media || !track.media.transcodings) {
     if (track.id) {
       try {
-        var r = await fetch('https://api-v2.soundcloud.com/tracks/' + track.id + '?client_id=' + clientId);
+        var r = await fetch('https://api-v2.soundcloud.com/tracks/' + track.id + '?client_id=' + clientId, { headers: authHeaders });
+        if (!r.ok && (r.status === 401 || r.status === 403)) {
+          await getFreshClientId();
+          r = await fetch('https://api-v2.soundcloud.com/tracks/' + track.id + '?client_id=' + clientId, { headers: authHeaders });
+        }
         if (r.ok) {
           var td = await r.json();
           track.media = td.media;
@@ -1386,31 +1908,42 @@ async function resolveStreamUrl(track) {
       return proto === 'progressive' || proto === 'hls';
     });
 
-    if (validTranscodings.length) {
-      var tc = validTranscodings.find(function(t){ return t.format.protocol === 'progressive'; })
-            || validTranscodings.find(function(t){ return t.format.protocol === 'hls'; })
-            || validTranscodings[0];
+    // Sort: progressive first, then mp4a HLS, then other HLS
+    validTranscodings.sort(function(a, b) {
+      var protoA = (a.format && a.format.protocol) || '';
+      var protoB = (b.format && b.format.protocol) || '';
+      if (protoA === 'progressive' && protoB !== 'progressive') return -1;
+      if (protoB === 'progressive' && protoA !== 'progressive') return 1;
+      var mimeA = (a.format && a.format.mime_type) || '';
+      var mimeB = (b.format && b.format.mime_type) || '';
+      if (mimeA.includes('mp4') && !mimeB.includes('mp4')) return -1;
+      if (mimeB.includes('mp4') && !mimeA.includes('mp4')) return 1;
+      return 0;
+    });
 
-      if (tc && tc.url) {
-        try {
-          var authParam = track.track_authorization ? '&track_authorization=' + encodeURIComponent(track.track_authorization) : '';
-          var res = await fetch(tc.url + '?client_id=' + clientId + authParam);
-          if (!res.ok && (res.status === 401 || res.status === 403)) {
-            await getFreshClientId();
-            res = await fetch(tc.url + '?client_id=' + clientId + authParam);
-          }
-          if (res.ok) {
-            var data = await res.json();
-            if (data.url) {
-              track.stream_url = data.url;
-              track._streamUrlTime = Date.now();
-              track.is_hls = (tc.format && tc.format.protocol === 'hls');
-              return data.url;
-            }
-          }
-        } catch(e) {
-          console.error('Direct stream resolve error:', e);
+    for (var i = 0; i < validTranscodings.length; i++) {
+      var tc = validTranscodings[i];
+      if (!tc || !tc.url) continue;
+      try {
+        var authParam = track.track_authorization ? '&track_authorization=' + encodeURIComponent(track.track_authorization) : '';
+        var res = await fetch(tc.url + '?client_id=' + clientId + authParam, { headers: authHeaders });
+        if (!res.ok && (res.status === 401 || res.status === 403)) {
+          await getFreshClientId();
+          res = await fetch(tc.url + '?client_id=' + clientId + authParam, { headers: authHeaders });
         }
+        if (res.ok) {
+          var data = await res.json();
+          if (data && data.url) {
+            track.stream_url = data.url;
+            track._streamUrlTime = Date.now();
+            track.is_hls = (tc.format && tc.format.protocol === 'hls');
+            return data.url;
+          }
+        } else {
+          console.warn('Transcoding #' + i + ' returned HTTP ' + res.status + ', trying next...');
+        }
+      } catch(e) {
+        console.warn('Direct stream resolve error on transcoding #' + i + ':', e);
       }
     }
   }
@@ -1535,6 +2068,9 @@ function buildTrackListHtml(tracks, listType) {
       var imgHtml = art ? '<img src="' + art + '" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'" onload="this.style.display=\'block\';this.nextElementSibling.style.display=\'none\'">' : '';
       var fallbackHtml = '<div class="art-fallback" style="' + (art ? 'display:none' : 'display:grid') + '">' + plIconSvg + '</div>';
 
+      var isPlOwn = isOwnerUser(pl.user || { username: plAuthor });
+      var plOwnerBadge = isPlOwn ? (' ' + getOwnerBadgeHtml(true)) : '';
+
       return '<div class="trk trk-playlist-row" data-pid="' + pl.id + '" data-i="' + idx + '" data-list="' + listType + '">' +
         '<div class="art-thumb" data-a="play-playlist" data-pid="' + pl.id + '" title="' + (lang === 'en' ? 'Play playlist' : 'Слушать плейлист') + '">' +
           imgHtml +
@@ -1546,7 +2082,7 @@ function buildTrackListHtml(tracks, listType) {
             '<span>' + esc(pl.title || 'Playlist') + '</span>' +
             '<span class="pl-badge">' + (lang === 'en' ? 'PLAYLIST' : 'ПЛЕЙЛИСТ') + '</span>' +
           '</div>' +
-          '<div class="trk-artist">' + esc(plAuthor) + ' <span style="opacity:0.5">• ' + plCount + ' ' + (lang === 'en' ? 'tracks' : 'треков') + '</span></div>' +
+          '<div class="trk-artist">' + esc(plAuthor) + plOwnerBadge + ' <span style="opacity:0.5">• ' + plCount + ' ' + (lang === 'en' ? 'tracks' : 'треков') + '</span></div>' +
         '</div>' +
         '<button class="lk' + (isPlLiked ? ' on' : '') + '" data-a="like-playlist" data-pid="' + pl.id + '" aria-label="' + (lang === 'en' ? 'Like' : 'Нравится') + '">' +
           '<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' +
@@ -1564,6 +2100,8 @@ function buildTrackListHtml(tracks, listType) {
     var artistName = (trackItem.user && trackItem.user.username) ? trackItem.user.username : 'SoundCloud';
     var artistId = (trackItem.user && trackItem.user.id) ? trackItem.user.id : '';
     var artistPermalink = (trackItem.user && trackItem.user.permalink) ? trackItem.user.permalink : '';
+    var isTrackOwn = isOwnerUser(trackItem.user || { username: artistName, permalink: artistPermalink, id: artistId });
+    var ownerBadge = isTrackOwn ? (' ' + getOwnerBadgeHtml(true)) : '';
 
     var vinylSvg = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>';
     var imgHtml = art ? '<img src="' + art + '" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'" onload="this.style.display=\'block\';this.nextElementSibling.style.display=\'none\'">' : '';
@@ -1578,12 +2116,22 @@ function buildTrackListHtml(tracks, listType) {
       '</div>' +
       '<div class="trk-info">' +
         '<div class="ti" data-a="play">' + esc(trackItem.title || trackItem.name) + '</div>' +
-        '<div class="trk-artist" data-a="artist" data-aid="' + artistId + '" data-apermalink="' + artistPermalink + '" data-aname="' + esc(artistName) + '">' + esc(artistName) + '</div>' +
+        '<div class="trk-artist" data-a="artist" data-aid="' + artistId + '" data-apermalink="' + artistPermalink + '" data-aname="' + esc(artistName) + '">' + esc(artistName) + ownerBadge + '</div>' +
       '</div>' +
-      '<button class="lk' + (likes[trackItem.id] ? ' on' : '') + '" data-a="like" aria-label="' + likeAria + '">' +
-        '<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' +
-      '</button>' +
       '<canvas></canvas>' +
+      '<div class="trk-right-wrap">' +
+        '<div class="trk-actions">' +
+          '<button class="trk-action-btn" data-a="add-queue" title="' + (lang === 'en' ? 'Add to queue' : 'В очередь') + '">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' +
+          '</button>' +
+          '<button class="trk-action-btn" data-a="track-radio" title="' + (lang === 'en' ? 'Track radio' : 'Радио по треку') + '">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="2.5" fill="currentColor"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>' +
+          '</button>' +
+        '</div>' +
+        '<button class="lk' + (likes[trackItem.id] ? ' on' : '') + '" data-a="like" aria-label="' + likeAria + '" title="' + likeAria + '">' +
+          '<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' +
+        '</button>' +
+      '</div>' +
     '</div>';
   }).join('');
 }
@@ -1629,9 +2177,10 @@ function renderFeed() {
   var fRow = $('#feedArtistsScroll');
   if (followings && followings.length) {
     fRow.innerHTML = followings.map(function(u) {
+      var isOwn = isOwnerUser(u);
       return '<div class="artist-chip" data-aid="' + u.id + '" data-apermalink="' + u.permalink + '" data-aname="' + esc(u.username) + '">' +
         '<div class="artist-chip-avatar" style="background-image:url(' + (u.avatar_url || '') + ')"></div>' +
-        '<div class="artist-chip-name">' + esc(u.username) + '</div>' +
+        '<div class="artist-chip-name">' + esc(u.username) + (isOwn ? (' ' + getOwnerBadgeHtml(true)) : '') + '</div>' +
         '<div class="artist-chip-stat">' + formatNumber(u.followers_count || 0) + '</div>' +
       '</div>';
     }).join('');
@@ -1776,20 +2325,27 @@ function renderLibrary() {
   var lang = (cfg.lang === 'en') ? 'en' : 'ru';
   var isFollowing = (libTab === 'following');
   var isPlaylists = (libTab === 'playlists');
+  var isHistory = (libTab === 'history');
   var isLiked = (libTab === 'liked');
 
-  $('#libraryList').hidden = (isFollowing || isPlaylists);
+  $('#libraryList').hidden = (isFollowing || isPlaylists || isHistory);
   $('#followingGrid').hidden = !isFollowing;
   var pGrid = $('#playlistsGrid');
   if (pGrid) pGrid.hidden = !isPlaylists;
+  var hView = $('#historyView');
+  if (hView) hView.hidden = !isHistory;
 
-  if (isFollowing) {
+  if (isHistory) {
+    $('#cnt').textContent = listeningHistory.length + ' ' + (lang === 'en' ? 'played' : 'в истории');
+    renderHistoryView();
+  } else if (isFollowing) {
     var fGrid = $('#followingGrid');
     fGrid.innerHTML = followings.map(function(u) {
+      var isOwn = isOwnerUser(u);
       return '<div class="following-card" data-aid="' + u.id + '" data-apermalink="' + u.permalink + '" data-aname="' + esc(u.username) + '">' +
         '<div class="following-card-avatar" style="background-image:url(' + (u.avatar_url || '') + ')"></div>' +
         '<div class="following-card-info">' +
-          '<div class="following-card-name">' + esc(u.username) + '</div>' +
+          '<div class="following-card-name">' + esc(u.username) + (isOwn ? (' ' + getOwnerBadgeHtml(true)) : '') + '</div>' +
           '<div class="following-card-stat">' + formatNumber(u.followers_count || 0) + ' ' + (lang === 'en' ? 'followers' : 'подписчиков') + (u.city ? ' • ' + esc(u.city) : '') + '</div>' +
         '</div>' +
       '</div>';
@@ -2151,6 +2707,10 @@ async function openArtistProfile(artistId, artistUsername, artistPermalink) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
   var name = artistUsername || 'Артист';
+  var isOwner = isOwnerUser({ username: name, permalink: artistPermalink, id: artistId });
+  var badge = $('#profOwnerBadge');
+  if (badge) badge.style.display = isOwner ? 'inline-flex' : 'none';
+
   $('#profName').textContent = name;
   $('#profHandle').textContent = artistPermalink ? '@' + artistPermalink : '@' + name;
   $('#profBio').textContent = '';
@@ -2186,6 +2746,10 @@ async function openArtistProfile(artistId, artistUsername, artistPermalink) {
 
     if (u) {
       currentProfile = u;
+      var isOwnerU = isOwnerUser(u);
+      var badgeU = $('#profOwnerBadge');
+      if (badgeU) badgeU.style.display = isOwnerU ? 'inline-flex' : 'none';
+
       $('#profName').textContent = u.username;
       $('#profHandle').textContent = '@' + (u.permalink || u.username);
       if (u.avatar_url) $('#profAvatar').style.backgroundImage = 'url(' + u.avatar_url.replace('-large.jpg', '-t500x500.jpg') + ')';
@@ -2449,10 +3013,11 @@ function renderDropdownResults(q, artists, tracks, isInitial) {
 
   artists.forEach(function(a) {
     var avatar = a.avatar_url ? a.avatar_url.replace('-large.jpg', '-t300x300.jpg') : '';
+    var isOwn = isOwnerUser(a);
     html += '<div class="sd-item sd-artist" data-aid="' + a.id + '" data-aname="' + esc(a.username) + '" data-apermalink="' + (a.permalink || '') + '">' +
       '<div class="sd-art sd-art-user" style="background-image:url(' + avatar + ')"></div>' +
       '<div class="sd-text">' +
-        '<div class="sd-title">' + esc(a.username) + '</div>' +
+        '<div class="sd-title">' + esc(a.username) + (isOwn ? (' ' + getOwnerBadgeHtml(true)) : '') + '</div>' +
       '</div>' +
       '<svg class="sd-icon" viewBox="0 0 24 24" fill="currentColor">' +
         '<path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>' +
@@ -2463,10 +3028,13 @@ function renderDropdownResults(q, artists, tracks, isInitial) {
   window._sdTracks = tracks;
   tracks.forEach(function(t, idx) {
     var art = t.artwork_url ? t.artwork_url.replace('-large.jpg', '-t300x300.jpg') : (t.user && t.user.avatar_url ? t.user.avatar_url : '');
+    var isTrackOwn = isOwnerUser(t.user);
+    var uName = (t.user && t.user.username) ? esc(t.user.username) : '';
     html += '<div class="sd-item sd-track" data-sd-track-idx="' + idx + '">' +
       '<div class="sd-art" style="background-image:url(' + art + ')"></div>' +
       '<div class="sd-text">' +
         '<div class="sd-title">' + esc(t.title) + '</div>' +
+        (uName ? ('<div class="sd-sub">' + uName + (isTrackOwn ? (' ' + getOwnerBadgeHtml(true)) : '') + '</div>') : '') +
       '</div>' +
       '<svg class="sd-icon" viewBox="0 0 24 24" fill="currentColor">' +
         '<rect x="2" y="9" width="2.5" height="6" rx="1"/>' +
@@ -2573,15 +3141,49 @@ function showToast(msg) {
 
 // PLAYBACK ENGINE WITH AUTO-RECOVERY & AUTO-SKIP
 var consecutivePlaybackErrors = 0;
+var _playbackWatchdog = null;
+
+function clearPlaybackWatchdog() {
+  if (_playbackWatchdog) {
+    clearInterval(_playbackWatchdog);
+    _playbackWatchdog = null;
+  }
+}
+
+function startPlaybackWatchdog(track) {
+  clearPlaybackWatchdog();
+  var zeroTimeCount = 0;
+  _playbackWatchdog = setInterval(function() {
+    if (!au || au.paused || cur < 0 || currentTrack !== track) {
+      clearPlaybackWatchdog();
+      return;
+    }
+    // If audio is supposedly playing but stuck at 0:00
+    if (au.currentTime === 0) {
+      zeroTimeCount++;
+      if (zeroTimeCount >= 7) { // 7 seconds of 0:00 without moving
+        clearPlaybackWatchdog();
+        console.warn('Playback stalled at 0:00 for 7s on:', track.title);
+        delete track.stream_url;
+        delete track._streamUrlTime;
+        handleTrackPlaybackError('Трек завис. Пробуем следующий...');
+      }
+    } else {
+      // Audio is advancing normally
+      clearPlaybackWatchdog();
+    }
+  }, 1000);
+}
 
 function handleTrackPlaybackError(msg) {
+  clearPlaybackWatchdog();
   consecutivePlaybackErrors++;
   showToast(msg || 'Трек недоступен. Переключаем на следующий...');
   
   if (consecutivePlaybackErrors > 8) {
     console.error('Too many consecutive playback errors. Pausing playback.');
     consecutivePlaybackErrors = 0;
-    au.pause();
+    try { au.pause(); } catch(e){}
     syncPlayer();
     showToast('Несколько треков подряд недоступны в SoundCloud.');
     return;
@@ -2593,6 +3195,11 @@ function handleTrackPlaybackError(msg) {
   }, 450);
 }
 
+function playTrack(track) {
+  if (!track) return;
+  playTrackInList([track], 0);
+}
+
 async function playTrackInList(list, idx) {
   if (!list || idx < 0 || idx >= list.length) return;
   playingList = list;
@@ -2600,11 +3207,26 @@ async function playTrackInList(list, idx) {
   var track = list[idx];
   currentTrack = track;
 
+  _nextPreloadedTrackId = null;
+  if (track) track._recordedInHistory = false;
+  if (lyricsVisible) loadLyrics(track);
+  if (window.chrome && window.chrome.webview) {
+    try {
+      window.chrome.webview.postMessage(JSON.stringify({
+        type: 'TRACK_NOTIFICATION',
+        title: track.title || track.name || '',
+        artist: (track.user && track.user.username) ? track.user.username : 'SoundCloud'
+      }));
+    } catch(e){}
+  }
+
   $('#bt').textContent = track.title || track.name;
   var aName = (track.user && track.user.username) ? track.user.username : 'SoundCloud';
-  $('#bm').textContent = aName;
+  var aPerm = (track.user && track.user.permalink) || '';
+  var isTrackOwn = isOwnerUser(track.user || { username: aName, permalink: aPerm });
+  $('#bm').innerHTML = esc(aName) + (isTrackOwn ? (' ' + getOwnerBadgeHtml(true)) : '');
   $('#bm').dataset.aid = (track.user && track.user.id) || '';
-  $('#bm').dataset.apermalink = (track.user && track.user.permalink) || '';
+  $('#bm').dataset.apermalink = aPerm;
   $('#bm').dataset.aname = aName;
   
   var art = track.artwork_url ? track.artwork_url.replace('-large.jpg', '-t500x500.jpg') : (track.user && track.user.avatar_url ? track.user.avatar_url : '');
@@ -2627,6 +3249,22 @@ async function playTrackInList(list, idx) {
   var expectedDur = track.duration ? Math.round(track.duration / 1000) : 0;
   $('#tm').textContent = '0:00 / ' + (expectedDur ? fmt(expectedDur) : '0:00');
 
+  // Complete teardown of previous audio / HLS session to prevent buffer leaks
+  clearPlaybackWatchdog();
+  if (hls) {
+    try {
+      hls.stopLoad();
+      hls.detachMedia();
+      hls.destroy();
+    } catch(e) {}
+    hls = null;
+  }
+  try {
+    au.pause();
+    au.removeAttribute('src');
+    au.load();
+  } catch(e) {}
+
   // Update visual cur states
   syncPlayer();
 
@@ -2637,38 +3275,59 @@ async function playTrackInList(list, idx) {
     return;
   }
 
-  consecutivePlaybackErrors = 0;
-
   // Handle HLS vs MP3
   try {
     if (track.is_hls || streamUrl.includes('.m3u8')) {
       if (Hls.isSupported()) {
-        if (hls) { hls.destroy(); hls = null; }
         hls = new Hls({
           enableWorker: true,
           lowLatencyMode: false,
-          backBufferLength: 90
+          backBufferLength: 60,
+          maxBufferLength: 30,
+          fragLoadingMaxRetry: 3,
+          fragLoadingRetryDelay: 1000
         });
         hls.loadSource(streamUrl);
         hls.attachMedia(au);
         hls.on(Hls.Events.MANIFEST_PARSED, function() {
           au.volume = cfg.vol !== undefined ? cfg.vol : 0.85;
+          startPlaybackWatchdog(track);
           au.play().catch(function(err){
             console.warn('HLS play() was blocked or interrupted:', err);
           });
         });
+        var hlsRetryCount = 0;
         hls.on(Hls.Events.ERROR, function(event, data) {
           if (data && data.fatal) {
             console.warn('Fatal HLS error:', data.type, data.details);
             switch(data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
-                hls.startLoad();
+                hlsRetryCount++;
+                if (hlsRetryCount <= 2) {
+                  console.log('Retrying HLS network load (' + hlsRetryCount + '/2)...');
+                  hls.startLoad();
+                } else {
+                  clearPlaybackWatchdog();
+                  if (hls) {
+                    try { hls.stopLoad(); hls.detachMedia(); hls.destroy(); } catch(e){}
+                    hls = null;
+                  }
+                  delete track.stream_url;
+                  delete track._streamUrlTime;
+                  handleTrackPlaybackError('Ошибка потока. Переключаем...');
+                }
                 break;
               case Hls.ErrorTypes.MEDIA_ERROR:
                 hls.recoverMediaError();
                 break;
               default:
-                if (hls) { hls.destroy(); hls = null; }
+                clearPlaybackWatchdog();
+                if (hls) {
+                  try { hls.stopLoad(); hls.detachMedia(); hls.destroy(); } catch(e){}
+                  hls = null;
+                }
+                delete track.stream_url;
+                delete track._streamUrlTime;
                 handleTrackPlaybackError('Ошибка потока. Переключаем...');
                 break;
             }
@@ -2682,9 +3341,9 @@ async function playTrackInList(list, idx) {
           }, 350);
         });
       } else if (au.canPlayType('application/vnd.apple.mpegurl')) {
-        if (hls) { hls.destroy(); hls = null; }
         au.src = streamUrl;
         au.volume = cfg.vol !== undefined ? cfg.vol : 0.85;
+        startPlaybackWatchdog(track);
         au.play().catch(function(err){
           console.warn('Native HLS play error:', err);
         });
@@ -2692,9 +3351,9 @@ async function playTrackInList(list, idx) {
         handleTrackPlaybackError('HLS не поддерживается.');
       }
     } else {
-      if (hls) { hls.destroy(); hls = null; }
       au.src = streamUrl;
       au.volume = cfg.vol !== undefined ? cfg.vol : 0.85;
+      startPlaybackWatchdog(track);
       au.play().catch(function(err){
         console.warn('Direct MP3 play error:', err);
       });
@@ -2851,6 +3510,24 @@ document.addEventListener('click', function(e) {
     var pIdx = playableList.findIndex(function(t){ return String(t.id) === String(track.id); });
     if (pIdx === -1) pIdx = 0;
 
+    // Click on Add to Queue button
+    var qBtn = e.target.closest('[data-a="add-queue"]');
+    if (qBtn) {
+      e.stopPropagation();
+      e.preventDefault();
+      addToQueue(track);
+      return;
+    }
+
+    // Click on Track Radio button
+    var rBtn = e.target.closest('[data-a="track-radio"]');
+    if (rBtn) {
+      e.stopPropagation();
+      e.preventDefault();
+      startTrackRadio(track);
+      return;
+    }
+
     // Click on canvas to seek
     if (e.target.tagName === 'CANVAS') {
       if (playingList !== playableList || cur !== pIdx) {
@@ -3002,18 +3679,30 @@ function syncRepeatUI() {
 }
 
 function playNext() {
+  if (userQueue.length > 0) {
+    var next = userQueue.shift();
+    saveQueue();
+    renderQueueDrawer();
+    doCrossfadeTransition(function() {
+      playTrack(next);
+    });
+    return;
+  }
   if (!playingList || !playingList.length) return;
+  var nextIdx;
   if (isShuffle && playingList.length > 1) {
-    var nextIdx = cur;
+    nextIdx = cur;
     var attempts = 0;
     while (nextIdx === cur && attempts < 20) {
       nextIdx = Math.floor(Math.random() * playingList.length);
       attempts++;
     }
-    playTrackInList(playingList, nextIdx);
   } else {
-    playTrackInList(playingList, (cur + 1) % playingList.length);
+    nextIdx = (cur + 1) % playingList.length;
   }
+  doCrossfadeTransition(function() {
+    playTrackInList(playingList, nextIdx);
+  });
 }
 
 function playPrev() {
@@ -3022,17 +3711,20 @@ function playPrev() {
     au.currentTime = 0;
     return;
   }
+  var prevIdx;
   if (isShuffle && playingList.length > 1) {
-    var prevIdx = cur;
+    prevIdx = cur;
     var attempts = 0;
     while (prevIdx === cur && attempts < 20) {
       prevIdx = Math.floor(Math.random() * playingList.length);
       attempts++;
     }
-    playTrackInList(playingList, prevIdx);
   } else {
-    playTrackInList(playingList, (cur - 1 + playingList.length) % playingList.length);
+    prevIdx = (cur - 1 + playingList.length) % playingList.length;
   }
+  doCrossfadeTransition(function() {
+    playTrackInList(playingList, prevIdx);
+  });
 }
 
 $('#pp').onclick = togglePlay;
@@ -3056,15 +3748,35 @@ $('#rep').onclick = function() {
 };
 
 au.onplay = function() {
+  initWebAudio();
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
   syncPlayer();
   au.volume = cfg.vol !== undefined ? cfg.vol : 0.85;
 };
-au.onpause = function() { syncPlayer(); };
+au.onplaying = function() {
+  clearPlaybackWatchdog();
+  consecutivePlaybackErrors = 0;
+  syncPlayer();
+};
+au.onpause = function() {
+  clearPlaybackWatchdog();
+  syncPlayer();
+};
 
 function handleTrackEnded() {
+  clearPlaybackWatchdog();
   if (repeatMode === 'one') {
     au.currentTime = 0;
     au.play().catch(function(){});
+    return;
+  }
+  if (userQueue.length > 0) {
+    var next = userQueue.shift();
+    saveQueue();
+    renderQueueDrawer();
+    playTrack(next);
     return;
   }
   if (repeatMode === 'all' || cfg.auto) {
@@ -3078,6 +3790,7 @@ au.onended = handleTrackEnded;
 
 au.onerror = function(e) {
   console.warn('HTMLAudioElement error event:', e);
+  clearPlaybackWatchdog();
   if (currentTrack) {
     delete currentTrack.stream_url;
     delete currentTrack._streamUrlTime;
@@ -3102,6 +3815,17 @@ au.ontimeupdate = function() {
   }
 
   if (typeof updateDiscordPresence === 'function') updateDiscordPresence(false);
+
+  // Gapless preload near track end
+  checkGaplessPreload();
+
+  // Record into history after 15s of playback
+  if (au.currentTime >= 15 && currentTrack) {
+    recordTrackHistory(currentTrack);
+  }
+
+  // Update lyrics highlight
+  updateLyricsHighlight();
 
   // EOF fallback: handles cases where browser/HLS reaches end but does not fire onended
   if (d > 0 && au.currentTime >= (d - 0.35) && !au.paused) {
@@ -3146,7 +3870,16 @@ function setVolume(v, save) {
     volEl.value = v;
     volEl.style.setProperty('--vol-pct', Math.round(v * 100) + '%');
   }
-  $('#volVal').textContent = Math.round(v * 100) + '%';
+  var volVal = $('#volVal');
+  if (volVal) volVal.textContent = Math.round(v * 100) + '%';
+
+  var fill = $('#volFill');
+  var thumb = $('#volThumb');
+  var popover = $('#volPopover');
+  if (fill) fill.style.height = (v * 96) + 'px';
+  if (thumb) thumb.style.bottom = (6 + v * 96) + 'px';
+  if (popover) popover.setAttribute('title', Math.round(v * 100) + '%');
+
   if (save !== false) {
     cfg.vol = v;
     if (v > 0) lastVol = v;
@@ -3154,6 +3887,49 @@ function setVolume(v, save) {
   }
   updateVolIcon(v);
 }
+
+function initVerticalVolume() {
+  var track = $('#volTrack');
+  var wrap = $('.vol-wrap');
+  if (!track || !wrap) return;
+
+  var isDragging = false;
+
+  function updateFromPointer(e) {
+    var rect = track.getBoundingClientRect();
+    var trackBottom = rect.bottom - 6;
+    var trackHeight = rect.height - 12; // 96px
+    var clientY = e.clientY;
+    var ratio = (trackBottom - clientY) / trackHeight;
+    ratio = Math.max(0, Math.min(1, ratio));
+    setVolume(ratio);
+  }
+
+  track.addEventListener('pointerdown', function(e) {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    try { track.setPointerCapture(e.pointerId); } catch(err) {}
+    isDragging = true;
+    wrap.classList.add('dragging');
+    updateFromPointer(e);
+  });
+
+  track.addEventListener('pointermove', function(e) {
+    if (!isDragging) return;
+    updateFromPointer(e);
+  });
+
+  function stopDrag(e) {
+    if (isDragging) {
+      isDragging = false;
+      wrap.classList.remove('dragging');
+      try { track.releasePointerCapture(e.pointerId); } catch(err) {}
+    }
+  }
+
+  track.addEventListener('pointerup', stopDrag);
+  track.addEventListener('pointercancel', stopDrag);
+}
+initVerticalVolume();
 
 $('#vol').oninput = function() {
   setVolume(+this.value);
@@ -3567,6 +4343,9 @@ if (window.chrome && window.chrome.webview) {
       showToast(isEn ? 'Logged in as ' + (user.username || user.name) : 'Вход выполнен: ' + (user.username || user.name));
       syncUserProfile();
       switchSection('library');
+    } else if (data.type === 'CLIENT_ID' && data.clientId) {
+      clientId = data.clientId;
+      console.log('[SoundClode] Received fresh client_id from host:', clientId);
     } else if (data.type === 'LIKE_RESULT') {
       var isEn = (cfg.lang === 'en');
       if (data.ok) {
@@ -3578,6 +4357,10 @@ if (window.chrome && window.chrome.webview) {
         console.warn('[SoundClode] Remote like sync error:', data);
         showToast(isEn ? 'SoundCloud like sync error' : 'Ошибка синхронизации лайка с SoundCloud');
       }
+    } else if (data.type === 'COMMAND') {
+      if (data.command === 'TOGGLE_PLAY') togglePlay();
+      else if (data.command === 'PLAY_NEXT') playNext();
+      else if (data.command === 'PLAY_PREV') playPrev();
     }
   });
 }
@@ -3924,6 +4707,8 @@ function applyLanguage() {
   if (tabFollowing) tabFollowing.textContent = t.tab_following;
   var tabAll = $('[data-t="all"] span');
   if (tabAll) tabAll.textContent = t.tab_all;
+  var tabHistory = $('[data-t="history"] span');
+  if (tabHistory) tabHistory.textContent = (lang === 'en') ? 'History & Stats' : 'История и статистика';
 
   // Search header
   var searchH = $('#searchHeader');
@@ -3954,25 +4739,6 @@ function applyLanguage() {
   if (setH2) setH2.textContent = t.settings;
   var lblLang = $('#lblLang');
   if (lblLang) lblLang.textContent = t.lbl_lang;
-  var lblAppName = $('#lblAppName');
-  if (lblAppName) lblAppName.textContent = t.lbl_name;
-  var lblAccent = $('#lblAccent');
-  if (lblAccent) lblAccent.textContent = t.lbl_accent;
-  var selAccent = $('#selAccent');
-  if (selAccent && selAccent.options) {
-    if (selAccent.options[0]) selAccent.options[0].textContent = t.opt_accent_orange;
-    if (selAccent.options[1]) selAccent.options[1].textContent = t.opt_accent_mono;
-    if (selAccent.options[2]) selAccent.options[2].textContent = t.opt_accent_purple;
-    if (selAccent.options[3]) selAccent.options[3].textContent = t.opt_accent_green;
-  }
-  var lblTheme = $('#lblTheme');
-  if (lblTheme) lblTheme.textContent = t.lbl_theme;
-  var selTheme = $('#selTheme');
-  if (selTheme && selTheme.options) {
-    if (selTheme.options[0]) selTheme.options[0].textContent = t.opt_theme_dark;
-    if (selTheme.options[1]) selTheme.options[1].textContent = t.opt_theme_light;
-    if (selTheme.options[2]) selTheme.options[2].textContent = t.opt_theme_auto;
-  }
   var lblFd = $('#lblFd');
   if (lblFd) lblFd.textContent = t.lbl_font;
   var lblRad = $('#lblRad');
@@ -3991,12 +4757,22 @@ function applyLanguage() {
     if (selWave.options[1]) selWave.options[1].textContent = t.opt_wave_thin;
     if (selWave.options[2]) selWave.options[2].textContent = t.opt_wave_base;
   }
-  var lblDense = $('#lblDense');
-  if (lblDense) lblDense.textContent = t.lbl_dense;
   var lblHide = $('#lblHide');
   if (lblHide) lblHide.textContent = t.lbl_hide;
   var lblAuto = $('#lblAuto');
   if (lblAuto) lblAuto.textContent = t.lbl_auto;
+  var lblNormalize = $('#lblNormalize');
+  if (lblNormalize) lblNormalize.textContent = (lang === 'en') ? 'Volume Normalization' : 'Нормализация громкости';
+  var lblCrossfade = $('#lblCrossfade');
+  if (lblCrossfade) lblCrossfade.textContent = (lang === 'en') ? 'Smooth Crossfade' : 'Плавный кроссфейд';
+  var lblVisMode = $('#lblVisMode');
+  if (lblVisMode) lblVisMode.textContent = (lang === 'en') ? 'Live Spectrum Analyzer' : 'Живой спектроанализатор';
+  var lblTray = $('#lblTray');
+  if (lblTray) lblTray.textContent = (lang === 'en') ? 'Minimize to System Tray' : 'Сворачивать в системный трей';
+  var lblQueueTitle = $('#lblQueueTitle');
+  if (lblQueueTitle) lblQueueTitle.textContent = (lang === 'en') ? 'Playback Queue' : 'Очередь воспроизведения';
+  var lblLyricsTitle = $('#lblLyricsTitle');
+  if (lblLyricsTitle) lblLyricsTitle.textContent = (lang === 'en') ? 'Lyrics' : 'Текст песни';
   var lblKeys = $('#lblKeys');
   if (lblKeys) lblKeys.textContent = t.lbl_keys;
   var btnRelog = $('#btnRelog');
@@ -4120,6 +4896,536 @@ $('#btnRelog').onclick = function() {
   }
 };
 
+// VISUALIZER RENDERER
+function initVisualizer() {
+  var canvas = $('#visCanvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var freqData = new Uint8Array(64);
+  var timeData = new Uint8Array(128);
+
+  canvas.onclick = function() {
+    var modes = ['bars', 'spectrum', 'oscilloscope', 'off'];
+    var curIdx = modes.indexOf(cfg.visMode || 'bars');
+    var nextMode = modes[(curIdx + 1) % modes.length];
+    cfg.visMode = nextMode;
+    saveCfg();
+    var sel = $('#selVisMode');
+    if (sel) sel.value = nextMode;
+    var isEn = (cfg.lang === 'en');
+    var names = {
+      bars: isEn ? 'Live Bars' : 'Живые столбики',
+      spectrum: isEn ? 'Spectral Wave' : 'Спектральная волна',
+      oscilloscope: isEn ? 'Oscilloscope' : 'Осциллограф',
+      off: isEn ? 'Off' : 'Выключен'
+    };
+    showToast((isEn ? 'Visualizer: ' : 'Спектроанализатор: ') + names[nextMode]);
+  };
+
+  function render() {
+    requestAnimationFrame(render);
+    var w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    var mode = cfg.visMode || 'bars';
+    if (mode === 'off' || !analyserNode || au.paused) {
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.fillRect(4, Math.round(h / 2), w - 8, 1);
+      return;
+    }
+
+    if (mode === 'bars') {
+      analyserNode.getByteFrequencyData(freqData);
+      var barsCount = 14;
+      var barW = Math.max(2, Math.floor((w - (barsCount * 2)) / barsCount));
+      for (var i = 0; i < barsCount; i++) {
+        var val = freqData[i * 2] / 255;
+        var barH = Math.max(2, Math.round(val * (h - 2)));
+        var y = h - barH;
+        ctx.fillStyle = 'rgba(255,255,255,' + (0.35 + val * 0.65) + ')';
+        ctx.fillRect(i * (barW + 2) + 2, y, barW, barH);
+      }
+    } else if (mode === 'spectrum') {
+      analyserNode.getByteFrequencyData(freqData);
+      ctx.beginPath();
+      ctx.moveTo(0, h);
+      for (var i = 0; i < 24; i++) {
+        var val = freqData[i] / 255;
+        var x = (i / 23) * w;
+        var y = h - (val * (h - 2));
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(w, h);
+      ctx.closePath();
+      var grad = ctx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, 'rgba(255,255,255,0.7)');
+      grad.addColorStop(1, 'rgba(255,255,255,0.06)');
+      ctx.fillStyle = grad;
+      ctx.fill();
+    } else if (mode === 'oscilloscope') {
+      analyserNode.getByteTimeDomainData(timeData);
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+      ctx.lineWidth = 1.5;
+      for (var i = 0; i < timeData.length; i++) {
+        var v = timeData[i] / 128.0;
+        var y = (v * h) / 2;
+        var x = (i / (timeData.length - 1)) * w;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+  }
+
+  requestAnimationFrame(render);
+}
+
+// SYNCHRONIZED LYRICS (LRCLIB)
+var activeSyncedLyrics = [];
+var currentActiveLyricIdx = -1;
+var lyricsVisible = false;
+
+function parseLRC(lrcText) {
+  if (!lrcText) return [];
+  var lines = lrcText.split('\n');
+  var result = [];
+  var timeRegex = /\[(\d{2}):(\d{2})\.?(\d{0,3})\](.*)/;
+  for (var i = 0; i < lines.length; i++) {
+    var match = timeRegex.exec(lines[i].trim());
+    if (match) {
+      var min = parseInt(match[1], 10);
+      var sec = parseInt(match[2], 10);
+      var ms = match[3] ? parseFloat('0.' + match[3]) : 0;
+      var totalSec = min * 60 + sec + ms;
+      var text = match[4].trim();
+      if (text) {
+        result.push({ time: totalSec, text: text });
+      }
+    }
+  }
+  return result;
+}
+
+function cleanSongTitleForLyrics(t) {
+  if (!t) return '';
+  return t
+    .replace(/\s*[([][^\])]*(official|video|audio|lyrics|remix|edit|prod|clip)[^\])]*[)\]]/gi, '')
+    .replace(/\s*ft\.?.*$/i, '')
+    .replace(/\s*feat\.?.*$/i, '')
+    .trim();
+}
+
+async function loadLyrics(track) {
+  var container = $('#lyricsContainer');
+  var infoEl = $('#lyricsTrackInfo');
+  if (!container || !track) return;
+  
+  var title = track.title || track.name || '';
+  var artist = (track.user && track.user.username) ? track.user.username : '';
+  if (infoEl) infoEl.textContent = title + ' — ' + (artist || 'SoundCloud');
+  
+  var isEn = (cfg.lang === 'en');
+  container.innerHTML = '<div style="color:var(--mut);text-align:center;padding:40px 0">' + (isEn ? 'Searching lyrics...' : 'Поиск текста песни...') + '</div>';
+  activeSyncedLyrics = [];
+  currentActiveLyricIdx = -1;
+
+  var cleanTitle = cleanSongTitleForLyrics(title);
+  var cleanArtist = artist.replace(/official/gi, '').trim();
+  var dur = track.duration ? Math.round(track.duration / 1000) : 0;
+
+  try {
+    var url = 'https://lrclib.net/api/get?track_name=' + encodeURIComponent(cleanTitle) + '&artist_name=' + encodeURIComponent(cleanArtist) + (dur ? ('&duration=' + dur) : '');
+    var res = await fetch(url);
+    var data = null;
+    if (res.ok) {
+      data = await res.json();
+    } else {
+      var searchUrl = 'https://lrclib.net/api/search?q=' + encodeURIComponent(cleanArtist + ' ' + cleanTitle);
+      var sRes = await fetch(searchUrl);
+      if (sRes.ok) {
+        var sList = await sRes.json();
+        if (sList && sList.length > 0) {
+          data = sList.find(function(it){ return it.syncedLyrics || it.plainLyrics; }) || sList[0];
+        }
+      }
+    }
+
+    if (!data || (!data.syncedLyrics && !data.plainLyrics)) {
+      container.innerHTML = '<div style="color:var(--mut);text-align:center;padding:40px 0">' + (isEn ? 'No lyrics found for this track' : 'Текст для этого трека пока не найден') + '</div>';
+      return;
+    }
+
+    if (data.syncedLyrics) {
+      activeSyncedLyrics = parseLRC(data.syncedLyrics);
+      if (activeSyncedLyrics.length > 0) {
+        var html = '';
+        for (var i = 0; i < activeSyncedLyrics.length; i++) {
+          html += '<p class="lyric-line" data-idx="' + i + '" data-time="' + activeSyncedLyrics[i].time + '">' + esc(activeSyncedLyrics[i].text) + '</p>';
+        }
+        container.innerHTML = html;
+        container.onclick = function(ev) {
+          var line = ev.target.closest('.lyric-line');
+          if (line && line.dataset.time) {
+            au.currentTime = parseFloat(line.dataset.time);
+            au.play();
+          }
+        };
+        return;
+      }
+    }
+
+    if (data.plainLyrics) {
+      var lines = data.plainLyrics.split('\n');
+      var html = '';
+      for (var i = 0; i < lines.length; i++) {
+        var lineText = lines[i].trim();
+        html += '<p class="lyric-line" style="opacity:0.85;cursor:default">' + (lineText ? esc(lineText) : '&nbsp;') + '</p>';
+      }
+      container.innerHTML = html;
+    }
+  } catch(e) {
+    console.warn('[Lyrics] Fetch error:', e);
+    container.innerHTML = '<div style="color:var(--mut);text-align:center;padding:40px 0">' + (isEn ? 'Failed to load lyrics' : 'Не удалось загрузить текст') + '</div>';
+  }
+}
+
+function updateLyricsHighlight() {
+  if (!lyricsVisible || activeSyncedLyrics.length === 0) return;
+  var curTime = au.currentTime;
+  var idx = -1;
+  for (var i = 0; i < activeSyncedLyrics.length; i++) {
+    if (curTime >= activeSyncedLyrics[i].time) {
+      idx = i;
+    } else {
+      break;
+    }
+  }
+  if (idx !== currentActiveLyricIdx) {
+    currentActiveLyricIdx = idx;
+    var lines = $$('#lyricsContainer .lyric-line');
+    lines.forEach(function(el, lIdx){
+      var isCur = (lIdx === idx);
+      el.classList.toggle('active', isCur);
+      if (isCur) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  }
+}
+
+// SMART QUEUE DRAWER
+function openQueueDrawer() {
+  var d = $('#queueDrawer');
+  if (!d) return;
+  d.classList.add('open');
+  renderQueueDrawer();
+}
+
+function closeQueueDrawer() {
+  var d = $('#queueDrawer');
+  if (d) d.classList.remove('open');
+}
+
+function addToQueue(track) {
+  if (!track) return;
+  userQueue.push(track);
+  saveQueue();
+  var isEn = (cfg.lang === 'en');
+  showToast(isEn ? 'Added to queue: ' + (track.title || track.name) : 'Добавлено в очередь: ' + (track.title || track.name));
+  renderQueueDrawer();
+}
+
+function removeFromQueue(idx) {
+  if (idx >= 0 && idx < userQueue.length) {
+    userQueue.splice(idx, 1);
+    saveQueue();
+    renderQueueDrawer();
+  }
+}
+
+function clearUserQueue() {
+  userQueue = [];
+  saveQueue();
+  renderQueueDrawer();
+  var isEn = (cfg.lang === 'en');
+  showToast(isEn ? 'Queue cleared' : 'Очередь очищена');
+}
+
+function renderQueueDrawer() {
+  var container = $('#queueContent');
+  if (!container) return;
+  var isEn = (cfg.lang === 'en');
+  var html = '';
+
+  if (currentTrack) {
+    var art = currentTrack.artwork_url ? currentTrack.artwork_url.replace('-large.jpg', '-t500x500.jpg') : ((currentTrack.user && currentTrack.user.avatar_url) || '');
+    var artist = (currentTrack.user && currentTrack.user.username) ? currentTrack.user.username : 'SoundCloud';
+    html += '<div class="queue-section-title">' + (isEn ? 'Now Playing' : 'Сейчас играет') + '</div>';
+    html += '<div class="queue-item" style="border-color:var(--line);background:var(--card-hover)">' +
+      (art ? '<img src="' + art + '" alt="">' : '<div style="width:42px;height:42px;background:#20222a;border-radius:8px"></div>') +
+      '<div class="q-info">' +
+        '<div class="q-title">' + esc(currentTrack.title || currentTrack.name) + '</div>' +
+        '<div class="q-artist">' + esc(artist) + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  html += '<div class="queue-section-title">' + (isEn ? 'Next in Queue' : 'Далее в очереди') + ' (' + userQueue.length + ')</div>';
+  if (userQueue.length > 0) {
+    for (var i = 0; i < userQueue.length; i++) {
+      var t = userQueue[i];
+      var art = t.artwork_url ? t.artwork_url.replace('-large.jpg', '-t500x500.jpg') : ((t.user && t.user.avatar_url) || '');
+      var aName = (t.user && t.user.username) ? t.user.username : 'SoundCloud';
+      html += '<div class="queue-item" data-qidx="' + i + '">' +
+        (art ? '<img src="' + art + '" alt="">' : '<div style="width:42px;height:42px;background:#20222a;border-radius:8px"></div>') +
+        '<div class="q-info" onclick="playQueuedTrack(' + i + ')">' +
+          '<div class="q-title">' + esc(t.title || t.name) + '</div>' +
+          '<div class="q-artist">' + esc(aName) + '</div>' +
+        '</div>' +
+        '<button class="q-remove" onclick="removeFromQueue(' + i + ')" title="' + (isEn ? 'Remove' : 'Удалить') + '">✕</button>' +
+      '</div>';
+    }
+  } else {
+    html += '<div style="color:var(--mut);font-size:12px;padding:8px 0">' + 
+      (isEn ? 'Queue is empty. Use «+» on tracks to queue.' : 'Очередь пуста. Вы можете добавлять треки кнопкой «+».') + '</div>';
+  }
+
+  if (playingList && playingList.length > 0 && cur >= 0) {
+    var upcoming = [];
+    for (var j = cur + 1; j < Math.min(cur + 15, playingList.length); j++) {
+      upcoming.push({ track: playingList[j], idx: j });
+    }
+    if (upcoming.length > 0) {
+      html += '<div class="queue-section-title">' + (isEn ? 'Upcoming from List' : 'Далее из текущего списка') + '</div>';
+      for (var k = 0; k < upcoming.length; k++) {
+        var up = upcoming[k];
+        var art = up.track.artwork_url ? up.track.artwork_url.replace('-large.jpg', '-t500x500.jpg') : ((up.track.user && up.track.user.avatar_url) || '');
+        var aName = (up.track.user && up.track.user.username) ? up.track.user.username : 'SoundCloud';
+        html += '<div class="queue-item" onclick="playTrackInList(playingList, ' + up.idx + ')">' +
+          (art ? '<img src="' + art + '" alt="">' : '<div style="width:42px;height:42px;background:#20222a;border-radius:8px"></div>') +
+          '<div class="q-info">' +
+            '<div class="q-title">' + esc(up.track.title || up.track.name) + '</div>' +
+            '<div class="q-artist">' + esc(aName) + '</div>' +
+          '</div>' +
+        '</div>';
+      }
+    }
+  }
+
+  container.innerHTML = html;
+}
+
+function playQueuedTrack(idx) {
+  if (idx >= 0 && idx < userQueue.length) {
+    var target = userQueue.splice(idx, 1)[0];
+    saveQueue();
+    renderQueueDrawer();
+    playTrack(target);
+  }
+}
+
+// TRACK RADIO (RELATED TRACKS)
+var radioTracks = [];
+
+async function startTrackRadio(track) {
+  if (!track || !track.id) return;
+  var isEn = (cfg.lang === 'en');
+  showToast(isEn ? 'Generating station for: ' + (track.title || track.name) : 'Запуск радио по треку: ' + (track.title || track.name));
+  try {
+    var cid = clientId || 'tHVbSbDP4TaoMbPppngv6Tdry83vNbMQ';
+    var url = 'https://api-v2.soundcloud.com/tracks/' + track.id + '/related?client_id=' + cid + '&limit=30';
+    var res = await fetch(url);
+    if (!res.ok) throw new Error('Status ' + res.status);
+    var data = await res.json();
+    var list = (data.collection || []).filter(function(t){ return t && t.id && (t.media || t.stream_url); });
+    if (!list.length) {
+      showToast(isEn ? 'No related tracks found' : 'Похожие треки не найдены');
+      return;
+    }
+    radioTracks = [track].concat(list);
+    showToast(isEn ? 'Radio station started (' + radioTracks.length + ' tracks)' : 'Радио запущено (' + radioTracks.length + ' треков)');
+    playTrackInList(radioTracks, 1);
+  } catch(e) {
+    console.warn('[TrackRadio] Error:', e);
+    showToast(isEn ? 'Failed to start radio' : 'Не удалось запустить радио');
+  }
+}
+
+// GAPLESS PRELOAD
+var _nextPreloadedTrackId = null;
+var _preloaderAudio = new Audio();
+
+function checkGaplessPreload() {
+  if (!au.duration || au.paused) return;
+  if (au.currentTime < (au.duration - 12)) return;
+  
+  var nextTrack = null;
+  if (userQueue.length > 0) {
+    nextTrack = userQueue[0];
+  } else if (playingList && cur >= 0 && (cur + 1) < playingList.length) {
+    nextTrack = playingList[cur + 1];
+  }
+  
+  if (nextTrack && nextTrack.id !== _nextPreloadedTrackId) {
+    _nextPreloadedTrackId = nextTrack.id;
+    resolveStreamUrl(nextTrack).then(function(streamUrl) {
+      if (streamUrl && !streamUrl.includes('.m3u8')) {
+        _preloaderAudio.src = streamUrl;
+        _preloaderAudio.preload = 'auto';
+        _preloaderAudio.load();
+        console.log('[Gapless] Preloaded next stream:', nextTrack.title);
+      }
+    }).catch(function(){});
+  }
+}
+
+// LISTENING HISTORY & STATS
+function recordTrackHistory(track) {
+  if (!track || !track.id || track._recordedInHistory) return;
+  track._recordedInHistory = true;
+  var entry = {
+    id: track.id,
+    title: track.title || track.name || '',
+    artist: (track.user && track.user.username) ? track.user.username : 'SoundCloud',
+    artwork: track.artwork_url || (track.user && track.user.avatar_url) || '',
+    duration: track.duration || (au.duration ? Math.round(au.duration * 1000) : 0),
+    timestamp: Date.now()
+  };
+  listeningHistory.unshift(entry);
+  if (listeningHistory.length > 250) listeningHistory.pop();
+  try { localStorage.setItem('soundclode_history', JSON.stringify(listeningHistory)); } catch(e){}
+  if (libTab === 'history') renderHistoryView();
+}
+
+function formatRelativeTime(ts) {
+  var isEn = (cfg.lang === 'en');
+  var diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 60) return isEn ? 'Just now' : 'Только что';
+  if (diff < 3600) {
+    var m = Math.floor(diff / 60);
+    return isEn ? (m + 'm ago') : (m + ' мин назад');
+  }
+  if (diff < 86400) {
+    var h = Math.floor(diff / 3600);
+    return isEn ? (h + 'h ago') : (h + ' ч назад');
+  }
+  var d = new Date(ts);
+  var hours = d.getHours().toString().padStart(2, '0');
+  var mins = d.getMinutes().toString().padStart(2, '0');
+  var dateStr = (d.getMonth() + 1) + '/' + d.getDate();
+  return dateStr + ' ' + hours + ':' + mins;
+}
+
+function renderHistoryView() {
+  var container = $('#historyView');
+  if (!container) return;
+  var isEn = (cfg.lang === 'en');
+  
+  if (!listeningHistory || !listeningHistory.length) {
+    container.innerHTML = '<div class="empty"><b>' + (isEn ? 'No History Yet' : 'История прослушиваний пуста') + '</b>' +
+      (isEn ? 'Listen to music to see listening stats and recently played tracks here!' : 'Слушайте любимую музыку, и здесь появится статистика ваших прослушиваний и история треков!') + '</div>';
+    return;
+  }
+
+  var totalTracks = listeningHistory.length;
+  var totalSec = 0;
+  var artistCounts = {};
+  for (var i = 0; i < listeningHistory.length; i++) {
+    var h = listeningHistory[i];
+    totalSec += (h.duration ? (h.duration / 1000) : 180);
+    var a = h.artist || 'SoundCloud';
+    artistCounts[a] = (artistCounts[a] || 0) + 1;
+  }
+  var totalMinutes = Math.round(totalSec / 60);
+  var topArtist = '';
+  var maxCount = 0;
+  for (var artName in artistCounts) {
+    if (artistCounts[artName] > maxCount) {
+      maxCount = artistCounts[artName];
+      topArtist = artName;
+    }
+  }
+
+  var html = '<div class="stats-grid">' +
+    '<div class="stat-card">' +
+      '<div class="stat-val">' + totalTracks + '</div>' +
+      '<div class="stat-label">' + (isEn ? 'Tracks Played' : 'Прослушано треков') + '</div>' +
+    '</div>' +
+    '<div class="stat-card">' +
+      '<div class="stat-val">' + (totalMinutes >= 60 ? (Math.floor(totalMinutes / 60) + (isEn ? 'h ' : 'ч ') + (totalMinutes % 60) + (isEn ? 'm' : 'м')) : (totalMinutes + (isEn ? ' min' : ' мин'))) + '</div>' +
+      '<div class="stat-label">' + (isEn ? 'Listening Time' : 'Время музыки') + '</div>' +
+    '</div>' +
+    '<div class="stat-card">' +
+      '<div class="stat-val" style="font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(topArtist || '—') + '</div>' +
+      '<div class="stat-label">' + (isEn ? 'Top Artist (' + maxCount + ' plays)' : 'Топ артист (' + maxCount + ' треков)') + '</div>' +
+    '</div>' +
+  '</div>';
+
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
+    '<span style="font-size:14px;font-weight:700">' + (isEn ? 'Recently Played' : 'Недавно прослушанные') + '</span>' +
+    '<button class="altbtn" id="btnClearHistory" style="font-size:11px;padding:4px 10px">' + (isEn ? 'Clear History' : 'Очистить историю') + '</button>' +
+  '</div>';
+
+  for (var j = 0; j < listeningHistory.length; j++) {
+    var item = listeningHistory[j];
+    var art = item.artwork ? item.artwork.replace('-large.jpg', '-t500x500.jpg') : '';
+    html += '<div class="history-row" onclick="playHistoryItem(' + j + ')">' +
+      (art ? '<img src="' + art + '" alt="">' : '<div style="width:44px;height:44px;background:#20222a;border-radius:10px"></div>') +
+      '<div style="min-width:0;flex:1">' +
+        '<div style="font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(item.title) + '</div>' +
+        '<div style="font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(item.artist) + '</div>' +
+      '</div>' +
+      '<div class="history-time">' + formatRelativeTime(item.timestamp) + '</div>' +
+    '</div>';
+  }
+
+  container.innerHTML = html;
+  var btnClr = $('#btnClearHistory');
+  if (btnClr) {
+    btnClr.onclick = function() {
+      listeningHistory = [];
+      try { localStorage.removeItem('soundclode_history'); } catch(e){}
+      renderHistoryView();
+    };
+  }
+}
+
+function playHistoryItem(idx) {
+  if (idx >= 0 && idx < listeningHistory.length) {
+    var item = listeningHistory[idx];
+    playTrack(item);
+  }
+}
+
+// BIND BOTTOM BAR & DRAWER CONTROLS
+$('#btnLyrics').onclick = function() {
+  lyricsVisible = !lyricsVisible;
+  var d = $('#lyricsDrawer');
+  if (d) d.classList.toggle('open', lyricsVisible);
+  if (lyricsVisible && currentTrack) loadLyrics(currentTrack);
+};
+$('#closeLyrics').onclick = function() {
+  lyricsVisible = false;
+  var d = $('#lyricsDrawer');
+  if (d) d.classList.remove('open');
+};
+
+$('#btnRadio').onclick = function() {
+  if (currentTrack) startTrackRadio(currentTrack);
+  else showToast(cfg.lang === 'en' ? 'Play a track first to start radio' : 'Включите трек для запуска радио');
+};
+
+$('#btnQueue').onclick = function() {
+  var d = $('#queueDrawer');
+  if (d) {
+    var isOpen = d.classList.toggle('open');
+    if (isOpen) renderQueueDrawer();
+  }
+};
+$('#closeQueue').onclick = closeQueueDrawer;
+$('#btnClearQueue').onclick = clearUserQueue;
+
 window.addEventListener('resize', function() {
   var list = (activeSection === 'feed') ? feedTracks :
              (activeSection === 'profile') ? profileTracks :
@@ -4141,6 +5447,8 @@ applyConfig();
 setVolume(cfg.vol !== undefined ? cfg.vol : 0.85, false);
 syncShuffleUI();
 syncRepeatUI();
+initVisualizer();
+updateQueueBadge();
 view();
 switchSection('library');
 var startupOAuthToken = localStorage.getItem('soundclode_oauth_token');
