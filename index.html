@@ -1022,14 +1022,21 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
     <label class="fld"><span id="lblAuto">Авто-переход к следующему</span><input type="checkbox" data-k="auto"></label>
     <label class="fld"><span id="lblKeys">Горячие клавиши (Пробел, ←, →, N, P, L)</span><input type="checkbox" data-k="keys"></label>
     
-    <div class="fld" style="margin-top:16px;border-top:1px solid var(--line);padding-top:16px">
-      <span style="font-weight:700" id="lblSyncTitle">Синхронизация SoundCloud</span>
-      <div id="tokenStatusText" style="font-size:12px;color:var(--mut);margin:4px 0 8px">Проверка статуса...</div>
-      <div style="display:flex;gap:8px">
-        <input id="inputOAuthToken" type="password" placeholder="Вставьте oauth_token..." style="flex:1;padding:8px 12px;border:1px solid var(--line);border-radius:var(--rp,12px);background:var(--card);color:var(--ink);font-size:13px;outline:none">
-        <button id="btnSaveToken" class="btn" style="padding:8px 14px;font-size:12px;white-space:nowrap;font-weight:700">Сохранить</button>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px;border-top:1px solid var(--line);padding-top:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span style="font-weight:700" id="lblSyncTitle">Синхронизация SoundCloud</span>
+        <div id="tokenStatusText" style="font-size:12px;color:var(--mut)">Проверка статуса...</div>
       </div>
-      <div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="position:relative;flex:1;display:flex;align-items:center">
+          <input id="inputOAuthToken" type="password" placeholder="Вставьте oauth_token..." style="width:100%;padding:9px 36px 9px 12px;border:1px solid var(--line);border-radius:var(--rp,12px);background:var(--card);color:var(--ink);font-size:13px;outline:none;font-family:monospace">
+          <button id="btnToggleTokenVis" type="button" title="Показать/скрыть токен" style="position:absolute;right:8px;background:none;border:none;cursor:pointer;color:var(--mut);padding:4px;display:flex;align-items:center">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <button id="btnSaveToken" class="btn" style="padding:9px 16px;font-size:12px;white-space:nowrap;font-weight:700">Сохранить</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
         <button id="btnPasteToken" class="altbtn" type="button" style="padding:4px 10px;font-size:11px">Вставить из буфера</button>
         <a href="#" id="linkTokenHelpSet" style="font-size:11px;color:var(--acc);text-decoration:none">Как получить токен?</a>
       </div>
@@ -3107,6 +3114,13 @@ if ($('#linkTokenHelpSet')) {
   $('#linkTokenHelpSet').onclick = function(e) {
     e.preventDefault();
     showTokenHelpModal();
+  };
+}
+if ($('#btnToggleTokenVis')) {
+  $('#btnToggleTokenVis').onclick = function() {
+    var inp = $('#inputOAuthToken');
+    if (!inp) return;
+    inp.type = (inp.type === 'password') ? 'text' : 'password';
   };
 }
 
