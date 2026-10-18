@@ -219,6 +219,9 @@ namespace SoundCloudNative
                         "--disable-background-timer-throttling " +
                         "--disable-renderer-backgrounding " +
                         "--disable-gpu-process-crash-limit " +
+                        "--renderer-process-limit=1 " +
+                        "--disable-extensions " +
+                        "--disable-component-update " +
                         "--autoplay-policy=no-user-gesture-required"
                 };
                 _env = await CoreWebView2Environment.CreateAsync(null, userDataDir, options);
@@ -244,23 +247,6 @@ namespace SoundCloudNative
                         });
                     }
                 };
-
-                // Initialize background sync worker sharing same profile
-                await bgSyncWebView.EnsureCoreWebView2Async(_env);
-                bgSyncWebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
-                bgSyncWebView.CoreWebView2.Settings.AreDevToolsEnabled = false;
-                bgSyncWebView.CoreWebView2.WebMessageReceived += (s, args) =>
-                {
-                    try
-                    {
-                        // Forward like results or background messages to frontend
-                        webView.CoreWebView2.PostWebMessageAsJson(args.WebMessageAsJson);
-                    }
-                    catch { }
-                };
-
-                // Warm up DataDome session in background
-                _ = EnsureBgSyncReadyAsync();
 
                 // Proxy SoundCloud API, Waveform, and asset requests to bypass any CORS restrictions
                 webView.CoreWebView2.AddWebResourceRequestedFilter("https://soundclode.local/*", CoreWebView2WebResourceContext.All);
@@ -440,8 +426,7 @@ namespace SoundCloudNative
                                 string? token = root.TryGetProperty("token", out var tokProp) ? tokProp.GetString() : null;
                                 if (!string.IsNullOrEmpty(token))
                                 {
-                                    _bgSyncReady = false;
-                                    _ = EnsureBgSyncReadyAsync(token);
+                                    _cachedOAuthToken = token;
                                 }
                             }
                             else if (type == "OPEN_AUTH")
@@ -452,10 +437,8 @@ namespace SoundCloudNative
                             else if (type == "LOGOUT")
                             {
                                 _discordRpc?.ClearActivity();
-                                _bgSyncReady = false;
                                 _cachedOAuthToken = null;
                                 webView.CoreWebView2.CookieManager.DeleteAllCookies();
-                                bgSyncWebView.CoreWebView2.CookieManager.DeleteAllCookies();
                             }
                         }
                     }
@@ -502,97 +485,65 @@ namespace SoundCloudNative
             }
         }
 
-        private bool _bgSyncReady = false;
         private string? _cachedOAuthToken = null;
-
-        private async Task EnsureBgSyncReadyAsync(string? token = null)
-        {
-            try
-            {
-                if (!string.IsNullOrEmpty(token))
-                {
-                    _cachedOAuthToken = token;
-                    var oauthCookie = bgSyncWebView.CoreWebView2.CookieManager.CreateCookie("oauth_token", token, ".soundcloud.com", "/");
-                    oauthCookie.IsSecure = true;
-                    oauthCookie.SameSite = CoreWebView2CookieSameSiteKind.Lax;
-                    bgSyncWebView.CoreWebView2.CookieManager.AddOrUpdateCookie(oauthCookie);
-                }
-
-                if (!_bgSyncReady)
-                {
-                    var tcs = new TaskCompletionSource<bool>();
-                    void OnNavCompleted(object? s, CoreWebView2NavigationCompletedEventArgs e)
-                    {
-                        bgSyncWebView.NavigationCompleted -= OnNavCompleted;
-                        tcs.TrySetResult(true);
-                    }
-                    bgSyncWebView.NavigationCompleted += OnNavCompleted;
-                    bgSyncWebView.CoreWebView2.Navigate("https://soundcloud.com");
-
-                    await Task.WhenAny(tcs.Task, Task.Delay(6000));
-                    await Task.Delay(2000); // Allow DataDome JavaScript to execute and issue datadome cookie
-                    _bgSyncReady = true;
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine("[SoundClode] BgSync error: " + ex.Message);
-            }
-        }
 
         private async Task ExecuteLikeAsync(long id, bool isLiked, bool isPlaylist, string token, long userId)
         {
             try
             {
-                await EnsureBgSyncReadyAsync(token);
-
                 string endpoint = isPlaylist ? $"playlist_likes/{id}" : $"track_likes/{id}";
                 string method = isLiked ? "PUT" : "DELETE";
-                string isLikedStr = isLiked ? "true" : "false";
-                string isPlaylistStr = isPlaylist ? "true" : "false";
-                string script = $@"
-                    (async () => {{
-                        try {{
-                            const r = await fetch('https://api-v2.soundcloud.com/users/{userId}/{endpoint}?client_id=tHVbSbDP4TaoMbPppngv6Tdry83vNbMQ', {{
-                                method: '{method}',
-                                headers: {{
-                                    'Authorization': 'OAuth {token}',
-                                    'Accept': 'application/json, text/javascript, */*; q=0.01'
-                                }}
-                            }});
-                            const body = await r.text();
-                            window.chrome.webview.postMessage(JSON.stringify({{
-                                type: 'LIKE_RESULT',
-                                id: {id},
-                                trackId: {id},
-                                isPlaylist: {isPlaylistStr},
-                                isLiked: {isLikedStr},
-                                status: r.status,
-                                ok: r.ok,
-                                body: body
-                            }}));
-                        }} catch(e) {{
-                            window.chrome.webview.postMessage(JSON.stringify({{
-                                type: 'LIKE_RESULT',
-                                id: {id},
-                                trackId: {id},
-                                isPlaylist: {isPlaylistStr},
-                                isLiked: {isLikedStr},
-                                ok: false,
-                                error: (e || '').toString()
-                            }}));
-                        }}
-                    }})()
-                ";
+                string url = $"https://api-v2.soundcloud.com/users/{userId}/{endpoint}?client_id=tHVbSbDP4TaoMbPppngv6Tdry83vNbMQ";
 
-                if (bgSyncWebView?.CoreWebView2 != null)
+                using var req = new HttpRequestMessage(new HttpMethod(method), url);
+                req.Headers.Add("Authorization", $"OAuth {token}");
+                req.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36");
+                req.Headers.Add("Accept", "application/json, text/javascript, */*; q=0.01");
+
+                var resp = await _httpClient.SendAsync(req);
+                var body = await resp.Content.ReadAsStringAsync();
+
+                Dispatcher.Invoke(() =>
                 {
-                    await bgSyncWebView.CoreWebView2.ExecuteScriptAsync(script);
-                }
+                    try
+                    {
+                        var resPayload = System.Text.Json.JsonSerializer.Serialize(new
+                        {
+                            type = "LIKE_RESULT",
+                            id = id,
+                            trackId = id,
+                            isPlaylist = isPlaylist,
+                            isLiked = isLiked,
+                            status = (int)resp.StatusCode,
+                            ok = resp.IsSuccessStatusCode,
+                            body = body
+                        });
+                        webView.CoreWebView2.PostWebMessageAsJson(resPayload);
+                    }
+                    catch { }
+                });
             }
             catch (Exception ex)
             {
                 Debug.WriteLine("[SoundClode] Like execution error: " + ex.Message);
+                Dispatcher.Invoke(() =>
+                {
+                    try
+                    {
+                        var errPayload = System.Text.Json.JsonSerializer.Serialize(new
+                        {
+                            type = "LIKE_RESULT",
+                            id = id,
+                            trackId = id,
+                            isPlaylist = isPlaylist,
+                            isLiked = isLiked,
+                            ok = false,
+                            error = ex.Message
+                        });
+                        webView.CoreWebView2.PostWebMessageAsJson(errPayload);
+                    }
+                    catch { }
+                });
             }
         }
 
