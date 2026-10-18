@@ -27,6 +27,7 @@ namespace SoundCloudNative
         private Forms.ToolStripMenuItem? _trayTrackItem;
         private bool _isQuitting = false;
         private bool _minimizeToTray = true;
+        private bool _isPageLoaded = false;
 
         private async Task<string> FetchFreshClientIdAsync()
         {
@@ -76,6 +77,19 @@ namespace SoundCloudNative
 
         [DllImport("dwmapi.dll")]
         private static extern int DwmExtendFrameIntoClientArea(IntPtr hWnd, ref MARGINS pMarInset);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool SetProcessWorkingSetSize(IntPtr hProcess, IntPtr dwMinimumWorkingSetSize, IntPtr dwMaximumWorkingSetSize);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, int dwProcessId);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool CloseHandle(IntPtr hObject);
+
+        private const uint PROCESS_SET_QUOTA = 0x0100;
+        private const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
+        private DispatcherTimer? _memoryOptimizerTimer;
 
         [StructLayout(LayoutKind.Sequential)]
         private struct MARGINS
@@ -184,14 +198,84 @@ namespace SoundCloudNative
                 catch {}
             };
 
+            // Aggressive memory trim when user minimizes or switches windows
+            Deactivated += (s, e) => TrimAllMemory();
+            StateChanged += (s, e) =>
+            {
+                if (WindowState == WindowState.Minimized)
+                {
+                    TrimAllMemory();
+                }
+            };
+
+            // Periodic background memory compacting every 30 seconds
+            _memoryOptimizerTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(30)
+            };
+            _memoryOptimizerTimer.Tick += (s, e) => TrimAllMemory();
+            _memoryOptimizerTimer.Start();
+
             Loaded += MainWindow_Loaded;
             Closed += MainWindow_Closed;
+        }
+
+        private static void Log(string msg)
+        {
+            Debug.WriteLine("[SoundClode] " + msg);
+        }
+
+        public void TrimAllMemory()
+        {
+            if (!_isPageLoaded) return;
+            try
+            {
+                Log("TrimAllMemory started");
+
+                // 1. CoreWebView2 low memory profile (compacts V8 heap, purges inactive caches)
+                if (webView?.CoreWebView2 != null)
+                {
+                    webView.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Low;
+                }
+
+                // 2. Aggressive .NET garbage collection
+                GC.Collect(2, GCCollectionMode.Forced, false, true);
+                GC.WaitForPendingFinalizers();
+                GC.Collect(2, GCCollectionMode.Forced, false, true);
+
+                // 3. Trim .NET process working set
+                IntPtr currentHandle = Process.GetCurrentProcess().Handle;
+                SetProcessWorkingSetSize(currentHandle, (IntPtr)(-1), (IntPtr)(-1));
+
+                // 4. Trim WebView2 browser process working set
+                if (webView?.CoreWebView2 != null)
+                {
+                    uint browserPid = webView.CoreWebView2.BrowserProcessId;
+                    if (browserPid > 0)
+                    {
+                        IntPtr hProc = OpenProcess(PROCESS_SET_QUOTA | PROCESS_QUERY_LIMITED_INFORMATION, false, (int)browserPid);
+                        if (hProc != IntPtr.Zero)
+                        {
+                            SetProcessWorkingSetSize(hProc, (IntPtr)(-1), (IntPtr)(-1));
+                            CloseHandle(hProc);
+                        }
+                    }
+                }
+
+                Log("TrimAllMemory completed successfully");
+            }
+            catch (Exception ex)
+            {
+                Log("TrimAllMemory exception: " + ex.ToString());
+            }
         }
 
         private void MainWindow_Closed(object? sender, EventArgs e)
         {
             try
             {
+                Log($"MainWindow_Closed called! _isQuitting = {_isQuitting}");
+                _memoryOptimizerTimer?.Stop();
                 if (_notifyIcon != null)
                 {
                     _notifyIcon.Visible = false;
@@ -222,10 +306,22 @@ namespace SoundCloudNative
                         "--renderer-process-limit=1 " +
                         "--disable-extensions " +
                         "--disable-component-update " +
+                        "--disable-background-networking " +
+                        "--disable-sync " +
+                        "--disable-default-apps " +
+                        "--disable-breakpad " +
+                        "--disable-domain-reliability " +
+                        "--disk-cache-size=16777216 " +
+                        "--media-cache-size=16777216 " +
+                        "--js-flags=--max-old-space-size=96 " +
                         "--autoplay-policy=no-user-gesture-required"
                 };
+                Log("Creating CoreWebView2Environment with userDataDir: " + userDataDir);
                 _env = await CoreWebView2Environment.CreateAsync(null, userDataDir, options);
+                Log("CoreWebView2Environment created. Initializing webView...");
                 await webView.EnsureCoreWebView2Async(_env);
+                Log("webView initialized successfully");
+                webView.CoreWebView2.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Low;
 
                 webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
                 webView.CoreWebView2.Settings.AreDevToolsEnabled = false;
@@ -448,13 +544,10 @@ namespace SoundCloudNative
                     }
                 };
 
-                var localHtml = GetOrExtractAssetPath("index.html");
-                var htmlFolder = Path.GetDirectoryName(localHtml) ?? AppDomain.CurrentDomain.BaseDirectory;
-                webView.CoreWebView2.SetVirtualHostNameToFolderMapping("soundclode.local", htmlFolder, CoreWebView2HostResourceAccessKind.Allow);
-                webView.Source = new Uri("https://soundclode.local/index.html");
-
                 webView.NavigationCompleted += async (s, e) =>
                 {
+                    _isPageLoaded = true;
+                    Log($"NavigationCompleted fired! Success: {e.IsSuccess}, StatusCode: {e.HttpStatusCode}");
                     try
                     {
                         var themeJson = await webView.ExecuteScriptAsync("document.documentElement.getAttribute('data-theme') || 'dark'");
@@ -462,7 +555,20 @@ namespace SoundCloudNative
                         ApplyWindowTheme(theme);
                     }
                     catch { }
+
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(2500);
+                        Dispatcher.Invoke(() => TrimAllMemory());
+                    });
                 };
+
+                var localHtml = GetOrExtractAssetPath("index.html");
+                var htmlFolder = Path.GetDirectoryName(localHtml) ?? AppDomain.CurrentDomain.BaseDirectory;
+                Log("Mapping virtual host soundclode.local to: " + htmlFolder);
+                webView.CoreWebView2.SetVirtualHostNameToFolderMapping("soundclode.local", htmlFolder, CoreWebView2HostResourceAccessKind.Allow);
+                webView.Source = new Uri("https://soundclode.local/index.html");
+                Log("webView.Source set to soundclode.local/index.html");
 
                 // Broadcast fresh scraped client ID on launch
                 _ = Task.Run(async () =>
@@ -478,9 +584,12 @@ namespace SoundCloudNative
                         catch { }
                     });
                 });
+
+                Log("MainWindow_Loaded finished setup");
             }
             catch (Exception ex)
             {
+                Log("MainWindow_Loaded EXCEPTION: " + ex.ToString());
                 MessageBox.Show("Ошибка запуска SoundClode: " + ex.Message);
             }
         }

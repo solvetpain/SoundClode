@@ -3491,8 +3491,10 @@ async function playTrackInList(list, idx) {
         hls = new Hls({
           enableWorker: true,
           lowLatencyMode: false,
-          backBufferLength: 60,
-          maxBufferLength: 30,
+          backBufferLength: 10,
+          maxBufferLength: 15,
+          maxMaxBufferLength: 30,
+          maxBufferSize: 8 * 1024 * 1024,
           fragLoadingMaxRetry: 3,
           fragLoadingRetryDelay: 1000
         });
