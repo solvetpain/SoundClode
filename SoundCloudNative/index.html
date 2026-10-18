@@ -911,7 +911,7 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
   border-radius:50%;background:var(--ink);
 }
 .ctl svg{width:18px;height:18px;fill:currentColor}
-.ctl.outline svg{fill:none;stroke:currentColor;stroke-width:2}
+.ctl.outline svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .rep-one-badge{
   position:absolute;top:6px;right:6px;font-size:9px;font-weight:900;
   color:var(--ink);line-height:1;pointer-events:none;
@@ -1695,7 +1695,7 @@ input::placeholder{
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
       </button>
       <button class="ctl outline" id="btnQueue" title="Очередь воспроизведения (Queue)" aria-label="Очередь">
-        <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
         <span id="queueBadge" class="rep-one-badge" style="display:none">0</span>
       </button>
       <span class="tm" id="tm">0:00 / 0:00</span>
@@ -1882,8 +1882,13 @@ var listeningHistory = [];
 try { listeningHistory = JSON.parse(localStorage.getItem('soundclode_history') || '[]'); } catch(e){}
 
 // AUDIO & WEB AUDIO ENGINE
+function toGain(v) {
+  v = Math.max(0, Math.min(1, Number(v) || 0));
+  return Math.pow(v, 2.2);
+}
+
 var au = new Audio();
-au.volume = cfg.vol;
+au.volume = toGain(cfg.vol !== undefined ? cfg.vol : 0.85);
 
 var audioCtx = null;
 var audioSourceNode = null;
@@ -3623,7 +3628,7 @@ async function playTrackInList(list, idx) {
         hls.loadSource(streamUrl);
         hls.attachMedia(au);
         hls.on(Hls.Events.MANIFEST_PARSED, function() {
-          au.volume = cfg.vol !== undefined ? cfg.vol : 0.85;
+          au.volume = toGain(cfg.vol !== undefined ? cfg.vol : 0.85);
           startPlaybackWatchdog(track);
           au.play().catch(function(err){
             console.warn('HLS play() was blocked or interrupted:', err);
@@ -3675,7 +3680,7 @@ async function playTrackInList(list, idx) {
         });
       } else if (au.canPlayType('application/vnd.apple.mpegurl')) {
         au.src = streamUrl;
-        au.volume = cfg.vol !== undefined ? cfg.vol : 0.85;
+        au.volume = toGain(cfg.vol !== undefined ? cfg.vol : 0.85);
         startPlaybackWatchdog(track);
         au.play().catch(function(err){
           console.warn('Native HLS play error:', err);
@@ -3685,7 +3690,7 @@ async function playTrackInList(list, idx) {
       }
     } else {
       au.src = streamUrl;
-      au.volume = cfg.vol !== undefined ? cfg.vol : 0.85;
+      au.volume = toGain(cfg.vol !== undefined ? cfg.vol : 0.85);
       startPlaybackWatchdog(track);
       au.play().catch(function(err){
         console.warn('Direct MP3 play error:', err);
@@ -4160,7 +4165,7 @@ au.onplay = function() {
   }
   startSmoothWaveLoop();
   syncPlayer();
-  au.volume = cfg.vol !== undefined ? cfg.vol : 0.85;
+  au.volume = toGain(cfg.vol !== undefined ? cfg.vol : 0.85);
 };
 au.onplaying = function() {
   clearPlaybackWatchdog();
@@ -4276,7 +4281,7 @@ function updateVolIcon(v) {
 
 function setVolume(v, save) {
   v = Math.max(0, Math.min(1, Math.round(v * 100) / 100));
-  au.volume = v;
+  au.volume = toGain(v);
   var volEl = $('#vol');
   if (volEl) {
     volEl.value = v;
@@ -4348,8 +4353,8 @@ $('#vol').oninput = function() {
 };
 
 $('#btnMute').onclick = function() {
-  if (au.volume > 0) {
-    lastVol = au.volume;
+  if (cfg.vol > 0.001) {
+    lastVol = cfg.vol;
     setVolume(0);
   } else {
     setVolume(lastVol || 0.85);
@@ -4358,8 +4363,9 @@ $('#btnMute').onclick = function() {
 
 $('.vol-wrap').onwheel = function(e) {
   e.preventDefault();
+  var currentVol = (cfg.vol !== undefined) ? cfg.vol : 0.85;
   var delta = e.deltaY < 0 ? 0.05 : -0.05;
-  setVolume(au.volume + delta);
+  setVolume(currentVol + delta);
 };
 
 // DISCORD RICH PRESENCE INTEGRATION
@@ -4823,10 +4829,10 @@ document.addEventListener('keydown', function(e) {
       $('#btnMute').click();
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setVolume(au.volume + 0.05);
+      setVolume(((cfg.vol !== undefined) ? cfg.vol : 0.85) + 0.05);
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setVolume(au.volume - 0.05);
+      setVolume(((cfg.vol !== undefined) ? cfg.vol : 0.85) - 0.05);
     } else if (e.key === 'l' || e.key === 'L' || e.key === 'д' || e.key === 'Д') {
       if ($('#barLike')) $('#barLike').click();
     }
