@@ -526,6 +526,77 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
 .btn-play-all:active{transform:scale(0.96)}
 .btn-play-all svg{width:14px;height:14px;fill:var(--bg)}
 
+.prof-actions .btn-play-all,
+.prof-actions #btnProfExternal,
+.btn-prof-external {
+  min-height: 38px;
+  box-sizing: border-box;
+}
+
+.btn-prof-external, #btnProfExternal {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--card);
+  color: var(--ink) !important;
+  font-family: var(--fb, "Instrument Sans", sans-serif);
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1;
+  padding: 0 18px;
+  border-radius: var(--rp, 999px);
+  border: 1px solid var(--line);
+  text-decoration: none !important;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  user-select: none;
+}
+.btn-prof-external:visited, #btnProfExternal:visited {
+  color: var(--ink) !important;
+  text-decoration: none !important;
+}
+.btn-prof-external:hover, #btnProfExternal:hover {
+  background: var(--card-hover);
+  border-color: var(--ink);
+  color: var(--ink) !important;
+  text-decoration: none !important;
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+}
+.btn-prof-external:active, #btnProfExternal:active {
+  transform: scale(0.96);
+}
+.btn-prof-external .sc-logo, #btnProfExternal .sc-logo {
+  width: 17px;
+  height: 17px;
+  fill: currentColor;
+  flex-shrink: 0;
+  opacity: 0.92;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-prof-external:hover .sc-logo, #btnProfExternal:hover .sc-logo {
+  transform: scale(1.08);
+}
+.btn-prof-external .sc-arrow, #btnProfExternal .sc-arrow {
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  opacity: 0.7;
+  margin-left: 1px;
+  flex-shrink: 0;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+.btn-prof-external:hover .sc-arrow, #btnProfExternal:hover .sc-arrow {
+  opacity: 1;
+  transform: translate(2px, -2px);
+}
+
 /* ARTIST PROFILE TABS (Exact match for SoundCloud Photo 2) */
 .prof-nav-bar{
   display:flex;align-items:center;justify-content:space-between;gap:16px;
@@ -1433,7 +1504,11 @@ input::placeholder{
               <svg viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"/></svg>
               <span id="btnProfPlayAllText">Слушать все</span>
             </button>
-            <a class="altbtn" id="btnProfExternal" target="_blank" rel="noopener" style="padding:10px 18px;font-size:13px">В SoundCloud ↗</a>
+            <a class="btn-prof-external" id="btnProfExternal" target="_blank" rel="noopener">
+              <svg class="sc-logo" viewBox="0 0 24 24"><path d="M1.5 13.5c0-.28.22-.5.5-.5s.5.22.5.5v3c0 .28-.22.5-.5.5s-.5-.22-.5-.5v-3zm2-2c0-.28.22-.5.5-.5s.5.22.5.5v5c0 .28-.22.5-.5.5s-.5-.22-.5-.5v-5zm2-1c0-.28.22-.5.5-.5s.5.22.5.5v6c0 .28-.22.5-.5.5s-.5-.22-.5-.5v-6zm2-1.5c0-.28.22-.5.5-.5s.5.22.5.5v8c0 .28-.22.5-.5.5s-.5-.22-.5-.5v-8zm2-1c0-.28.22-.5.5-.5s.5.22.5.5v9.5c0 .28-.22.5-.5.5s-.5-.22-.5-.5V8zm2 1.5c.34-.61.85-1.11 1.47-1.44.62-.33 1.33-.5 2.03-.49 1.4.01 2.71.69 3.51 1.83.67-.34 1.42-.51 2.18-.5 2.65 0 4.81 2.16 4.81 4.81s-2.16 4.81-4.81 4.81H11.5v-9.02z"/></svg>
+              <span id="btnProfExternalText">В SoundCloud</span>
+              <svg class="sc-arrow" viewBox="0 0 24 24"><path d="M7 17L17 7M7 7h10v10"/></svg>
+            </a>
           </div>
         </div>
       </div>
@@ -4806,7 +4881,7 @@ var I18N = {
     tracks: 'треков',
     likes_stat: 'лайков',
     play_all: 'Слушать все',
-    on_soundcloud: 'В SoundCloud ↗',
+    on_soundcloud: 'В SoundCloud',
     ptab_likes: 'Понравившиеся',
     ptab_all: 'All',
     ptab_popular: 'Popular tracks',
@@ -4901,7 +4976,7 @@ var I18N = {
     tracks: 'tracks',
     likes_stat: 'likes',
     play_all: 'Play all',
-    on_soundcloud: 'On SoundCloud ↗',
+    on_soundcloud: 'On SoundCloud',
     ptab_likes: 'Liked tracks',
     ptab_all: 'All',
     ptab_popular: 'Popular tracks',
@@ -5055,8 +5130,13 @@ function applyLanguage() {
   if (backSpan) backSpan.textContent = t.back;
   var playAllSpan = $('#btnProfPlayAllText');
   if (playAllSpan && !currentProfile) playAllSpan.textContent = t.play_all;
-  var extLink = $('#btnProfExternal');
-  if (extLink) extLink.textContent = t.on_soundcloud;
+  var extSpan = $('#btnProfExternalText');
+  if (extSpan) {
+    extSpan.textContent = t.on_soundcloud || 'В SoundCloud';
+  } else {
+    var extLink = $('#btnProfExternal');
+    if (extLink) extLink.textContent = t.on_soundcloud;
+  }
   var fLbl = $('#profFollowersLabel');
   if (fLbl) fLbl.textContent = t.followers;
   var trkLbl = $('#profTracksLabel');

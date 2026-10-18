@@ -391,6 +391,20 @@ namespace SoundCloudNative
                 webView.CoreWebView2.Settings.AreDevToolsEnabled = false;
                 webView.DefaultBackgroundColor = System.Drawing.Color.FromArgb(0, 0, 0, 0);
 
+                // Handle external links (e.g. "В SoundCloud") by opening them in the default system browser
+                webView.CoreWebView2.NewWindowRequested += (s, args) =>
+                {
+                    try
+                    {
+                        args.Handled = true;
+                        if (!string.IsNullOrEmpty(args.Uri))
+                        {
+                            Process.Start(new ProcessStartInfo(args.Uri) { UseShellExecute = true });
+                        }
+                    }
+                    catch { }
+                };
+
                 // Auto-recover if GPU or Renderer crashes (e.g. when DirectX games take exclusive focus)
                 webView.CoreWebView2.ProcessFailed += (s, args) =>
                 {
