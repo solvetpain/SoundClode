@@ -87,6 +87,33 @@ namespace SoundCloudNative
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool CloseHandle(IntPtr hObject);
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr CreateToolhelp32Snapshot(uint dwFlags, uint th32ProcessID);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+        private static extern bool Process32First(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+        private static extern bool Process32Next(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
+
+        private const uint TH32CS_SNAPPROCESS = 0x00000002;
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        private struct PROCESSENTRY32
+        {
+            public uint dwSize;
+            public uint cntUsage;
+            public uint th32ProcessID;
+            public IntPtr th32DefaultHeapID;
+            public uint th32ModuleID;
+            public uint cntThreads;
+            public uint th32ParentProcessID;
+            public int pcPriClassBase;
+            public uint dwFlags;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+            public string szExeFile;
+        }
+
         private const uint PROCESS_SET_QUOTA = 0x0100;
         private const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
         private DispatcherTimer? _memoryOptimizerTimer;
@@ -247,17 +274,51 @@ namespace SoundCloudNative
                 IntPtr currentHandle = Process.GetCurrentProcess().Handle;
                 SetProcessWorkingSetSize(currentHandle, (IntPtr)(-1), (IntPtr)(-1));
 
-                // 4. Trim WebView2 browser process working set
+                // 4. Trim WebView2 browser process and all child processes (Renderer, GPU, Utility)
                 if (webView?.CoreWebView2 != null)
                 {
                     uint browserPid = webView.CoreWebView2.BrowserProcessId;
                     if (browserPid > 0)
                     {
-                        IntPtr hProc = OpenProcess(PROCESS_SET_QUOTA | PROCESS_QUERY_LIMITED_INFORMATION, false, (int)browserPid);
-                        if (hProc != IntPtr.Zero)
+                        var pidsToTrim = new System.Collections.Generic.List<uint> { browserPid };
+
+                        IntPtr hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+                        if (hSnap != IntPtr.Zero && hSnap != (IntPtr)(-1))
                         {
-                            SetProcessWorkingSetSize(hProc, (IntPtr)(-1), (IntPtr)(-1));
-                            CloseHandle(hProc);
+                            try
+                            {
+                                var pe = new PROCESSENTRY32();
+                                pe.dwSize = (uint)Marshal.SizeOf<PROCESSENTRY32>();
+                                if (Process32First(hSnap, ref pe))
+                                {
+                                    do
+                                    {
+                                        if (pe.th32ParentProcessID == browserPid)
+                                        {
+                                            pidsToTrim.Add(pe.th32ProcessID);
+                                        }
+                                    } while (Process32Next(hSnap, ref pe));
+                                }
+                            }
+                            catch { }
+                            finally
+                            {
+                                CloseHandle(hSnap);
+                            }
+                        }
+
+                        foreach (uint pid in pidsToTrim)
+                        {
+                            try
+                            {
+                                IntPtr hProc = OpenProcess(PROCESS_SET_QUOTA | PROCESS_QUERY_LIMITED_INFORMATION, false, (int)pid);
+                                if (hProc != IntPtr.Zero)
+                                {
+                                    SetProcessWorkingSetSize(hProc, (IntPtr)(-1), (IntPtr)(-1));
+                                    CloseHandle(hProc);
+                                }
+                            }
+                            catch { }
                         }
                     }
                 }
@@ -298,7 +359,7 @@ namespace SoundCloudNative
                 var options = new CoreWebView2EnvironmentOptions
                 {
                     AdditionalBrowserArguments =
-                        "--disable-features=CalculateNativeWinOcclusion,IntensiveWakeUpThrottling " +
+                        "--disable-features=CalculateNativeWinOcclusion,IntensiveWakeUpThrottling,Translate,MediaRouter " +
                         "--disable-backgrounding-occluded-windows " +
                         "--disable-background-timer-throttling " +
                         "--disable-renderer-backgrounding " +
@@ -311,9 +372,12 @@ namespace SoundCloudNative
                         "--disable-default-apps " +
                         "--disable-breakpad " +
                         "--disable-domain-reliability " +
-                        "--disk-cache-size=16777216 " +
-                        "--media-cache-size=16777216 " +
-                        "--js-flags=--max-old-space-size=96 " +
+                        "--disable-speech-api " +
+                        "--disable-print-preview " +
+                        "--enable-surface-trimming " +
+                        "--disk-cache-size=8388608 " +
+                        "--media-cache-size=8388608 " +
+                        "--js-flags=--max-old-space-size=64 " +
                         "--autoplay-policy=no-user-gesture-required"
                 };
                 Log("Creating CoreWebView2Environment with userDataDir: " + userDataDir);

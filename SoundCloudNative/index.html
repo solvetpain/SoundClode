@@ -403,7 +403,7 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
   display:flex;align-items:center;gap:14px;background:var(--card);
   border-radius:var(--r, 20px);padding:14px;border:1px solid var(--line);
   cursor:pointer;
-  transition:all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   backface-visibility:hidden;
   transform:translateZ(0);
 }
@@ -601,7 +601,7 @@ main{padding:32px clamp(16px,4vw,40px) 160px;max-width:1060px;margin:0 auto}
   display:grid;grid-template-columns:52px 1fr auto;gap:8px 16px;align-items:center;
   background:var(--card);border-radius:var(--r,20px);padding:14px 18px;margin-bottom:10px;
   border:1px solid var(--line);
-  transition:all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   backface-visibility:hidden;
   transform:translateZ(0);
 }
@@ -2209,8 +2209,8 @@ function updateCachedWaveColors() {
 }
 
 function drawWave(c, track, isCurrentPlaying) {
-  if (!c) return;
-  var d = window.devicePixelRatio || 1;
+  if (!c || !track) return;
+  var d = Math.min(1.25, window.devicePixelRatio || 1);
   var w = c.clientWidth, h = c.clientHeight;
   if (!w || !h) return;
 
@@ -2242,16 +2242,37 @@ function drawWave(c, track, isCurrentPlaying) {
     return;
   }
 
-  var progress = (isCurrentPlaying && au.duration) ? (au.currentTime / au.duration) : 0;
+  var progress = (isCurrentPlaying && au && au.duration) ? Math.max(0, Math.min(1, au.currentTime / au.duration)) : 0;
   var n = pk.length;
   var bw = w / n;
   var barWidth = cfg.wave === 'thin' ? Math.max(1, bw * 0.35) : Math.max(1, bw - 2);
 
+  // 1. Draw inactive background bars
+  ctx.fillStyle = colorOff;
   for (var i = 0; i < n; i++) {
-    ctx.fillStyle = (i / n < progress) ? colorOn : colorOff;
     var barHeight = Math.max(3, pk[i] * h);
     var y = cfg.wave === 'base' ? (h - barHeight) : (h - barHeight) / 2;
-    ctx.fillRect(i * bw + (bw - barWidth) / 2, y, barWidth, barHeight);
+    var x = i * bw + (bw - barWidth) / 2;
+    ctx.fillRect(x, y, barWidth, barHeight);
+  }
+
+  // 2. Draw smooth active fill with clipping for buttery smooth transition
+  if (isCurrentPlaying && progress > 0) {
+    var progressX = progress * w;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, progressX, h);
+    ctx.clip();
+
+    ctx.fillStyle = colorOn;
+    for (var i = 0; i < n; i++) {
+      var x = i * bw + (bw - barWidth) / 2;
+      if (x > progressX) break;
+      var barHeight = Math.max(3, pk[i] * h);
+      var y = cfg.wave === 'base' ? (h - barHeight) : (h - barHeight) / 2;
+      ctx.fillRect(x, y, barWidth, barHeight);
+    }
+    ctx.restore();
   }
 }
 
@@ -4013,25 +4034,72 @@ $('#rep').onclick = function() {
   syncRepeatUI();
 };
 
+var _waveRafId = null;
+function updatePlaybackWaveSmooth() {
+  if (au && !au.paused && currentTrack) {
+    if (!document.hidden) {
+      var c = document.querySelector('.trk.cur canvas');
+      if (c) drawWave(c, currentTrack, true);
+
+      var d = au.duration || (currentTrack.duration ? currentTrack.duration / 1000 : 0);
+      var pct = d ? (au.currentTime / d * 100) : 0;
+      var skEl = $('#sk');
+      if (skEl) {
+        skEl.value = d ? (au.currentTime / d * 1000) : 0;
+        skEl.style.setProperty('--pct', pct + '%');
+      }
+      $('#tm').textContent = fmt(au.currentTime) + ' / ' + fmt(d);
+    }
+    _waveRafId = requestAnimationFrame(updatePlaybackWaveSmooth);
+  } else {
+    _waveRafId = null;
+  }
+}
+
+function startSmoothWaveLoop() {
+  if (!_waveRafId && au && !au.paused) {
+    _waveRafId = requestAnimationFrame(updatePlaybackWaveSmooth);
+  }
+}
+
+function stopSmoothWaveLoop() {
+  if (_waveRafId) {
+    cancelAnimationFrame(_waveRafId);
+    _waveRafId = null;
+  }
+}
+
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden) {
+    stopSmoothWaveLoop();
+  } else if (au && !au.paused) {
+    startSmoothWaveLoop();
+  }
+});
+
 au.onplay = function() {
   initWebAudio();
   if (audioCtx && audioCtx.state === 'suspended') {
     audioCtx.resume();
   }
+  startSmoothWaveLoop();
   syncPlayer();
   au.volume = cfg.vol !== undefined ? cfg.vol : 0.85;
 };
 au.onplaying = function() {
   clearPlaybackWatchdog();
   consecutivePlaybackErrors = 0;
+  startSmoothWaveLoop();
   syncPlayer();
 };
 au.onpause = function() {
+  stopSmoothWaveLoop();
   clearPlaybackWatchdog();
   syncPlayer();
 };
 
 function handleTrackEnded() {
+  stopSmoothWaveLoop();
   clearPlaybackWatchdog();
   if (repeatMode === 'one') {
     au.currentTime = 0;
@@ -4067,6 +4135,7 @@ au.onerror = function(e) {
 
 var _eosCheckTimer = null;
 au.ontimeupdate = function() {
+  if (!_waveRafId && !au.paused) startSmoothWaveLoop();
   var d = au.duration || (currentTrack && currentTrack.duration ? currentTrack.duration / 1000 : 0);
   var pct = d ? (au.currentTime / d * 100) : 0;
   var skEl = $('#sk');
@@ -5134,11 +5203,16 @@ function redrawAllWaves() {
                (activeSection === 'search') ? searchResults :
                getVisibleLibraryTracks();
     if (!list) return;
-    $$('.trk').forEach(function(el) {
+    $$('.trk[data-tid]').forEach(function(el) {
       var idx = +el.dataset.i;
-      if (list[idx]) {
-        var isCur = (playingList === list && cur === idx);
-        drawWave(el.querySelector('canvas'), list[idx], isCur);
+      var rawItem = list[idx];
+      if (rawItem) {
+        var track = rawItem.track || rawItem;
+        if (track && (track.id || track.title || track.name)) {
+          var isCur = !!(currentTrack && String(currentTrack.id) === String(track.id));
+          var cv = el.querySelector('canvas');
+          if (cv) drawWave(cv, track, isCur);
+        }
       }
     });
   } catch(e) {}
@@ -5738,17 +5812,7 @@ $('#closeQueue').onclick = closeQueueDrawer;
 $('#btnClearQueue').onclick = clearUserQueue;
 
 window.addEventListener('resize', function() {
-  var list = (activeSection === 'feed') ? feedTracks :
-             (activeSection === 'profile') ? profileTracks :
-             (activeSection === 'search') ? searchResults :
-             getVisibleLibraryTracks();
-  $$('.trk').forEach(function(el) {
-    var idx = +el.dataset.i;
-    if (list[idx]) {
-      var isCur = (playingList === list && cur === idx);
-      drawWave(el.querySelector('canvas'), list[idx], isCur);
-    }
-  });
+  redrawAllWaves();
 });
 
 // INITIALIZE
