@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -680,12 +681,38 @@ namespace SoundCloudNative
             {
                 string endpoint = isPlaylist ? $"playlist_likes/{id}" : $"track_likes/{id}";
                 string method = isLiked ? "PUT" : "DELETE";
-                string url = $"https://api-v2.soundcloud.com/users/{userId}/{endpoint}?client_id=tHVbSbDP4TaoMbPppngv6Tdry83vNbMQ";
+                string cid = !string.IsNullOrEmpty(_activeClientId) ? _activeClientId : "tHVbSbDP4TaoMbPppngv6Tdry83vNbMQ";
+                string url = $"https://api-v2.soundcloud.com/users/{userId}/{endpoint}?client_id={cid}";
 
                 using var req = new HttpRequestMessage(new HttpMethod(method), url);
                 req.Headers.Add("Authorization", $"OAuth {token}");
                 req.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36");
                 req.Headers.Add("Accept", "application/json, text/javascript, */*; q=0.01");
+                req.Headers.Add("Origin", "https://soundcloud.com");
+                req.Headers.Add("Referer", "https://soundcloud.com/");
+
+                if (method == "PUT")
+                {
+                    req.Content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
+                }
+
+                try
+                {
+                    var cookieManager = webView?.CoreWebView2?.CookieManager;
+                    if (cookieManager != null)
+                    {
+                        var cookies = await cookieManager.GetCookiesAsync("https://soundcloud.com");
+                        if (cookies != null && cookies.Count > 0)
+                        {
+                            var cookieStr = string.Join("; ", cookies.Select(c => $"{c.Name}={c.Value}"));
+                            if (!string.IsNullOrEmpty(cookieStr))
+                            {
+                                req.Headers.Add("Cookie", cookieStr);
+                            }
+                        }
+                    }
+                }
+                catch { }
 
                 var resp = await _httpClient.SendAsync(req);
                 var body = await resp.Content.ReadAsStringAsync();
@@ -705,7 +732,7 @@ namespace SoundCloudNative
                             ok = resp.IsSuccessStatusCode,
                             body = body
                         });
-                        webView.CoreWebView2.PostWebMessageAsJson(resPayload);
+                        webView?.CoreWebView2?.PostWebMessageAsJson(resPayload);
                     }
                     catch { }
                 });
@@ -727,7 +754,7 @@ namespace SoundCloudNative
                             ok = false,
                             error = ex.Message
                         });
-                        webView.CoreWebView2.PostWebMessageAsJson(errPayload);
+                        webView?.CoreWebView2?.PostWebMessageAsJson(errPayload);
                     }
                     catch { }
                 });

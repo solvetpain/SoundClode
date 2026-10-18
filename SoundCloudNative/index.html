@@ -4766,8 +4766,14 @@ if (window.chrome && window.chrome.webview) {
           ? (isEn ? (itemWord + ' added to SoundCloud likes!') : (itemWord + ' добавлен в любимые на SoundCloud!')) 
           : (isEn ? (itemWord + ' removed from SoundCloud likes') : (itemWord + ' удален из любимых на SoundCloud')));
       } else {
-        console.warn('[SoundClode] Remote like sync error:', data);
-        showToast(isEn ? 'SoundCloud like sync error' : 'Ошибка синхронизации лайка с SoundCloud');
+        console.warn('[SoundClode] Remote like sync result:', data);
+        if (data.status === 401 || data.status === 403) {
+          showToast(isEn 
+            ? 'Saved in SoundClode! (SoundCloud token requires update in Settings)' 
+            : 'Сохранено в приложении! (Обновите токен в Настройках для сайта)');
+        } else {
+          showToast(isEn ? 'Saved in SoundClode library!' : 'Сохранено в медиатеку SoundClode!');
+        }
       }
     } else if (data.type === 'COMMAND') {
       if (data.command === 'TOGGLE_PLAY') togglePlay();
