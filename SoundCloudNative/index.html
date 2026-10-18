@@ -3411,9 +3411,34 @@ function playTrack(track) {
 
 async function playTrackInList(list, idx) {
   if (!list || idx < 0 || idx >= list.length) return;
-  playingList = list;
-  cur = idx;
-  var track = list[idx];
+  var rawItem = list[idx];
+  if (!rawItem) return;
+
+  // Handle playlist wrapper item
+  if (rawItem.item_type === 'playlist' || rawItem.playlist) {
+    playPlaylist(rawItem.playlist || rawItem);
+    return;
+  }
+
+  // Filter out playlist items and unwrap tracks
+  var cleanList = list.filter(function(x){
+    return x && !(x.item_type === 'playlist' || x.playlist);
+  }).map(function(x){
+    return x.track || x;
+  }).filter(function(t){
+    return t && (t.id || t.title || t.name);
+  });
+
+  if (!cleanList.length) return;
+
+  var track = rawItem.track || rawItem;
+  if (!track || (!track.id && !track.title && !track.name)) return;
+
+  var newIdx = cleanList.findIndex(function(t){ return String(t.id) === String(track.id); });
+  if (newIdx < 0) newIdx = Math.min(idx, cleanList.length - 1);
+
+  playingList = cleanList;
+  cur = newIdx;
   currentTrack = track;
 
   _nextPreloadedTrackId = null;
@@ -3576,15 +3601,45 @@ async function playTrackInList(list, idx) {
 }
 
 function togglePlay() {
-  if (cur < 0) {
-    var currentList = (activeSection === 'feed') ? feedTracks :
-                      (activeSection === 'profile') ? profileTracks :
-                      (activeSection === 'search') ? searchResults :
-                      getVisibleLibraryTracks();
-    if (currentList.length) playTrackInList(currentList, 0);
+  if (cur < 0 || !currentTrack || !au.src) {
+    var rawList = (activeSection === 'feed') ? feedTracks :
+                  (activeSection === 'profile') ? profileTracks :
+                  (activeSection === 'search') ? searchResults :
+                  getVisibleLibraryTracks();
+
+    var playableList = (rawList || []).filter(function(x){
+      return x && !(x.item_type === 'playlist' || x.playlist);
+    }).map(function(x){
+      return x.track || x;
+    }).filter(function(t){
+      return t && (t.id || t.title || t.name);
+    });
+
+    if (!playableList.length) {
+      playableList = (libraryTracks || []).concat(feedTracks || []).filter(function(x){
+        return x && !(x.item_type === 'playlist' || x.playlist);
+      }).map(function(x){
+        return x.track || x;
+      }).filter(function(t){
+        return t && (t.id || t.title || t.name);
+      });
+    }
+
+    if (playableList.length) {
+      playTrackInList(playableList, 0);
+    } else {
+      var lang = (cfg.lang === 'en') ? 'en' : 'ru';
+      showToast(lang === 'en' ? 'Select a track to play' : 'Выберите трек для воспроизведения');
+    }
     return;
   }
-  au.paused ? au.play() : au.pause();
+  if (au.paused) {
+    au.play().catch(function(err){
+      console.warn('au.play() blocked or failed:', err);
+    });
+  } else {
+    au.pause();
+  }
 }
 
 function syncBarLike() {
@@ -4000,12 +4055,13 @@ function handleTrackEnded() {
 au.onended = handleTrackEnded;
 
 au.onerror = function(e) {
+  if (!currentTrack || !au.src || au.src === '' || au.src === window.location.href) {
+    return;
+  }
   console.warn('HTMLAudioElement error event:', e);
   clearPlaybackWatchdog();
-  if (currentTrack) {
-    delete currentTrack.stream_url;
-    delete currentTrack._streamUrlTime;
-  }
+  delete currentTrack.stream_url;
+  delete currentTrack._streamUrlTime;
   handleTrackPlaybackError('Ошибка аудиопотока. Переключаем...');
 };
 
