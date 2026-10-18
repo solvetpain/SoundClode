@@ -7,6 +7,8 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>soundcloud.ico</ApplicationIcon>
     <AssemblyName>SoundClode</AssemblyName>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>
