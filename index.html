@@ -124,26 +124,22 @@ h1,h2,.logo{font-family:var(--fd, Unbounded, system-ui, sans-serif);letter-spaci
 .hero{max-width:860px;width:100%}
 .hero h1{font-size:clamp(38px,11vw,88px);line-height:.92;margin:0 0 20px;font-weight:800}
 .hero .bars{
-  display:flex;align-items:flex-end;gap:4px;height:56px;
-  margin-bottom:28px;max-width:480px;overflow:hidden;
+  display:flex;align-items:flex-end;gap:5px;height:62px;
+  margin-bottom:28px;max-width:560px;
 }
 .hero .bars i{
-  flex:1;background:var(--ink);border-radius:999px;
-  height:var(--h, 40px);transform-origin:bottom;
-  will-change:transform, opacity;
-  animation:smoothWave 2.4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  flex:1;background:var(--ink);border-radius:3px;
+  height:var(--h, 42px);transform-origin:bottom;
+  will-change:transform;
+  animation:eqBounce var(--dur, 1.4s) cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate;
   animation-delay:var(--d, 0s);
-  opacity:0.9;
+  opacity:0.95;
   transition:background 0.3s ease;
 }
-.hero .bars i:nth-child(3n){opacity:0.6}
 .hero .bars i:nth-child(5n){opacity:0.35}
-@keyframes smoothWave{
-  0%{transform:scaleY(0.22)}
-  25%{transform:scaleY(0.92)}
-  50%{transform:scaleY(0.38)}
-  75%{transform:scaleY(1)}
-  100%{transform:scaleY(0.22)}
+@keyframes eqBounce{
+  0%{transform:scaleY(0.25)}
+  100%{transform:scaleY(1)}
 }
 @media (prefers-reduced-motion:reduce){.hero .bars i{animation:none}}
 .hero p{max-width:56ch;color:var(--mut);margin:0 0 28px;font-size:17px}
@@ -1921,21 +1917,23 @@ function formatNumber(n) {
   return n.toString();
 }
 
-// Generate animated bars in hero
+// Generate animated bars in hero (Equalizer pulsing in place without horizontal drift)
 var barsEl = $('#bars');
 if (barsEl) {
   barsEl.innerHTML = '';
-  var count = 36;
+  var pattern = [
+    16, 26, 46, 42, 34, 18, 38, 44, 44, 28, 14, 32, 46, 40, 24, 48,
+    54, 36, 22, 30, 42, 44, 32, 18, 30, 42, 44, 34, 26, 40, 44, 36, 18, 32
+  ];
+  var count = pattern.length;
   for (var i = 0; i < count; i++) {
     var b = document.createElement('i');
-    var norm = i / (count - 1);
-    var envelope = Math.sin(norm * Math.PI);
-    var baseH = 18 + envelope * 32 + Math.sin(i * 0.75) * 6;
-    var dur = (2.2 + Math.sin(i * 0.45) * 0.4).toFixed(2);
-    var delay = (- (i * 0.08)).toFixed(2);
-    b.style.setProperty('--h', Math.round(baseH) + 'px');
-    b.style.animationDuration = dur + 's';
-    b.style.animationDelay = delay + 's';
+    var h = pattern[i];
+    var dur = (1.2 + ((i * 7) % 10) * 0.1).toFixed(2);
+    var delay = (- (((i * 13) % 17) * 0.09)).toFixed(2);
+    b.style.setProperty('--h', h + 'px');
+    b.style.setProperty('--dur', dur + 's');
+    b.style.setProperty('--d', delay + 's');
     barsEl.appendChild(b);
   }
 }
